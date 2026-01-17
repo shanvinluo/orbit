@@ -46,12 +46,10 @@ app.post('/api/ai/analyze', async (req, res) => {
 });
 
 // Serve Client
-const clientPath = path.join(__dirname, '../../dist');
+// CHANGED: Adjusted path to point to sibling 'client' folder inside 'dist'
+const clientPath = path.join(__dirname, '../client'); 
+
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(clientPath));
   app.get('*', (req, res) => res.sendFile(path.join(clientPath, 'index.html')));
 }
-
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
