@@ -51,6 +51,57 @@ export const findPaths = (fromId: string, toId: string, maxDepth: number = 5): P
   return results.sort((a, b) => a.length - b.length);
 };
 
+/**
+ * Finds the shortest path between two nodes using BFS
+ * Returns null if no path exists
+ */
+export const findShortestPath = (fromId: string, toId: string, maxDepth: number = 10): PathResult | null => {
+  const graph = loadGraph();
+  const adj = new Map<string, GraphEdge[]>();
+  
+  // Build adjacency list with edge details (undirected)
+  graph.links.forEach(link => {
+    const sourceId = link.source as string;
+    const targetId = link.target as string;
+    
+    if (!adj.has(sourceId)) adj.set(sourceId, []);
+    adj.get(sourceId)!.push(link);
+    
+    // Add reverse edge for undirected traversal
+    if (!adj.has(targetId)) adj.set(targetId, []);
+    adj.get(targetId)!.push({ ...link, source: targetId, target: sourceId });
+  });
+
+  // BFS to find shortest path
+  const queue: { id: string; pathNodes: string[]; pathEdges: GraphEdge[] }[] = [{ id: fromId, pathNodes: [fromId], pathEdges: [] }];
+  const visited = new Set<string>([fromId]);
+
+  while (queue.length > 0) {
+    const { id, pathNodes, pathEdges } = queue.shift()!;
+    
+    if (pathNodes.length > maxDepth + 1) continue;
+
+    if (id === toId) {
+      return { nodes: pathNodes, edges: pathEdges, length: pathNodes.length - 1 };
+    }
+
+    const neighbors = adj.get(id) || [];
+    for (const link of neighbors) {
+      const neighborId = link.target as string;
+      if (!visited.has(neighborId)) {
+        visited.add(neighborId);
+        queue.push({ 
+          id: neighborId, 
+          pathNodes: [...pathNodes, neighborId], 
+          pathEdges: [...pathEdges, link] 
+        });
+      }
+    }
+  }
+  
+  return null; // No path found
+};
+
 export const findCycles = (nodeId: string, maxDepth: number = 6): CycleResult[] => {
   const graph = loadGraph();
   const cycles: CycleResult[] = [];

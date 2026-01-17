@@ -5,6 +5,7 @@ import GraphViz from '@/components/GraphViz';
 import SearchBar from '@/components/SearchBar';
 import Chatbot from '@/components/Chatbot';
 import TradingCard from '@/components/TradingCard';
+import PathFinder from '@/components/PathFinder';
 import { GraphData, GraphNode, GraphEdge } from '@/types';
 
 export default function Home() {
@@ -12,6 +13,7 @@ export default function Home() {
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [highlightNodes, setHighlightNodes] = useState<Set<string>>(new Set());
   const [highlightEdges, setHighlightEdges] = useState<Set<string>>(new Set());
+  const [pathMode, setPathMode] = useState(false);
 
   // Load data
   useEffect(() => {
@@ -25,9 +27,13 @@ export default function Home() {
     setSelectedNode(null);
     setHighlightNodes(new Set());
     setHighlightEdges(new Set());
+    setPathMode(false);
   }, []);
 
   const handleNodeClick = useCallback((node: GraphNode) => {
+    // If in path mode, don't change highlighting on node click
+    if (pathMode) return;
+
     setSelectedNode(node);
 
     // Simple neighbor highlighting
@@ -49,7 +55,19 @@ export default function Home() {
 
     setHighlightNodes(newHighlightNodes);
     setHighlightEdges(newHighlightEdges);
-  }, [graphData.links]);
+  }, [graphData.links, pathMode]);
+
+  const handlePathFound = useCallback((path: { nodes: string[]; edges: string[] } | null) => {
+    if (path) {
+      setPathMode(true);
+      setHighlightNodes(new Set(path.nodes));
+      setHighlightEdges(new Set(path.edges));
+    } else {
+      setPathMode(false);
+      setHighlightNodes(new Set());
+      setHighlightEdges(new Set());
+    }
+  }, []);
 
   const handleSearchSelect = useCallback((node: GraphNode) => {
     handleNodeClick(node);
@@ -76,6 +94,8 @@ export default function Home() {
       <SearchBar nodes={graphData.nodes} onSelect={handleSearchSelect} />
       
       <Chatbot />
+
+      <PathFinder nodes={graphData.nodes} onPathFound={handlePathFound} />
 
       {selectedNode && (
         <TradingCard node={selectedNode} onClose={clearSelection} />
