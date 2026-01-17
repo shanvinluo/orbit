@@ -36,7 +36,7 @@ export default function GraphViz({ data, onNodeClick, onBackgroundClick, highlig
         // Need to wait for graph to have nodes
         const node = data.nodes.find(n => n.id === focusedNodeId);
         if (node && typeof node.x === 'number') {
-            const distance = 150; // Increased distance to zoom out a bit more
+            const distance = 250; // Increased distance to zoom out further
             const distRatio = 1 + distance/Math.hypot(node.x, node.y!, node.z!);
             fgRef.current.cameraPosition(
                 { x: node.x * distRatio, y: node.y! * distRatio, z: node.z! * distRatio },
@@ -53,7 +53,7 @@ export default function GraphViz({ data, onNodeClick, onBackgroundClick, highlig
         ref={fgRef}
         graphData={data}
         nodeLabel="label"
-        nodeColor={(node: any) => highlightNodes.has(node.id) ? '#d946ef' : '#4f46e5'}
+        nodeColor={(node: any) => highlightNodes.has(node.id) ? '#d946ef' : '#8b5cf6'} // Highlight: Fuchsia, Default: Violet (High-tech purple)
         nodeVal={(node: any) => (node.val || 1) * 1.5}
         nodeResolution={16}
         nodeOpacity={0.9}
