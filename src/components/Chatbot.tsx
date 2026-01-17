@@ -10,7 +10,23 @@ interface Message {
   content: string;
 }
 
-export default function Chatbot() {
+interface ChatbotProps {
+  onNewsAnalysis?: (analysis: any) => void;
+}
+
+// Simple heuristic to detect if text is likely news
+const isLikelyNews = (text: string): boolean => {
+  const newsKeywords = ['announced', 'reported', 'according to', 'breaking', 'news', 'article', 'sources', 'confirmed', 'invaded', 'stocks would be affected', 'which stocks', 'affected stocks', 'market impact', 'financial impact'];
+  const lowerText = text.toLowerCase();
+  const hasNewsKeywords = newsKeywords.some(keyword => lowerText.includes(keyword));
+  const isLongText = text.length > 200; // News articles are typically longer
+  const hasMultipleSentences = (text.match(/[.!?]/g) || []).length >= 3;
+  const asksAboutImpact = lowerText.includes('affected') || lowerText.includes('impact') || lowerText.includes('stocks');
+  
+  return (hasNewsKeywords || isLongText || asksAboutImpact) && (hasMultipleSentences || asksAboutImpact);
+};
+
+export default function Chatbot({ onNewsAnalysis }: ChatbotProps = {}) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -36,24 +52,87 @@ export default function Chatbot() {
     setIsLoading(true);
 
     try {
+      // Detect if this is news
+      const isNews = isLikelyNews(userMsg.content);
+      const analysisType = isNews ? 'news' : 'relationship';
+      
       const res = await fetch('/api/ai/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: userMsg.content })
+        body: JSON.stringify({ text: userMsg.content, type: analysisType })
       });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: `Server error: ${res.status}` }));
+        throw new Error(errorData.error || `Request failed with status ${res.status}`);
+      }
+
       const data = await res.json();
       
-      const aiMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'ai',
-        content: data.error || data.explanation || "I couldn't analyze that."
-      };
-      setMessages(prev => [...prev, aiMsg]);
+      // Handle errors first
+      if (data.error) {
+        const aiMsg: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'ai',
+          content: data.error
+        };
+        setMessages(prev => [...prev, aiMsg]);
+        return;
+      }
       
-      // Note: In a full implementation, we'd pass the AI results (paths/nodes) up to the parent
-      // to highlight the graph. For now, we just show the text response.
-    } catch (e) {
-      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'ai', content: "Error connecting to AI." }]);
+      // Handle news analysis
+      if (data.analysisType === 'news' && data.affectedCompanies) {
+        const affectedCount = data.affectedCompanies.length;
+        let responseContent = `📰 Analyzed the news article and identified ${affectedCount} affected compan${affectedCount === 1 ? 'y' : 'ies'} in the graph. `;
+        
+        if (affectedCount > 0) {
+          responseContent += `The companies have been highlighted in the graph. Click to see detailed impact analysis.`;
+          // Pass to parent for highlighting and popup
+          if (onNewsAnalysis) {
+            onNewsAnalysis(data);
+          }
+        } else {
+          responseContent += `However, none of the mentioned companies were found in the current graph.`;
+        }
+        
+        const aiMsg: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'ai',
+          content: responseContent
+        };
+        setMessages(prev => [...prev, aiMsg]);
+      } else {
+        // Handle relationship analysis (existing logic)
+        const aiMsg: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'ai',
+          content: data.error || data.explanation || "I couldn't analyze that."
+        };
+        setMessages(prev => [...prev, aiMsg]);
+      }
+    } catch (e: any) {
+      console.error('Chatbot error:', e);
+      const errorMessage = e?.message || String(e);
+      
+      let userMessage = "Sorry, I encountered an error connecting to the AI service.";
+      
+      // Provide more specific error messages
+      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('network')) {
+        userMessage = "Network error: Could not connect to the server. Please check your internet connection.";
+      } else if (errorMessage.includes('API key') || errorMessage.includes('401') || errorMessage.includes('403')) {
+        userMessage = "API key error: Your Gemini API key may be invalid or expired. Please check your .env.local file.";
+      } else if (errorMessage.includes('404') || errorMessage.includes('not found')) {
+        userMessage = "Model not found: The AI model is not available. This may be an API key permissions issue.";
+      } else if (errorMessage) {
+        userMessage = `Error: ${errorMessage.substring(0, 200)}`;
+      }
+      
+      const errorMsg: Message = {
+        id: Date.now().toString(),
+        role: 'ai',
+        content: userMessage
+      };
+      setMessages(prev => [...prev, errorMsg]);
     } finally {
       setIsLoading(false);
     }

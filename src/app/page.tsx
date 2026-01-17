@@ -7,7 +7,9 @@ import Chatbot from '@/components/Chatbot';
 import TradingCard from '@/components/TradingCard';
 import PathFinder from '@/components/PathFinder';
 import RelationshipFilter from '@/components/RelationshipFilter';
+import NewsImpactPopup from '@/components/NewsImpactPopup';
 import { GraphData, GraphNode, GraphEdge, EdgeType } from '@/types';
+import { NewsAnalysis } from '@/services/aiService';
 
 export default function Home() {
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
@@ -15,6 +17,8 @@ export default function Home() {
   const [highlightNodes, setHighlightNodes] = useState<Set<string>>(new Set());
   const [highlightEdges, setHighlightEdges] = useState<Set<string>>(new Set());
   const [pathMode, setPathMode] = useState(false);
+  const [newsMode, setNewsMode] = useState(false);
+  const [newsAnalysis, setNewsAnalysis] = useState<NewsAnalysis | null>(null);
   const [enabledEdgeTypes, setEnabledEdgeTypes] = useState<Set<EdgeType>>(
     new Set(Object.values(EdgeType)) // All types enabled by default
   );
@@ -32,11 +36,13 @@ export default function Home() {
     setHighlightNodes(new Set());
     setHighlightEdges(new Set());
     setPathMode(false);
+    setNewsMode(false);
+    setNewsAnalysis(null);
   }, []);
 
   const handleNodeClick = useCallback((node: GraphNode) => {
-    // If in path mode, don't change highlighting on node click
-    if (pathMode) return;
+    // If in path mode or news mode, don't change highlighting on node click
+    if (pathMode || newsMode) return;
 
     setSelectedNode(node);
 
@@ -97,6 +103,40 @@ export default function Home() {
     });
   }, []);
 
+  const handleNewsAnalysis = useCallback((analysis: NewsAnalysis) => {
+    setNewsAnalysis(analysis);
+    setNewsMode(true);
+    setPathMode(false);
+    
+    // Highlight affected companies
+    const affectedIds = new Set(analysis.affectedCompanies.map(c => c.companyId));
+    setHighlightNodes(affectedIds);
+    
+    // Also highlight edges connected to affected companies
+    const affectedEdges = new Set<string>();
+    graphData.links.forEach(link => {
+      const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+      const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+      
+      if (affectedIds.has(sourceId) || affectedIds.has(targetId)) {
+        affectedEdges.add(`${sourceId}-${targetId}`);
+        affectedEdges.add(`${targetId}-${sourceId}`);
+      }
+    });
+    setHighlightEdges(affectedEdges);
+  }, [graphData.links]);
+
+  const handleCloseNewsPopup = useCallback(() => {
+    setNewsAnalysis(null);
+    // Keep highlighting but allow node clicks
+    setNewsMode(false);
+  }, []);
+  
+  // Create map of affected companies for GraphViz
+  const affectedCompaniesMap = newsAnalysis 
+    ? new Map(newsAnalysis.affectedCompanies.map(c => [c.companyId, c.impactType]))
+    : undefined;
+
   return (
     <main className="relative w-screen h-screen bg-[#000011] overflow-hidden font-sans selection:bg-violet-500/30">
       {/* Background Gradient - Deep space nebula */}
@@ -112,6 +152,7 @@ export default function Home() {
           highlightEdges={highlightEdges}
           focusedNodeId={selectedNode?.id}
           enabledEdgeTypes={enabledEdgeTypes}
+          affectedCompanies={affectedCompaniesMap}
         />
       </div>
 
@@ -124,9 +165,13 @@ export default function Home() {
         onToggleAll={handleToggleAllEdgeTypes}
       />
       
-      <Chatbot />
+      <Chatbot onNewsAnalysis={handleNewsAnalysis} />
 
       <PathFinder nodes={graphData.nodes} onPathFound={handlePathFound} />
+
+      {newsAnalysis && (
+        <NewsImpactPopup analysis={newsAnalysis} onClose={handleCloseNewsPopup} />
+      )}
 
       {selectedNode && (
         <TradingCard node={selectedNode} onClose={clearSelection} />

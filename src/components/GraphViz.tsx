@@ -20,6 +20,7 @@ interface Props {
   highlightEdges: Set<string>;
   focusedNodeId?: string;
   enabledEdgeTypes?: Set<EdgeType>;
+  affectedCompanies?: Map<string, 'positive' | 'negative' | 'neutral' | 'mixed'>;
 }
 
 // Cosmic nebula color palette: distinct clusters of blue/cyan and amber/gold
@@ -50,7 +51,7 @@ const getNodeColor = (nodeId: string): string => {
 };
 
 
-export default function GraphViz({ data, onNodeClick, onBackgroundClick, highlightNodes, highlightEdges, focusedNodeId, enabledEdgeTypes }: Props) {
+export default function GraphViz({ data, onNodeClick, onBackgroundClick, highlightNodes, highlightEdges, focusedNodeId, enabledEdgeTypes, affectedCompanies }: Props) {
   const fgRef = useRef<any>();
   const [cameraDistance, setCameraDistance] = useState(1000);
 
@@ -83,7 +84,7 @@ export default function GraphViz({ data, onNodeClick, onBackgroundClick, highlig
 
   // Store camera position for per-node distance calculation
   const [cameraPosition, setCameraPosition] = useState<THREE.Vector3>(new THREE.Vector3(0, 0, 1000));
-  
+
   useEffect(() => {
     if (!fgRef.current) return;
 
@@ -164,7 +165,7 @@ export default function GraphViz({ data, onNodeClick, onBackgroundClick, highlig
 
     // Initial force settings
     if (fgRef.current) {
-      fgRef.current.d3Force('charge').strength(-120);
+       fgRef.current.d3Force('charge').strength(-120);
     }
   }, []);
 
@@ -270,6 +271,18 @@ export default function GraphViz({ data, onNodeClick, onBackgroundClick, highlig
         graphData={filteredData}
         nodeLabel="label"
         nodeColor={(node: any) => {
+          // Color by impact type if in news mode
+          if (affectedCompanies && affectedCompanies.has(node.id)) {
+            const impactType = affectedCompanies.get(node.id);
+            switch (impactType) {
+              case 'positive': return '#10b981'; // Green
+              case 'negative': return '#ef4444'; // Red
+              case 'neutral': return '#6b7280'; // Gray
+              case 'uncertain': return '#f59e0b'; // Yellow/Amber
+              default: return NODE_COLOR_HIGHLIGHT;
+            }
+          }
+          // Default colors
           if (focusedNodeId === node.id) return NODE_COLOR_SELECTED;
           if (highlightNodes.has(node.id)) return NODE_COLOR_HIGHLIGHT;
           return getNodeColor(node.id);
