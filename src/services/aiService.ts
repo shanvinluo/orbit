@@ -3,7 +3,7 @@ import { searchNodes } from './graphService';
 import { findPaths } from './pathService';
 import { GraphEdge } from '../types';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'AIzaSyAKBC8isX--9XLnm8Xmm_BU_jOsLXopcuU');
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export const analyzeText = async (text: string) => {
   const model = genAI.getGenerativeModel({ model: "gemini-pro" });

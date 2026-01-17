@@ -63,15 +63,17 @@ export default function GraphViz({ data, onNodeClick, onBackgroundClick, highlig
                 : `${link.source}-${link.target}`;
             // If any node is highlighted, fade out non-highlighted edges
             if (highlightNodes.size > 0 && !highlightEdges.has(id)) {
-                return 'rgba(100, 100, 100, 0.05)';
+                return 'rgba(100, 100, 100, 0.02)'; // Even more transparent
             }
-            return highlightEdges.has(id) ? '#d946ef' : (EDGE_COLORS[link.type as keyof typeof EDGE_COLORS] || '#8b5cf6');
+            // Use a very subtle color for default edges, not white
+            return highlightEdges.has(id) ? '#d946ef' : 'rgba(139, 92, 246, 0.15)'; // Very faint violet
         }}
         linkWidth={(link: any) => {
             const id = typeof link.source === 'object' 
                 ? `${link.source.id}-${link.target.id}`
                 : `${link.source}-${link.target}`;
-            return highlightEdges.has(id) ? 3 : 1;
+            // Thinner lines for unselected edges
+            return highlightEdges.has(id) ? 3 : 0.5;
         }}
         linkOpacity={0.6}
         onNodeClick={(node) => {

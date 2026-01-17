@@ -63,12 +63,12 @@ export default function Chatbot() {
     <>
       <motion.button
         onClick={() => setIsOpen(true)}
-        style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 50 }}
-        className={`p-4 bg-transparent border-2 border-white text-white rounded-full transition-all hover:bg-white/10 shadow-[0_0_15px_rgba(255,255,255,0.3)] ${isOpen ? 'hidden' : 'flex'}`}
+        style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 50, backgroundColor: 'white' }}
+        className={`p-4 rounded-full transition-all hover:scale-110 shadow-[0_0_15px_rgba(255,255,255,0.5)] ${isOpen ? 'hidden' : 'flex'}`}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
       >
-        <Sparkles size={24} className="text-white fill-white" />
+        <Sparkles size={24} className="text-black fill-black" />
       </motion.button>
 
       <AnimatePresence>
