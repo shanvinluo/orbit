@@ -1487,10 +1487,10 @@
     },
     {
       "id": "c_135",
-      "name": "W\u00e4rtsil\u00e4 Corporation",
+      "name": "Wärtsilä Corporation",
       "type": "company",
       "val": 11.85080131947691,
-      "description": "A leading technology company focused on innovation and digital transformation. W\u00e4rtsil\u00e4 Corporation is a well-established organization.",
+      "description": "A leading technology company focused on innovation and digital transformation. Wärtsilä Corporation is a well-established organization.",
       "price": 344.56,
       "change": -5.06,
       "tvl": 2865770590.69,
@@ -2235,10 +2235,10 @@
     },
     {
       "id": "c_203",
-      "name": "L'Or\u00e9al SA",
+      "name": "L'Oréal SA",
       "type": "company",
       "val": 22.75861384284901,
-      "description": "A leading technology company focused on innovation and digital transformation. L'Or\u00e9al SA is a well-established organization.",
+      "description": "A leading technology company focused on innovation and digital transformation. L'Oréal SA is a well-established organization.",
       "price": 435.74,
       "change": -7.21,
       "tvl": null,
@@ -2246,10 +2246,10 @@
     },
     {
       "id": "c_204",
-      "name": "Est\u00e9e Lauder Companies",
+      "name": "Estée Lauder Companies",
       "type": "company",
       "val": 5.820279102005134,
-      "description": "A leading technology company focused on innovation and digital transformation. Est\u00e9e Lauder Companies is a well-established organization.",
+      "description": "A leading technology company focused on innovation and digital transformation. Estée Lauder Companies is a well-established organization.",
       "price": 159.43,
       "change": -9.7,
       "tvl": null,
@@ -11896,6 +11896,3546 @@
       "source": "c_499",
       "target": "c_31",
       "type": "partnership"
+    },
+    {
+      "source": "c_166",
+      "target": "c_94",
+      "type": "client",
+      "description": "Cubic Corporation provides services to Celestica Inc."
+    },
+    {
+      "source": "c_157",
+      "target": "c_364",
+      "type": "client",
+      "description": "Fluor Corporation has FNCB Bancorp as a key customer"
+    },
+    {
+      "source": "c_216",
+      "target": "c_442",
+      "type": "client",
+      "description": "Young Living provides services to Seagen Inc."
+    },
+    {
+      "source": "c_433",
+      "target": "c_13",
+      "type": "client",
+      "description": "Netflix Inc. uses Gilead Sciences Inc.'s platform/services"
+    },
+    {
+      "source": "c_304",
+      "target": "c_103",
+      "type": "client",
+      "description": "M&T Bank Corporation has AT&S Austria as a key customer"
+    },
+    {
+      "source": "c_448",
+      "target": "c_180",
+      "type": "client",
+      "description": "Boston Scientific provides services to Mitsubishi Chemical"
+    },
+    {
+      "source": "c_300",
+      "target": "c_211",
+      "type": "client",
+      "description": "Nu Skin Enterprises is a major client of Fifth Third Bancorp"
+    },
+    {
+      "source": "c_274",
+      "target": "c_133",
+      "type": "client",
+      "description": "Konecranes is a major client of Puerto Rican Diet"
+    },
+    {
+      "source": "c_461",
+      "target": "c_347",
+      "type": "client",
+      "description": "First National Corporation uses Hologic Inc.'s platform/services"
+    },
+    {
+      "source": "c_476",
+      "target": "c_102",
+      "type": "client",
+      "description": "Zhen Ding Technology uses Select Medical Holdings's platform/services"
+    },
+    {
+      "source": "c_98",
+      "target": "c_76",
+      "type": "client",
+      "description": "Viasystems Group provides services to NTT Data Corporation"
+    },
+    {
+      "source": "c_429",
+      "target": "c_488",
+      "type": "client",
+      "description": "Merck & Co. Inc. has Bluebird Bio Inc. as a key customer"
+    },
+    {
+      "source": "c_204",
+      "target": "c_273",
+      "type": "client",
+      "description": "Estée Lauder Companies provides services to Haitian Diet"
+    },
+    {
+      "source": "c_31",
+      "target": "c_96",
+      "type": "client",
+      "description": "Plexus Corp. purchases products from Twilio Inc."
+    },
+    {
+      "source": "c_206",
+      "target": "c_65",
+      "type": "client",
+      "description": "Yandex N.V. uses Revlon Inc.'s platform/services"
+    },
+    {
+      "source": "c_366",
+      "target": "c_41",
+      "type": "client",
+      "description": "BlackRock Inc. has ASML Holding as a key customer"
+    },
+    {
+      "source": "c_456",
+      "target": "c_137",
+      "type": "client",
+      "description": "Dexcom Inc. provides services to Rolls-Royce Holdings"
+    },
+    {
+      "source": "c_444",
+      "target": "c_140",
+      "type": "client",
+      "description": "Thermo Fisher Scientific provides services to Leonardo S.p.A."
+    },
+    {
+      "source": "c_363",
+      "target": "c_469",
+      "type": "client",
+      "description": "Alphatec Holdings purchases products from FNB Financial Services"
+    },
+    {
+      "source": "c_93",
+      "target": "c_254",
+      "type": "client",
+      "description": "South African Diet purchases products from Sanmina Corporation"
+    },
+    {
+      "source": "c_464",
+      "target": "c_316",
+      "type": "client",
+      "description": "Teleflex Incorporated provides services to Valley National Bancorp"
+    },
+    {
+      "source": "c_324",
+      "target": "c_437",
+      "type": "client",
+      "description": "Moderna Inc. is a major client of Commerce Bancshares"
+    },
+    {
+      "source": "c_423",
+      "target": "c_362",
+      "type": "client",
+      "description": "FNB Bancorp purchases products from New Enterprise Associates"
+    },
+    {
+      "source": "c_10",
+      "target": "c_184",
+      "type": "client",
+      "description": "Teijin Limited purchases products from Intel Corporation"
+    },
+    {
+      "source": "c_397",
+      "target": "c_64",
+      "type": "client",
+      "description": "Accel Partners has Naspers Limited as a key customer"
+    },
+    {
+      "source": "c_120",
+      "target": "c_184",
+      "type": "client",
+      "description": "General Electric has Teijin Limited as a key customer"
+    },
+    {
+      "source": "c_469",
+      "target": "c_77",
+      "type": "client",
+      "description": "Fujitsu Limited uses Alphatec Holdings's platform/services"
+    },
+    {
+      "source": "c_260",
+      "target": "c_62",
+      "type": "client",
+      "description": "Rakuten Inc. purchases products from Colombian Diet"
+    },
+    {
+      "source": "c_491",
+      "target": "c_473",
+      "type": "client",
+      "description": "Sangamo Therapeutics provides services to Addus HomeCare"
+    },
+    {
+      "source": "c_340",
+      "target": "c_24",
+      "type": "client",
+      "description": "BancFirst Corporation provides services to Workday Inc."
+    },
+    {
+      "source": "c_104",
+      "target": "c_76",
+      "type": "client",
+      "description": "Ibiden Co. Ltd. has NTT Data Corporation as a key customer"
+    },
+    {
+      "source": "c_259",
+      "target": "c_134",
+      "type": "client",
+      "description": "Peruvian Diet provides services to Cargotec Corporation"
+    },
+    {
+      "source": "c_85",
+      "target": "c_31",
+      "type": "client",
+      "description": "Foxconn Technology provides services to Twilio Inc."
+    },
+    {
+      "source": "c_493",
+      "target": "c_426",
+      "type": "client",
+      "description": "UnitedHealth Group purchases products from Editas Medicine"
+    },
+    {
+      "source": "c_80",
+      "target": "c_406",
+      "type": "client",
+      "description": "Toshiba Corporation has General Catalyst as a key customer"
+    },
+    {
+      "source": "c_196",
+      "target": "c_316",
+      "type": "client",
+      "description": "Procter & Gamble provides services to Valley National Bancorp"
+    },
+    {
+      "source": "c_456",
+      "target": "c_185",
+      "type": "client",
+      "description": "Dexcom Inc. provides services to Kuraray Co. Ltd."
+    },
+    {
+      "source": "c_104",
+      "target": "c_153",
+      "type": "client",
+      "description": "Ibiden Co. Ltd. has ManTech International as a key customer"
+    },
+    {
+      "source": "c_136",
+      "target": "c_407",
+      "type": "client",
+      "description": "Lightspeed Venture Partners uses MAN Energy Solutions's platform/services"
+    },
+    {
+      "source": "c_441",
+      "target": "c_369",
+      "type": "client",
+      "description": "BNY Mellon is a major client of Alexion Pharmaceuticals"
+    },
+    {
+      "source": "c_483",
+      "target": "c_172",
+      "type": "client",
+      "description": "Capital Senior Living provides services to Heico Corporation"
+    },
+    {
+      "source": "c_475",
+      "target": "c_120",
+      "type": "client",
+      "description": "General Electric purchases products from Encompass Health"
+    },
+    {
+      "source": "c_333",
+      "target": "c_483",
+      "type": "client",
+      "description": "Capital Senior Living purchases products from SouthState Corporation"
+    },
+    {
+      "source": "c_323",
+      "target": "c_484",
+      "type": "client",
+      "description": "Diversicare Healthcare uses UMB Financial Corporation's platform/services"
+    },
+    {
+      "source": "c_105",
+      "target": "c_98",
+      "type": "client",
+      "description": "Mektron Corporation has Viasystems Group as a key customer"
+    },
+    {
+      "source": "c_460",
+      "target": "c_395",
+      "type": "client",
+      "description": "Kleiner Perkins purchases products from Varian Medical Systems"
+    },
+    {
+      "source": "c_101",
+      "target": "c_246",
+      "type": "client",
+      "description": "Compeq Manufacturing provides services to Thai Diet"
+    },
+    {
+      "source": "c_170",
+      "target": "c_94",
+      "type": "client",
+      "description": "Celestica Inc. is a major client of Moog Inc."
+    },
+    {
+      "source": "c_40",
+      "target": "c_296",
+      "type": "client",
+      "description": "Lam Research provides services to American Express Co."
+    },
+    {
+      "source": "c_430",
+      "target": "c_134",
+      "type": "client",
+      "description": "Bristol-Myers Squibb has Cargotec Corporation as a key customer"
+    },
+    {
+      "source": "c_98",
+      "target": "c_13",
+      "type": "client",
+      "description": "Netflix Inc. purchases products from Viasystems Group"
+    },
+    {
+      "source": "c_264",
+      "target": "c_229",
+      "type": "client",
+      "description": "Paraguayan Diet has Keto Diet as a key customer"
+    },
+    {
+      "source": "c_19",
+      "target": "c_124",
+      "type": "client",
+      "description": "Dover Corporation purchases products from Twitter Inc."
+    },
+    {
+      "source": "c_163",
+      "target": "c_240",
+      "type": "client",
+      "description": "Parsons Corporation has Macrobiotic Diet as a key customer"
+    },
+    {
+      "source": "c_120",
+      "target": "c_79",
+      "type": "client",
+      "description": "NEC Corporation uses General Electric's platform/services"
+    },
+    {
+      "source": "c_102",
+      "target": "c_43",
+      "type": "client",
+      "description": "Samsung Electronics purchases products from Zhen Ding Technology"
+    },
+    {
+      "source": "c_65",
+      "target": "c_10",
+      "type": "client",
+      "description": "Intel Corporation uses Yandex N.V.'s platform/services"
+    },
+    {
+      "source": "c_143",
+      "target": "c_27",
+      "type": "client",
+      "description": "CrowdStrike Holdings purchases products from Boeing Company"
+    },
+    {
+      "source": "c_108",
+      "target": "c_376",
+      "type": "client",
+      "description": "Amphenol Corporation provides services to Eaton Vance Corp."
+    },
+    {
+      "source": "c_344",
+      "target": "c_75",
+      "type": "client",
+      "description": "First Bancorp provides services to Atos SE"
+    },
+    {
+      "source": "c_75",
+      "target": "c_41",
+      "type": "supplier",
+      "description": "ASML Holding supplies components to Atos SE"
+    },
+    {
+      "source": "c_159",
+      "target": "c_172",
+      "type": "supplier",
+      "description": "Heico Corporation provides raw materials to Tetra Tech"
+    },
+    {
+      "source": "c_210",
+      "target": "c_27",
+      "type": "supplier",
+      "description": "Herbalife Nutrition sources materials from CrowdStrike Holdings"
+    },
+    {
+      "source": "c_46",
+      "target": "c_410",
+      "type": "supplier",
+      "description": "Redpoint Ventures is a key supplier for Panasonic Corporation"
+    },
+    {
+      "source": "c_291",
+      "target": "c_219",
+      "type": "supplier",
+      "description": "Beachbody Company is a key supplier for Charles Schwab Corp."
+    },
+    {
+      "source": "c_125",
+      "target": "c_402",
+      "type": "supplier",
+      "description": "Pentair plc sources materials from True Ventures"
+    },
+    {
+      "source": "c_389",
+      "target": "c_286",
+      "type": "supplier",
+      "description": "Warburg Pincus relies on Bank of America Corp. for manufacturing"
+    },
+    {
+      "source": "c_308",
+      "target": "c_142",
+      "type": "supplier",
+      "description": "Lockheed Martin supplies components to Zions Bancorporation"
+    },
+    {
+      "source": "c_488",
+      "target": "c_46",
+      "type": "supplier",
+      "description": "Panasonic Corporation supplies components to Bluebird Bio Inc."
+    },
+    {
+      "source": "c_358",
+      "target": "c_76",
+      "type": "supplier",
+      "description": "NTT Data Corporation is a key supplier for FNB Bancorp"
+    },
+    {
+      "source": "c_350",
+      "target": "c_379",
+      "type": "supplier",
+      "description": "First Savings Financial relies on Cohen & Steers for manufacturing"
+    },
+    {
+      "source": "c_311",
+      "target": "c_303",
+      "type": "supplier",
+      "description": "People's United Financial relies on Regions Financial Corp. for manufacturing"
+    },
+    {
+      "source": "c_141",
+      "target": "c_251",
+      "type": "supplier",
+      "description": "BAE Systems sources materials from Singaporean Diet"
+    },
+    {
+      "source": "c_183",
+      "target": "c_17",
+      "type": "supplier",
+      "description": "Spotify Technology supplies components to Toray Industries"
+    },
+    {
+      "source": "c_224",
+      "target": "c_273",
+      "type": "supplier",
+      "description": "Haitian Diet is a key supplier for Jenny Craig"
+    },
+    {
+      "source": "c_369",
+      "target": "c_295",
+      "type": "supplier",
+      "description": "BNY Mellon sources materials from Capital One Financial"
+    },
+    {
+      "source": "c_461",
+      "target": "c_388",
+      "type": "supplier",
+      "description": "Bain Capital supplies components to Hologic Inc."
+    },
+    {
+      "source": "c_330",
+      "target": "c_111",
+      "type": "supplier",
+      "description": "United Community Banks relies on Amphenol Corporation for manufacturing"
+    },
+    {
+      "source": "c_324",
+      "target": "c_387",
+      "type": "supplier",
+      "description": "TPG Capital is a key supplier for Commerce Bancshares"
+    },
+    {
+      "source": "c_273",
+      "target": "c_129",
+      "type": "supplier",
+      "description": "Atlas Copco provides raw materials to Haitian Diet"
+    },
+    {
+      "source": "c_374",
+      "target": "c_249",
+      "type": "supplier",
+      "description": "Indonesian Diet is a key supplier for Janus Henderson Group"
+    },
+    {
+      "source": "c_224",
+      "target": "c_199",
+      "type": "supplier",
+      "description": "Johnson & Johnson is a key supplier for Jenny Craig"
+    },
+    {
+      "source": "c_377",
+      "target": "c_323",
+      "type": "supplier",
+      "description": "UMB Financial Corporation is a key supplier for AllianceBernstein"
+    },
+    {
+      "source": "c_278",
+      "target": "c_248",
+      "type": "supplier",
+      "description": "Filipino Diet supplies components to Belizean Diet"
+    },
+    {
+      "source": "c_386",
+      "target": "c_47",
+      "type": "supplier",
+      "description": "Carlyle Group sources materials from Canon Inc."
+    },
+    {
+      "source": "c_151",
+      "target": "c_48",
+      "type": "supplier",
+      "description": "Nikon Corporation provides raw materials to Booz Allen Hamilton"
+    },
+    {
+      "source": "c_214",
+      "target": "c_305",
+      "type": "supplier",
+      "description": "Mannatech relies on First Republic Bank for manufacturing"
+    },
+    {
+      "source": "c_77",
+      "target": "c_340",
+      "type": "supplier",
+      "description": "BancFirst Corporation provides raw materials to Fujitsu Limited"
+    },
+    {
+      "source": "c_469",
+      "target": "c_476",
+      "type": "supplier",
+      "description": "Select Medical Holdings is a key supplier for Alphatec Holdings"
+    },
+    {
+      "source": "c_130",
+      "target": "c_253",
+      "type": "supplier",
+      "description": "New Zealand Diet supplies components to Sandvik AB"
+    },
+    {
+      "source": "c_387",
+      "target": "c_413",
+      "type": "supplier",
+      "description": "Sutter Hill Ventures provides raw materials to TPG Capital"
+    },
+    {
+      "source": "c_352",
+      "target": "c_202",
+      "type": "supplier",
+      "description": "Beiersdorf AG supplies components to First Western Financial"
+    },
+    {
+      "source": "c_142",
+      "target": "c_370",
+      "type": "supplier",
+      "description": "Lockheed Martin sources materials from Northern Trust Corporation"
+    },
+    {
+      "source": "c_456",
+      "target": "c_258",
+      "type": "supplier",
+      "description": "Chilean Diet supplies components to Dexcom Inc."
+    },
+    {
+      "source": "c_151",
+      "target": "c_366",
+      "type": "supplier",
+      "description": "BlackRock Inc. is a key supplier for Booz Allen Hamilton"
+    },
+    {
+      "source": "c_258",
+      "target": "c_55",
+      "type": "supplier",
+      "description": "Chilean Diet relies on Alibaba Group for manufacturing"
+    },
+    {
+      "source": "c_314",
+      "target": "c_0",
+      "type": "supplier",
+      "description": "Western Alliance Bancorp sources materials from Apple Inc."
+    },
+    {
+      "source": "c_87",
+      "target": "c_158",
+      "type": "supplier",
+      "description": "KBR Inc. supplies components to Quanta Computer"
+    },
+    {
+      "source": "c_329",
+      "target": "c_394",
+      "type": "supplier",
+      "description": "Sequoia Capital supplies components to Old National Bancorp"
+    },
+    {
+      "source": "c_464",
+      "target": "c_176",
+      "type": "supplier",
+      "description": "Teleflex Incorporated relies on Hexcel Corporation for manufacturing"
+    },
+    {
+      "source": "c_370",
+      "target": "c_384",
+      "type": "supplier",
+      "description": "Northern Trust Corporation sources materials from KKR & Co."
+    },
+    {
+      "source": "c_51",
+      "target": "c_246",
+      "type": "supplier",
+      "description": "Thai Diet provides raw materials to Lenovo Group"
+    },
+    {
+      "source": "c_214",
+      "target": "c_456",
+      "type": "supplier",
+      "description": "Mannatech relies on Dexcom Inc. for manufacturing"
+    },
+    {
+      "source": "c_140",
+      "target": "c_218",
+      "type": "supplier",
+      "description": "Leonardo S.p.A. sources materials from Rodan + Fields"
+    },
+    {
+      "source": "c_165",
+      "target": "c_370",
+      "type": "supplier",
+      "description": "Northern Trust Corporation supplies components to V2X Inc."
+    },
+    {
+      "source": "c_270",
+      "target": "c_476",
+      "type": "supplier",
+      "description": "Jamaican Diet sources materials from Select Medical Holdings"
+    },
+    {
+      "source": "c_146",
+      "target": "c_383",
+      "type": "supplier",
+      "description": "General Dynamics sources materials from Apollo Global Management"
+    },
+    {
+      "source": "c_57",
+      "target": "c_323",
+      "type": "supplier",
+      "description": "UMB Financial Corporation provides raw materials to JD.com Inc."
+    },
+    {
+      "source": "c_327",
+      "target": "c_153",
+      "type": "supplier",
+      "description": "ManTech International provides raw materials to Wintrust Financial"
+    },
+    {
+      "source": "c_304",
+      "target": "c_325",
+      "type": "supplier",
+      "description": "TCF Financial Corporation provides raw materials to M&T Bank Corporation"
+    },
+    {
+      "source": "c_458",
+      "target": "c_471",
+      "type": "supplier",
+      "description": "Tandem Diabetes Care sources materials from Amedisys Inc."
+    },
+    {
+      "source": "c_98",
+      "target": "c_383",
+      "type": "supplier",
+      "description": "Apollo Global Management is a key supplier for Viasystems Group"
+    },
+    {
+      "source": "c_368",
+      "target": "c_381",
+      "type": "supplier",
+      "description": "Guggenheim Partners is a key supplier for State Street Corporation"
+    },
+    {
+      "source": "c_496",
+      "target": "c_123",
+      "type": "supplier",
+      "description": "Prime Medicine Inc. sources materials from Illinois Tool Works"
+    },
+    {
+      "source": "c_81",
+      "target": "c_376",
+      "type": "supplier",
+      "description": "Eaton Vance Corp. provides raw materials to Sharp Corporation"
+    },
+    {
+      "source": "c_189",
+      "target": "c_442",
+      "type": "supplier",
+      "description": "Seagen Inc. is a key supplier for Tokuyama Corporation"
+    },
+    {
+      "source": "c_213",
+      "target": "c_318",
+      "type": "supplier",
+      "description": "Nature's Sunshine sources materials from F.N.B. Corporation"
+    },
+    {
+      "source": "c_26",
+      "target": "c_319",
+      "type": "supplier",
+      "description": "Palantir Technologies relies on BancorpSouth Bank for manufacturing"
+    },
+    {
+      "source": "c_203",
+      "target": "c_453",
+      "type": "supplier",
+      "description": "L'Oréal SA sources materials from Edwards Lifesciences"
+    },
+    {
+      "source": "c_349",
+      "target": "c_170",
+      "type": "supplier",
+      "description": "First of Long Island Corp sources materials from Moog Inc."
+    },
+    {
+      "source": "c_295",
+      "target": "c_206",
+      "type": "creditor",
+      "description": "Capital One Financial provided financing to Revlon Inc.",
+      "data": {
+        "amount": 41827674,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_296",
+      "target": "c_53",
+      "type": "creditor",
+      "description": "Huawei Technologies owes money to American Express Co.",
+      "data": {
+        "amount": 97975796,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_421",
+      "target": "c_473",
+      "type": "creditor",
+      "description": "General Catalyst provided financing to Addus HomeCare",
+      "data": {
+        "amount": 386909484,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_100",
+      "target": "c_409",
+      "type": "creditor",
+      "description": "Unimicron Technology provided financing to Institutional Venture Partners",
+      "data": {
+        "amount": 688416837,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_446",
+      "target": "c_41",
+      "type": "creditor",
+      "description": "Abbott Laboratories has extended credit to ASML Holding",
+      "data": {
+        "amount": 941128799,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_78",
+      "target": "c_144",
+      "type": "creditor",
+      "description": "Hitachi Ltd. is a creditor of Northrop Grumman",
+      "data": {
+        "amount": 74907693,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_74",
+      "target": "c_67",
+      "type": "creditor",
+      "description": "SAP SE owes money to Capgemini SE",
+      "data": {
+        "amount": 699397012,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_127",
+      "target": "c_212",
+      "type": "creditor",
+      "description": "Ingersoll Rand is a creditor of USANA Health Sciences",
+      "data": {
+        "amount": 393190744,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_318",
+      "target": "c_238",
+      "type": "creditor",
+      "description": "F.N.B. Corporation provided financing to Clean Eating",
+      "data": {
+        "amount": 518454562,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_270",
+      "target": "c_96",
+      "type": "creditor",
+      "description": "Jamaican Diet has extended credit to Plexus Corp.",
+      "data": {
+        "amount": 701590861,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_374",
+      "target": "c_484",
+      "type": "creditor",
+      "description": "Diversicare Healthcare has outstanding debt to Janus Henderson Group",
+      "data": {
+        "amount": 988094815,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_64",
+      "target": "c_121",
+      "type": "creditor",
+      "description": "Naspers Limited is a creditor of Eaton Corporation",
+      "data": {
+        "amount": 563686563,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_416",
+      "target": "c_59",
+      "type": "creditor",
+      "description": "Atomico provided financing to ByteDance Ltd.",
+      "data": {
+        "amount": 794386815,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_496",
+      "target": "c_77",
+      "type": "creditor",
+      "description": "Prime Medicine Inc. is a creditor of Fujitsu Limited",
+      "data": {
+        "amount": 721182450,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_462",
+      "target": "c_422",
+      "type": "creditor",
+      "description": "Cooper Companies provided financing to Lightspeed Venture Partners",
+      "data": {
+        "amount": 407492650,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_208",
+      "target": "c_335",
+      "type": "creditor",
+      "description": "Mary Kay Inc. provided financing to First Financial Bankshares",
+      "data": {
+        "amount": 983193736,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_329",
+      "target": "c_385",
+      "type": "creditor",
+      "description": "Old National Bancorp provided financing to Blackstone Group",
+      "data": {
+        "amount": 295666673,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_425",
+      "target": "c_97",
+      "type": "creditor",
+      "description": "TTM Technologies owes money to Johnson & Johnson",
+      "data": {
+        "amount": 376435869,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_43",
+      "target": "c_77",
+      "type": "creditor",
+      "description": "Samsung Electronics has extended credit to Fujitsu Limited",
+      "data": {
+        "amount": 777031141,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_178",
+      "target": "c_166",
+      "type": "creditor",
+      "description": "Toray Industries is a creditor of Cubic Corporation",
+      "data": {
+        "amount": 774547068,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_100",
+      "target": "c_52",
+      "type": "creditor",
+      "description": "Xiaomi Corporation owes money to Unimicron Technology",
+      "data": {
+        "amount": 454960913,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_401",
+      "target": "c_455",
+      "type": "creditor",
+      "description": "Align Technology has outstanding debt to Foundry Group",
+      "data": {
+        "amount": 972769685,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_395",
+      "target": "c_317",
+      "type": "creditor",
+      "description": "Kleiner Perkins is a creditor of Associated Banc-Corp",
+      "data": {
+        "amount": 850142486,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_393",
+      "target": "c_324",
+      "type": "creditor",
+      "description": "Andreessen Horowitz is a creditor of Commerce Bancshares",
+      "data": {
+        "amount": 897187415,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_17",
+      "target": "c_28",
+      "type": "creditor",
+      "description": "Spotify Technology provided financing to Zscaler Inc.",
+      "data": {
+        "amount": 496657808,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_337",
+      "target": "c_82",
+      "type": "creditor",
+      "description": "Independent Bank Group has extended credit to Kyocera Corporation",
+      "data": {
+        "amount": 374125257,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_225",
+      "target": "c_275",
+      "type": "creditor",
+      "description": "Trinidadian Diet has outstanding debt to Atkins Nutritionals",
+      "data": {
+        "amount": 534910423,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_248",
+      "target": "c_184",
+      "type": "creditor",
+      "description": "Teijin Limited has outstanding debt to Filipino Diet",
+      "data": {
+        "amount": 573864387,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_230",
+      "target": "c_330",
+      "type": "creditor",
+      "description": "United Community Banks has outstanding debt to Vegan Diet",
+      "data": {
+        "amount": 168466864,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_412",
+      "target": "c_358",
+      "type": "creditor",
+      "description": "FNB Bancorp owes money to Norwest Venture Partners",
+      "data": {
+        "amount": 836494201,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_87",
+      "target": "c_344",
+      "type": "creditor",
+      "description": "Quanta Computer is a creditor of First Bancorp",
+      "data": {
+        "amount": 844483582,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_5",
+      "target": "c_411",
+      "type": "creditor",
+      "description": "NVIDIA Corporation provided financing to Mayfield Fund",
+      "data": {
+        "amount": 235879467,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_438",
+      "target": "c_203",
+      "type": "creditor",
+      "description": "BioNTech SE is a creditor of L'Oréal SA",
+      "data": {
+        "amount": 285764539,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_349",
+      "target": "c_34",
+      "type": "creditor",
+      "description": "First of Long Island Corp provided financing to VMware Inc.",
+      "data": {
+        "amount": 399220022,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_479",
+      "target": "c_325",
+      "type": "creditor",
+      "description": "The Ensign Group is a creditor of TCF Financial Corporation",
+      "data": {
+        "amount": 686143837,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_89",
+      "target": "c_284",
+      "type": "creditor",
+      "description": "El Salvadoran Diet has outstanding debt to Wistron Corporation",
+      "data": {
+        "amount": 947681531,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_7",
+      "target": "c_127",
+      "type": "creditor",
+      "description": "Ingersoll Rand has outstanding debt to Oracle Corporation",
+      "data": {
+        "amount": 250985529,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_438",
+      "target": "c_160",
+      "type": "creditor",
+      "description": "BioNTech SE has extended credit to Stantec Inc.",
+      "data": {
+        "amount": 137137567,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_214",
+      "target": "c_422",
+      "type": "creditor",
+      "description": "Mannatech has extended credit to Lightspeed Venture Partners",
+      "data": {
+        "amount": 189938967,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_456",
+      "target": "c_180",
+      "type": "creditor",
+      "description": "Mitsubishi Chemical has outstanding debt to Dexcom Inc.",
+      "data": {
+        "amount": 816306756,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_373",
+      "target": "c_87",
+      "type": "creditor",
+      "description": "Invesco Ltd. has extended credit to Quanta Computer",
+      "data": {
+        "amount": 364396976,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_385",
+      "target": "c_45",
+      "type": "creditor",
+      "description": "LG Electronics owes money to Blackstone Group",
+      "data": {
+        "amount": 367578053,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_175",
+      "target": "c_138",
+      "type": "creditor",
+      "description": "Spirit AeroSystems is a creditor of Safran SA",
+      "data": {
+        "amount": 655027332,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_257",
+      "target": "c_31",
+      "type": "creditor",
+      "description": "Argentine Diet has extended credit to Twilio Inc.",
+      "data": {
+        "amount": 111648783,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_288",
+      "target": "c_299",
+      "type": "creditor",
+      "description": "Citigroup Inc. is a creditor of Ally Financial Inc.",
+      "data": {
+        "amount": 190266076,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_441",
+      "target": "c_324",
+      "type": "creditor",
+      "description": "Alexion Pharmaceuticals is a creditor of Commerce Bancshares",
+      "data": {
+        "amount": 311626875,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_216",
+      "target": "c_405",
+      "type": "creditor",
+      "description": "Young Living has extended credit to Battery Ventures",
+      "data": {
+        "amount": 856884060,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_133",
+      "target": "c_121",
+      "type": "creditor",
+      "description": "Konecranes is a creditor of Eaton Corporation",
+      "data": {
+        "amount": 543777299,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_61",
+      "target": "c_288",
+      "type": "creditor",
+      "description": "Grab Holdings is a creditor of Citigroup Inc.",
+      "data": {
+        "amount": 880034873,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_56",
+      "target": "c_270",
+      "type": "creditor",
+      "description": "Baidu Inc. provided financing to Jamaican Diet",
+      "data": {
+        "amount": 146948942,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_432",
+      "target": "c_149",
+      "type": "creditor",
+      "description": "Huntington Ingalls has outstanding debt to Amgen Inc.",
+      "data": {
+        "amount": 45739711,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_470",
+      "target": "c_3",
+      "type": "creditor",
+      "description": "RTI Surgical Holdings has extended credit to Amazon.com Inc.",
+      "data": {
+        "amount": 448887361,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_302",
+      "target": "c_409",
+      "type": "creditor",
+      "description": "Huntington Bancshares has extended credit to Institutional Venture Partners",
+      "data": {
+        "amount": 567947326,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_55",
+      "target": "c_423",
+      "type": "creditor",
+      "description": "Alibaba Group provided financing to New Enterprise Associates",
+      "data": {
+        "amount": 845622408,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_445",
+      "target": "c_83",
+      "type": "creditor",
+      "description": "Danaher Corporation provided financing to TDK Corporation",
+      "data": {
+        "amount": 9051902,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_368",
+      "target": "c_110",
+      "type": "creditor",
+      "description": "State Street Corporation provided financing to Molex Incorporated",
+      "data": {
+        "amount": 853784651,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_413",
+      "target": "c_55",
+      "type": "creditor",
+      "description": "Sutter Hill Ventures has extended credit to Alibaba Group",
+      "data": {
+        "amount": 581966762,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_158",
+      "target": "c_10",
+      "type": "creditor",
+      "description": "Intel Corporation has outstanding debt to KBR Inc.",
+      "data": {
+        "amount": 840574214,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_347",
+      "target": "c_374",
+      "type": "creditor",
+      "description": "First National Corporation is a creditor of Janus Henderson Group",
+      "data": {
+        "amount": 877469490,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_237",
+      "target": "c_168",
+      "type": "creditor",
+      "description": "Whole30 provided financing to Ultra Electronics",
+      "data": {
+        "amount": 657397047,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_448",
+      "target": "c_143",
+      "type": "debtor",
+      "description": "Boston Scientific borrowed funds from Boeing Company",
+      "data": {
+        "amount": 914275867,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_296",
+      "target": "c_456",
+      "type": "debtor",
+      "description": "American Express Co. borrowed funds from Dexcom Inc.",
+      "data": {
+        "amount": 950644550,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_324",
+      "target": "c_486",
+      "type": "debtor",
+      "description": "Arena Pharmaceuticals is a creditor of Commerce Bancshares",
+      "data": {
+        "amount": 742997574,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_193",
+      "target": "c_10",
+      "type": "debtor",
+      "description": "Kao Corporation owes debt to Intel Corporation",
+      "data": {
+        "amount": 792679271,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_49",
+      "target": "c_239",
+      "type": "debtor",
+      "description": "HP Inc. owes debt to Raw Food Diet",
+      "data": {
+        "amount": 66494127,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_452",
+      "target": "c_353",
+      "type": "debtor",
+      "description": "Zimmer Biomet Holdings has outstanding loans from FirstBank Holding Company",
+      "data": {
+        "amount": 126969504,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_128",
+      "target": "c_73",
+      "type": "debtor",
+      "description": "DXC Technology is a creditor of Gardner Denver",
+      "data": {
+        "amount": 982635059,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_232",
+      "target": "c_389",
+      "type": "debtor",
+      "description": "Mediterranean Diet owes debt to Warburg Pincus",
+      "data": {
+        "amount": 967755298,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_234",
+      "target": "c_223",
+      "type": "debtor",
+      "description": "MIND Diet owes debt to Nutrisystem Inc.",
+      "data": {
+        "amount": 609012751,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_253",
+      "target": "c_273",
+      "type": "debtor",
+      "description": "New Zealand Diet has outstanding loans from Haitian Diet",
+      "data": {
+        "amount": 211429684,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_197",
+      "target": "c_441",
+      "type": "debtor",
+      "description": "Colgate-Palmolive has outstanding loans from Alexion Pharmaceuticals",
+      "data": {
+        "amount": 401930972,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_466",
+      "target": "c_473",
+      "type": "debtor",
+      "description": "Addus HomeCare extended credit to NuVasive Inc.",
+      "data": {
+        "amount": 595148618,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_356",
+      "target": "c_98",
+      "type": "debtor",
+      "description": "FNB Corporation has outstanding loans from Viasystems Group",
+      "data": {
+        "amount": 185953328,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_446",
+      "target": "c_3",
+      "type": "debtor",
+      "description": "Abbott Laboratories has outstanding loans from Amazon.com Inc.",
+      "data": {
+        "amount": 556912294,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_444",
+      "target": "c_231",
+      "type": "debtor",
+      "description": "Vegetarian Diet extended credit to Thermo Fisher Scientific",
+      "data": {
+        "amount": 890265992,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_172",
+      "target": "c_493",
+      "type": "debtor",
+      "description": "Editas Medicine is a creditor of Heico Corporation",
+      "data": {
+        "amount": 208729926,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_411",
+      "target": "c_241",
+      "type": "debtor",
+      "description": "Ayurvedic Diet is a creditor of Mayfield Fund",
+      "data": {
+        "amount": 918420072,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_336",
+      "target": "c_346",
+      "type": "debtor",
+      "description": "First Mid Bancshares is a creditor of Texas Capital Bancshares",
+      "data": {
+        "amount": 530642393,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_440",
+      "target": "c_461",
+      "type": "debtor",
+      "description": "Hologic Inc. extended credit to Incyte Corporation",
+      "data": {
+        "amount": 717133102,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_239",
+      "target": "c_404",
+      "type": "debtor",
+      "description": "Raw Food Diet has outstanding loans from Matrix Partners",
+      "data": {
+        "amount": 400151619,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_340",
+      "target": "c_415",
+      "type": "debtor",
+      "description": "BancFirst Corporation has outstanding loans from Index Ventures",
+      "data": {
+        "amount": 372390031,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_253",
+      "target": "c_4",
+      "type": "debtor",
+      "description": "Meta Platforms Inc. extended credit to New Zealand Diet",
+      "data": {
+        "amount": 398289500,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_357",
+      "target": "c_354",
+      "type": "debtor",
+      "description": "Flagstar Bancorp Inc. extended credit to FNCB Bancorp Inc.",
+      "data": {
+        "amount": 772077736,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_78",
+      "target": "c_441",
+      "type": "debtor",
+      "description": "Hitachi Ltd. has outstanding loans from Alexion Pharmaceuticals",
+      "data": {
+        "amount": 210156823,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_431",
+      "target": "c_436",
+      "type": "debtor",
+      "description": "Eli Lilly and Company has outstanding loans from Vertex Pharmaceuticals",
+      "data": {
+        "amount": 855663041,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_53",
+      "target": "c_206",
+      "type": "debtor",
+      "description": "Revlon Inc. is a creditor of Huawei Technologies",
+      "data": {
+        "amount": 858594009,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_241",
+      "target": "c_245",
+      "type": "debtor",
+      "description": "Indian Diet extended credit to Ayurvedic Diet",
+      "data": {
+        "amount": 627146298,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_350",
+      "target": "c_444",
+      "type": "debtor",
+      "description": "Thermo Fisher Scientific extended credit to First Savings Financial",
+      "data": {
+        "amount": 12072482,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_302",
+      "target": "c_407",
+      "type": "debtor",
+      "description": "Lightspeed Venture Partners is a creditor of Huntington Bancshares",
+      "data": {
+        "amount": 701051642,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_297",
+      "target": "c_42",
+      "type": "debtor",
+      "description": "Taiwan Semiconductor extended credit to Discover Financial",
+      "data": {
+        "amount": 255452462,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_413",
+      "target": "c_86",
+      "type": "debtor",
+      "description": "Pegatron Corporation is a creditor of Sutter Hill Ventures",
+      "data": {
+        "amount": 193041390,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_228",
+      "target": "c_94",
+      "type": "debtor",
+      "description": "Celestica Inc. is a creditor of Paleo Diet",
+      "data": {
+        "amount": 771306163,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_389",
+      "target": "c_295",
+      "type": "debtor",
+      "description": "Warburg Pincus owes debt to Capital One Financial",
+      "data": {
+        "amount": 7519061,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_442",
+      "target": "c_286",
+      "type": "debtor",
+      "description": "Seagen Inc. borrowed funds from Bank of America Corp.",
+      "data": {
+        "amount": 404048089,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_363",
+      "target": "c_89",
+      "type": "debtor",
+      "description": "FNB Financial Services owes debt to Wistron Corporation",
+      "data": {
+        "amount": 510983556,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_474",
+      "target": "c_330",
+      "type": "debtor",
+      "description": "LHC Group Inc. has outstanding loans from United Community Banks",
+      "data": {
+        "amount": 736176275,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_20",
+      "target": "c_214",
+      "type": "debtor",
+      "description": "Mannatech extended credit to Pinterest Inc.",
+      "data": {
+        "amount": 490536298,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_291",
+      "target": "c_492",
+      "type": "debtor",
+      "description": "CRISPR Therapeutics extended credit to Charles Schwab Corp.",
+      "data": {
+        "amount": 243822062,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_75",
+      "target": "c_440",
+      "type": "debtor",
+      "description": "Incyte Corporation is a creditor of Atos SE",
+      "data": {
+        "amount": 36983782,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_305",
+      "target": "c_107",
+      "type": "debtor",
+      "description": "Flex Ltd. extended credit to First Republic Bank",
+      "data": {
+        "amount": 558024672,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_46",
+      "target": "c_326",
+      "type": "debtor",
+      "description": "Panasonic Corporation borrowed funds from BOK Financial Corporation",
+      "data": {
+        "amount": 102526208,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_335",
+      "target": "c_418",
+      "type": "debtor",
+      "description": "Accel Partners is a creditor of First Financial Bankshares",
+      "data": {
+        "amount": 523622560,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_157",
+      "target": "c_472",
+      "type": "debtor",
+      "description": "Fluor Corporation owes debt to Chemed Corporation",
+      "data": {
+        "amount": 433043504,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_344",
+      "target": "c_282",
+      "type": "debtor",
+      "description": "Honduran Diet is a creditor of First Bancorp",
+      "data": {
+        "amount": 978008989,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_220",
+      "target": "c_383",
+      "type": "debtor",
+      "description": "Medifast Inc. borrowed funds from Apollo Global Management",
+      "data": {
+        "amount": 283136509,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_156",
+      "target": "c_72",
+      "type": "debtor",
+      "description": "AECOM Technology has outstanding loans from Cognizant Technology",
+      "data": {
+        "amount": 316912936,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_41",
+      "target": "c_493",
+      "type": "debtor",
+      "description": "Editas Medicine is a creditor of ASML Holding",
+      "data": {
+        "amount": 139260471,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_335",
+      "target": "c_179",
+      "type": "debtor",
+      "description": "Teijin Limited is a creditor of First Financial Bankshares",
+      "data": {
+        "amount": 437496611,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_447",
+      "target": "c_102",
+      "type": "debtor",
+      "description": "Zhen Ding Technology is a creditor of Medtronic plc",
+      "data": {
+        "amount": 137330271,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_404",
+      "target": "c_284",
+      "type": "debtor",
+      "description": "Matrix Partners has outstanding loans from El Salvadoran Diet",
+      "data": {
+        "amount": 727019496,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_172",
+      "target": "c_154",
+      "type": "debtor",
+      "description": "Heico Corporation has outstanding loans from Science Applications",
+      "data": {
+        "amount": 655044071,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_484",
+      "target": "c_120",
+      "type": "debtor",
+      "description": "Diversicare Healthcare has outstanding loans from General Electric",
+      "data": {
+        "amount": 873438783,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_406",
+      "target": "c_80",
+      "type": "debtor",
+      "description": "General Catalyst owes debt to Toshiba Corporation",
+      "data": {
+        "amount": 969771546,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_426",
+      "target": "c_308",
+      "type": "debtor",
+      "description": "UnitedHealth Group borrowed funds from Zions Bancorporation",
+      "data": {
+        "amount": 515500900,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_176",
+      "target": "c_408",
+      "type": "debtor",
+      "description": "Hexcel Corporation owes debt to New Enterprise Associates",
+      "data": {
+        "amount": 202957366,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_273",
+      "target": "c_349",
+      "type": "debtor",
+      "description": "Haitian Diet owes debt to First of Long Island Corp",
+      "data": {
+        "amount": 226338917,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_207",
+      "target": "c_0",
+      "type": "debtor",
+      "description": "Apple Inc. is a creditor of Avon Products",
+      "data": {
+        "amount": 886136445,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_376",
+      "target": "c_221",
+      "type": "debtor",
+      "description": "Weight Watchers is a creditor of Eaton Vance Corp.",
+      "data": {
+        "amount": 375335754,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_14",
+      "target": "c_160",
+      "type": "debtor",
+      "description": "PayPal Holdings Inc. borrowed funds from Stantec Inc.",
+      "data": {
+        "amount": 541671958,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_259",
+      "target": "c_12",
+      "type": "debtor",
+      "description": "IBM Corporation extended credit to Peruvian Diet",
+      "data": {
+        "amount": 137542344,
+        "currency": "USD"
+      }
+    },
+    {
+      "source": "c_261",
+      "target": "c_360",
+      "type": "joint_venture",
+      "description": "Venezuelan Diet and FNCB Bancorp collaborate through joint venture",
+      "data": {
+        "ownership_split": "55/63"
+      }
+    },
+    {
+      "source": "c_91",
+      "target": "c_336",
+      "type": "joint_venture",
+      "description": "Flextronics International and Texas Capital Bancshares collaborate through joint venture",
+      "data": {
+        "ownership_split": "48/68"
+      }
+    },
+    {
+      "source": "c_90",
+      "target": "c_496",
+      "type": "joint_venture",
+      "description": "Inventec Corporation and Prime Medicine Inc. collaborate through joint venture",
+      "data": {
+        "ownership_split": "37/35"
+      }
+    },
+    {
+      "source": "c_238",
+      "target": "c_415",
+      "type": "joint_venture",
+      "description": "Clean Eating and Index Ventures collaborate through joint venture",
+      "data": {
+        "ownership_split": "65/48"
+      }
+    },
+    {
+      "source": "c_164",
+      "target": "c_488",
+      "type": "joint_venture",
+      "description": "Vectrus Inc. and Bluebird Bio Inc. formed a joint venture partnership",
+      "data": {
+        "ownership_split": "56/51"
+      }
+    },
+    {
+      "source": "c_272",
+      "target": "c_259",
+      "type": "joint_venture",
+      "description": "JV partnership: Dominican Diet and Peruvian Diet",
+      "data": {
+        "ownership_split": "52/54"
+      }
+    },
+    {
+      "source": "c_330",
+      "target": "c_172",
+      "type": "joint_venture",
+      "description": "JV partnership: United Community Banks and Heico Corporation",
+      "data": {
+        "ownership_split": "39/40"
+      }
+    },
+    {
+      "source": "c_251",
+      "target": "c_97",
+      "type": "joint_venture",
+      "description": "JV partnership: Singaporean Diet and TTM Technologies",
+      "data": {
+        "ownership_split": "57/48"
+      }
+    },
+    {
+      "source": "c_242",
+      "target": "c_476",
+      "type": "joint_venture",
+      "description": "Chinese Medicine Diet and Select Medical Holdings formed a joint venture partnership",
+      "data": {
+        "ownership_split": "53/66"
+      }
+    },
+    {
+      "source": "c_322",
+      "target": "c_57",
+      "type": "joint_venture",
+      "description": "Joint venture between Fulton Financial Corporation and JD.com Inc.",
+      "data": {
+        "ownership_split": "61/49"
+      }
+    },
+    {
+      "source": "c_471",
+      "target": "c_492",
+      "type": "joint_venture",
+      "description": "Joint venture between Amedisys Inc. and CRISPR Therapeutics",
+      "data": {
+        "ownership_split": "55/31"
+      }
+    },
+    {
+      "source": "c_198",
+      "target": "c_433",
+      "type": "joint_venture",
+      "description": "Kimberly-Clark and Gilead Sciences Inc. formed a joint venture partnership",
+      "data": {
+        "ownership_split": "60/31"
+      }
+    },
+    {
+      "source": "c_331",
+      "target": "c_438",
+      "type": "joint_venture",
+      "description": "Home BancShares Inc. and BioNTech SE have a joint venture",
+      "data": {
+        "ownership_split": "66/69"
+      }
+    },
+    {
+      "source": "c_185",
+      "target": "c_341",
+      "type": "joint_venture",
+      "description": "Kuraray Co. Ltd. and First Interstate BancSystem have a joint venture",
+      "data": {
+        "ownership_split": "31/42"
+      }
+    },
+    {
+      "source": "c_171",
+      "target": "c_160",
+      "type": "joint_venture",
+      "description": "TransDigm Group and Stantec Inc. formed a joint venture partnership",
+      "data": {
+        "ownership_split": "39/47"
+      }
+    },
+    {
+      "source": "c_80",
+      "target": "c_438",
+      "type": "joint_venture",
+      "description": "Toshiba Corporation and BioNTech SE formed a joint venture partnership",
+      "data": {
+        "ownership_split": "32/48"
+      }
+    },
+    {
+      "source": "c_474",
+      "target": "c_413",
+      "type": "joint_venture",
+      "description": "Joint venture between LHC Group Inc. and Sutter Hill Ventures",
+      "data": {
+        "ownership_split": "68/63"
+      }
+    },
+    {
+      "source": "c_17",
+      "target": "c_385",
+      "type": "joint_venture",
+      "description": "JV partnership: Spotify Technology and Blackstone Group",
+      "data": {
+        "ownership_split": "45/42"
+      }
+    },
+    {
+      "source": "c_279",
+      "target": "c_267",
+      "type": "joint_venture",
+      "description": "Joint venture between Costa Rican Diet and Surinamese Diet",
+      "data": {
+        "ownership_split": "67/61"
+      }
+    },
+    {
+      "source": "c_366",
+      "target": "c_33",
+      "type": "joint_venture",
+      "description": "JV partnership: BlackRock Inc. and Splunk Inc.",
+      "data": {
+        "ownership_split": "64/53"
+      }
+    },
+    {
+      "source": "c_112",
+      "target": "c_335",
+      "type": "joint_venture",
+      "description": "3M Company and First Financial Bankshares collaborate through joint venture",
+      "data": {
+        "ownership_split": "40/54"
+      }
+    },
+    {
+      "source": "c_142",
+      "target": "c_62",
+      "type": "joint_venture",
+      "description": "Lockheed Martin and Rakuten Inc. have a joint venture",
+      "data": {
+        "ownership_split": "60/34"
+      }
+    },
+    {
+      "source": "c_107",
+      "target": "c_169",
+      "type": "joint_venture",
+      "description": "Flex Ltd. and Curtiss-Wright have a joint venture",
+      "data": {
+        "ownership_split": "58/31"
+      }
+    },
+    {
+      "source": "c_143",
+      "target": "c_70",
+      "type": "joint_venture",
+      "description": "Boeing Company and Tata Consultancy Services have a joint venture",
+      "data": {
+        "ownership_split": "66/48"
+      }
+    },
+    {
+      "source": "c_293",
+      "target": "c_143",
+      "type": "joint_venture",
+      "description": "PNC Financial Services and Boeing Company collaborate through joint venture",
+      "data": {
+        "ownership_split": "70/40"
+      }
+    },
+    {
+      "source": "c_65",
+      "target": "c_380",
+      "type": "joint_venture",
+      "description": "Yandex N.V. and GAMCO Investors formed a joint venture partnership",
+      "data": {
+        "ownership_split": "45/37"
+      }
+    },
+    {
+      "source": "c_423",
+      "target": "c_358",
+      "type": "joint_venture",
+      "description": "Joint venture between New Enterprise Associates and FNB Bancorp",
+      "data": {
+        "ownership_split": "62/68"
+      }
+    },
+    {
+      "source": "c_359",
+      "target": "c_167",
+      "type": "joint_venture",
+      "description": "FNB Financial Services and Mercury Systems have a joint venture",
+      "data": {
+        "ownership_split": "39/33"
+      }
+    },
+    {
+      "source": "c_265",
+      "target": "c_337",
+      "type": "joint_venture",
+      "description": "Uruguayan Diet and Independent Bank Group have a joint venture",
+      "data": {
+        "ownership_split": "62/58"
+      }
+    },
+    {
+      "source": "c_452",
+      "target": "c_91",
+      "type": "joint_venture",
+      "description": "Joint venture between Zimmer Biomet Holdings and Flextronics International",
+      "data": {
+        "ownership_split": "69/56"
+      }
+    },
+    {
+      "source": "c_451",
+      "target": "c_362",
+      "type": "joint_venture",
+      "description": "Baxter International and FNB Bancorp formed a joint venture partnership",
+      "data": {
+        "ownership_split": "31/43"
+      }
+    },
+    {
+      "source": "c_272",
+      "target": "c_385",
+      "type": "joint_venture",
+      "description": "Joint venture between Dominican Diet and Blackstone Group",
+      "data": {
+        "ownership_split": "46/59"
+      }
+    },
+    {
+      "source": "c_96",
+      "target": "c_22",
+      "type": "joint_venture",
+      "description": "Plexus Corp. and Shopify Inc. collaborate through joint venture",
+      "data": {
+        "ownership_split": "60/60"
+      }
+    },
+    {
+      "source": "c_139",
+      "target": "c_443",
+      "type": "joint_venture",
+      "description": "Thales Group and Illumina Inc. formed a joint venture partnership",
+      "data": {
+        "ownership_split": "32/41"
+      }
+    },
+    {
+      "source": "c_78",
+      "target": "c_265",
+      "type": "joint_venture",
+      "description": "Hitachi Ltd. and Uruguayan Diet have a joint venture",
+      "data": {
+        "ownership_split": "40/46"
+      }
+    },
+    {
+      "source": "c_286",
+      "target": "c_477",
+      "type": "joint_venture",
+      "description": "JV partnership: Bank of America Corp. and Kindred Healthcare",
+      "data": {
+        "ownership_split": "39/33"
+      }
+    },
+    {
+      "source": "c_256",
+      "target": "c_186",
+      "type": "joint_venture",
+      "description": "Mexican Diet and Ube Industries have a joint venture",
+      "data": {
+        "ownership_split": "49/63"
+      }
+    },
+    {
+      "source": "c_309",
+      "target": "c_212",
+      "type": "joint_venture",
+      "description": "Comerica Incorporated and USANA Health Sciences formed a joint venture partnership",
+      "data": {
+        "ownership_split": "41/31"
+      }
+    },
+    {
+      "source": "c_441",
+      "target": "c_317",
+      "type": "joint_venture",
+      "description": "Alexion Pharmaceuticals and Associated Banc-Corp have a joint venture",
+      "data": {
+        "ownership_split": "59/59"
+      }
+    },
+    {
+      "source": "c_364",
+      "target": "c_467",
+      "type": "joint_venture",
+      "description": "JV partnership: FNCB Bancorp and Globus Medical Inc.",
+      "data": {
+        "ownership_split": "56/31"
+      }
+    },
+    {
+      "source": "c_168",
+      "target": "c_329",
+      "type": "joint_venture",
+      "description": "Ultra Electronics and Old National Bancorp collaborate through joint venture",
+      "data": {
+        "ownership_split": "47/69"
+      }
+    },
+    {
+      "source": "c_14",
+      "target": "c_78",
+      "type": "joint_venture",
+      "description": "PayPal Holdings Inc. and Hitachi Ltd. collaborate through joint venture",
+      "data": {
+        "ownership_split": "45/51"
+      }
+    },
+    {
+      "source": "c_239",
+      "target": "c_172",
+      "type": "joint_venture",
+      "description": "Joint venture between Raw Food Diet and Heico Corporation",
+      "data": {
+        "ownership_split": "35/55"
+      }
+    },
+    {
+      "source": "c_211",
+      "target": "c_389",
+      "type": "joint_venture",
+      "description": "Nu Skin Enterprises and Warburg Pincus formed a joint venture partnership",
+      "data": {
+        "ownership_split": "60/63"
+      }
+    },
+    {
+      "source": "c_4",
+      "target": "c_206",
+      "type": "joint_venture",
+      "description": "JV partnership: Meta Platforms Inc. and Revlon Inc.",
+      "data": {
+        "ownership_split": "47/35"
+      }
+    },
+    {
+      "source": "c_86",
+      "target": "c_434",
+      "type": "joint_venture",
+      "description": "Pegatron Corporation and Regeneron Pharmaceuticals collaborate through joint venture",
+      "data": {
+        "ownership_split": "41/36"
+      }
+    },
+    {
+      "source": "c_164",
+      "target": "c_420",
+      "type": "joint_venture",
+      "description": "Vectrus Inc. and Insight Partners formed a joint venture partnership",
+      "data": {
+        "ownership_split": "63/34"
+      }
+    },
+    {
+      "source": "c_386",
+      "target": "c_165",
+      "type": "joint_venture",
+      "description": "Carlyle Group and V2X Inc. formed a joint venture partnership",
+      "data": {
+        "ownership_split": "44/36"
+      }
+    },
+    {
+      "source": "c_170",
+      "target": "c_428",
+      "type": "joint_venture",
+      "description": "Moog Inc. and AbbVie Inc. have a joint venture",
+      "data": {
+        "ownership_split": "34/32"
+      }
+    },
+    {
+      "source": "c_290",
+      "target": "c_422",
+      "type": "joint_venture",
+      "description": "Morgan Stanley and Lightspeed Venture Partners have a joint venture",
+      "data": {
+        "ownership_split": "42/34"
+      }
+    },
+    {
+      "source": "c_428",
+      "target": "c_4",
+      "type": "joint_venture",
+      "description": "AbbVie Inc. and Meta Platforms Inc. formed a joint venture partnership",
+      "data": {
+        "ownership_split": "48/51"
+      }
+    },
+    {
+      "source": "c_162",
+      "target": "c_192",
+      "type": "joint_venture",
+      "description": "Aecom Technology and Nippon Shokubai collaborate through joint venture",
+      "data": {
+        "ownership_split": "58/61"
+      }
+    },
+    {
+      "source": "c_397",
+      "target": "c_112",
+      "type": "joint_venture",
+      "description": "JV partnership: Accel Partners and 3M Company",
+      "data": {
+        "ownership_split": "51/41"
+      }
+    },
+    {
+      "source": "c_380",
+      "target": "c_407",
+      "type": "joint_venture",
+      "description": "GAMCO Investors and Lightspeed Venture Partners formed a joint venture partnership",
+      "data": {
+        "ownership_split": "57/31"
+      }
+    },
+    {
+      "source": "c_182",
+      "target": "c_240",
+      "type": "joint_venture",
+      "description": "JV partnership: Asahi Kasei and Macrobiotic Diet",
+      "data": {
+        "ownership_split": "70/33"
+      }
+    },
+    {
+      "source": "c_446",
+      "target": "c_151",
+      "type": "joint_venture",
+      "description": "Abbott Laboratories and Booz Allen Hamilton collaborate through joint venture",
+      "data": {
+        "ownership_split": "41/38"
+      }
+    },
+    {
+      "source": "c_341",
+      "target": "c_149",
+      "type": "joint_venture",
+      "description": "Joint venture between First Interstate BancSystem and Huntington Ingalls",
+      "data": {
+        "ownership_split": "54/58"
+      }
+    },
+    {
+      "source": "c_429",
+      "target": "c_408",
+      "type": "joint_venture",
+      "description": "Joint venture between Merck & Co. Inc. and New Enterprise Associates",
+      "data": {
+        "ownership_split": "31/65"
+      }
+    },
+    {
+      "source": "c_171",
+      "target": "c_25",
+      "type": "joint_venture",
+      "description": "TransDigm Group and Snowflake Inc. formed a joint venture partnership",
+      "data": {
+        "ownership_split": "53/51"
+      }
+    },
+    {
+      "source": "c_397",
+      "target": "c_448",
+      "type": "joint_venture",
+      "description": "JV partnership: Accel Partners and Boston Scientific",
+      "data": {
+        "ownership_split": "68/31"
+      }
+    },
+    {
+      "source": "c_60",
+      "target": "c_293",
+      "type": "licensing",
+      "description": "PNC Financial Services provides licenses to Sea Limited"
+    },
+    {
+      "source": "c_207",
+      "target": "c_233",
+      "type": "licensing",
+      "description": "Licensing agreement: Avon Products and DASH Diet"
+    },
+    {
+      "source": "c_225",
+      "target": "c_404",
+      "type": "licensing",
+      "description": "Licensing agreement: Atkins Nutritionals and Matrix Partners"
+    },
+    {
+      "source": "c_263",
+      "target": "c_369",
+      "type": "licensing",
+      "description": "Licensing agreement: Bolivian Diet and BNY Mellon"
+    },
+    {
+      "source": "c_90",
+      "target": "c_185",
+      "type": "licensing",
+      "description": "Kuraray Co. Ltd. provides licenses to Inventec Corporation"
+    },
+    {
+      "source": "c_372",
+      "target": "c_275",
+      "type": "licensing",
+      "description": "Trinidadian Diet provides licenses to Franklin Resources"
+    },
+    {
+      "source": "c_421",
+      "target": "c_215",
+      "type": "licensing",
+      "description": "General Catalyst uses Forever Living Products's licensed technology"
+    },
+    {
+      "source": "c_463",
+      "target": "c_241",
+      "type": "licensing",
+      "description": "Licensing agreement: STERIS plc and Ayurvedic Diet"
+    },
+    {
+      "source": "c_378",
+      "target": "c_364",
+      "type": "licensing",
+      "description": "Licensing agreement: Federated Hermes and FNCB Bancorp"
+    },
+    {
+      "source": "c_456",
+      "target": "c_36",
+      "type": "licensing",
+      "description": "Broadcom Inc. provides licenses to Dexcom Inc."
+    },
+    {
+      "source": "c_112",
+      "target": "c_68",
+      "type": "licensing",
+      "description": "3M Company licenses technology from Infosys Limited"
+    },
+    {
+      "source": "c_371",
+      "target": "c_187",
+      "type": "licensing",
+      "description": "Licensing agreement: T. Rowe Price Group and Mitsui Chemicals"
+    },
+    {
+      "source": "c_124",
+      "target": "c_237",
+      "type": "licensing",
+      "description": "Whole30 has licensing agreement with Dover Corporation"
+    },
+    {
+      "source": "c_20",
+      "target": "c_96",
+      "type": "licensing",
+      "description": "Pinterest Inc. licenses technology from Plexus Corp."
+    },
+    {
+      "source": "c_158",
+      "target": "c_409",
+      "type": "licensing",
+      "description": "Institutional Venture Partners provides licenses to KBR Inc."
+    },
+    {
+      "source": "c_147",
+      "target": "c_496",
+      "type": "licensing",
+      "description": "Prime Medicine Inc. has licensing agreement with L3Harris Technologies"
+    },
+    {
+      "source": "c_271",
+      "target": "c_266",
+      "type": "licensing",
+      "description": "Cuban Diet uses Guyanese Diet's licensed technology"
+    },
+    {
+      "source": "c_91",
+      "target": "c_22",
+      "type": "licensing",
+      "description": "Flextronics International licenses technology from Shopify Inc."
+    },
+    {
+      "source": "c_208",
+      "target": "c_86",
+      "type": "licensing",
+      "description": "Pegatron Corporation has licensing agreement with Mary Kay Inc."
+    },
+    {
+      "source": "c_205",
+      "target": "c_47",
+      "type": "licensing",
+      "description": "Licensing agreement: Coty Inc. and Canon Inc."
+    },
+    {
+      "source": "c_484",
+      "target": "c_51",
+      "type": "licensing",
+      "description": "Diversicare Healthcare licenses technology from Lenovo Group"
+    },
+    {
+      "source": "c_450",
+      "target": "c_426",
+      "type": "licensing",
+      "description": "Becton Dickinson licenses technology from UnitedHealth Group"
+    },
+    {
+      "source": "c_36",
+      "target": "c_279",
+      "type": "licensing",
+      "description": "Broadcom Inc. uses Costa Rican Diet's licensed technology"
+    },
+    {
+      "source": "c_486",
+      "target": "c_217",
+      "type": "licensing",
+      "description": "Arena Pharmaceuticals licenses technology from doTERRA"
+    },
+    {
+      "source": "c_179",
+      "target": "c_343",
+      "type": "licensing",
+      "description": "First Merchants Corporation provides licenses to Teijin Limited"
+    },
+    {
+      "source": "c_446",
+      "target": "c_223",
+      "type": "licensing",
+      "description": "Abbott Laboratories licenses technology from Nutrisystem Inc."
+    },
+    {
+      "source": "c_323",
+      "target": "c_450",
+      "type": "licensing",
+      "description": "Becton Dickinson provides licenses to UMB Financial Corporation"
+    },
+    {
+      "source": "c_83",
+      "target": "c_240",
+      "type": "licensing",
+      "description": "TDK Corporation licenses technology from Macrobiotic Diet"
+    },
+    {
+      "source": "c_29",
+      "target": "c_148",
+      "type": "licensing",
+      "description": "Licensing agreement: Okta Inc. and Textron Inc."
+    },
+    {
+      "source": "c_79",
+      "target": "c_167",
+      "type": "licensing",
+      "description": "Licensing agreement: NEC Corporation and Mercury Systems"
+    },
+    {
+      "source": "c_66",
+      "target": "c_365",
+      "type": "licensing",
+      "description": "Mail.ru Group licenses technology from Berkshire Hathaway"
+    },
+    {
+      "source": "c_69",
+      "target": "c_124",
+      "type": "licensing",
+      "description": "Wipro Limited uses Dover Corporation's licensed technology"
+    },
+    {
+      "source": "c_196",
+      "target": "c_353",
+      "type": "licensing",
+      "description": "Licensing agreement: Procter & Gamble and FirstBank Holding Company"
+    },
+    {
+      "source": "c_161",
+      "target": "c_420",
+      "type": "licensing",
+      "description": "Insight Partners provides licenses to WSP Global Inc."
+    },
+    {
+      "source": "c_245",
+      "target": "c_8",
+      "type": "licensing",
+      "description": "Licensing agreement: Indian Diet and Adobe Inc."
+    },
+    {
+      "source": "c_105",
+      "target": "c_298",
+      "type": "licensing",
+      "description": "Mektron Corporation uses Synchrony Financial's licensed technology"
+    },
+    {
+      "source": "c_215",
+      "target": "c_113",
+      "type": "licensing",
+      "description": "Forever Living Products uses Corning Incorporated's licensed technology"
+    },
+    {
+      "source": "c_494",
+      "target": "c_247",
+      "type": "licensing",
+      "description": "Intellia Therapeutics uses Vietnamese Diet's licensed technology"
+    },
+    {
+      "source": "c_210",
+      "target": "c_462",
+      "type": "licensing",
+      "description": "Herbalife Nutrition licenses technology from Cooper Companies"
+    },
+    {
+      "source": "c_278",
+      "target": "c_119",
+      "type": "licensing",
+      "description": "Belizean Diet licenses technology from ABB Ltd."
+    },
+    {
+      "source": "c_163",
+      "target": "c_73",
+      "type": "licensing",
+      "description": "Parsons Corporation licenses technology from DXC Technology"
+    },
+    {
+      "source": "c_184",
+      "target": "c_455",
+      "type": "licensing",
+      "description": "Teijin Limited licenses technology from Align Technology"
+    },
+    {
+      "source": "c_242",
+      "target": "c_277",
+      "type": "licensing",
+      "description": "Bahamian Diet provides licenses to Chinese Medicine Diet"
+    },
+    {
+      "source": "c_443",
+      "target": "c_281",
+      "type": "licensing",
+      "description": "Licensing agreement: Illumina Inc. and Nicaraguan Diet"
+    },
+    {
+      "source": "c_231",
+      "target": "c_187",
+      "type": "licensing",
+      "description": "Vegetarian Diet uses Mitsui Chemicals's licensed technology"
+    },
+    {
+      "source": "c_202",
+      "target": "c_282",
+      "type": "licensing",
+      "description": "Beiersdorf AG licenses technology from Honduran Diet"
+    },
+    {
+      "source": "c_144",
+      "target": "c_91",
+      "type": "licensing",
+      "description": "Northrop Grumman uses Flextronics International's licensed technology"
+    },
+    {
+      "source": "c_487",
+      "target": "c_112",
+      "type": "licensing",
+      "description": "3M Company has licensing agreement with Sarepta Therapeutics"
+    },
+    {
+      "source": "c_81",
+      "target": "c_148",
+      "type": "licensing",
+      "description": "Textron Inc. has licensing agreement with Sharp Corporation"
+    },
+    {
+      "source": "c_196",
+      "target": "c_306",
+      "type": "licensing",
+      "description": "Procter & Gamble uses SVB Financial Group's licensed technology"
+    },
+    {
+      "source": "c_111",
+      "target": "c_419",
+      "type": "licensing",
+      "description": "Bessemer Venture Partners provides licenses to Amphenol Corporation"
+    },
+    {
+      "source": "c_349",
+      "target": "c_309",
+      "type": "licensing",
+      "description": "First of Long Island Corp licenses technology from Comerica Incorporated"
+    },
+    {
+      "source": "c_473",
+      "target": "c_228",
+      "type": "licensing",
+      "description": "Paleo Diet provides licenses to Addus HomeCare"
+    },
+    {
+      "source": "c_131",
+      "target": "c_122",
+      "type": "licensing",
+      "description": "Licensing agreement: Metso Outotec and Parker Hannifin"
+    },
+    {
+      "source": "c_409",
+      "target": "c_275",
+      "type": "licensing",
+      "description": "Institutional Venture Partners uses Trinidadian Diet's licensed technology"
+    },
+    {
+      "source": "c_247",
+      "target": "c_440",
+      "type": "licensing",
+      "description": "Vietnamese Diet uses Incyte Corporation's licensed technology"
+    },
+    {
+      "source": "c_158",
+      "target": "c_139",
+      "type": "licensing",
+      "description": "Thales Group has licensing agreement with KBR Inc."
+    },
+    {
+      "source": "c_170",
+      "target": "c_189",
+      "type": "licensing",
+      "description": "Licensing agreement: Moog Inc. and Tokuyama Corporation"
+    },
+    {
+      "source": "c_249",
+      "target": "c_313",
+      "type": "licensing",
+      "description": "Indonesian Diet licenses technology from Signature Bank"
+    },
+    {
+      "source": "c_61",
+      "target": "c_147",
+      "type": "licensing",
+      "description": "Grab Holdings licenses technology from L3Harris Technologies"
+    },
+    {
+      "source": "c_466",
+      "target": "c_154",
+      "type": "swaps",
+      "description": "NuVasive Inc. and Science Applications have interest rate swap agreements"
+    },
+    {
+      "source": "c_8",
+      "target": "c_0",
+      "type": "swaps",
+      "description": "Adobe Inc. and Apple Inc. engage in derivative swaps"
+    },
+    {
+      "source": "c_220",
+      "target": "c_143",
+      "type": "swaps",
+      "description": "Currency swap between Medifast Inc. and Boeing Company"
+    },
+    {
+      "source": "c_210",
+      "target": "c_330",
+      "type": "swaps",
+      "description": "Swap agreement: Herbalife Nutrition and United Community Banks"
+    },
+    {
+      "source": "c_1",
+      "target": "c_462",
+      "type": "swaps",
+      "description": "Currency swap between Microsoft Corporation and Cooper Companies"
+    },
+    {
+      "source": "c_342",
+      "target": "c_327",
+      "type": "swaps",
+      "description": "Currency swap between First Hawaiian Inc. and Wintrust Financial"
+    },
+    {
+      "source": "c_184",
+      "target": "c_449",
+      "type": "swaps",
+      "description": "Teijin Limited has swap contracts with Stryker Corporation"
+    },
+    {
+      "source": "c_359",
+      "target": "c_402",
+      "type": "swaps",
+      "description": "FNB Financial Services has swap contracts with True Ventures"
+    },
+    {
+      "source": "c_193",
+      "target": "c_460",
+      "type": "swaps",
+      "description": "Kao Corporation and Varian Medical Systems have interest rate swap agreements"
+    },
+    {
+      "source": "c_416",
+      "target": "c_156",
+      "type": "swaps",
+      "description": "Currency swap between Atomico and AECOM Technology"
+    },
+    {
+      "source": "c_6",
+      "target": "c_434",
+      "type": "swaps",
+      "description": "Tesla Inc. and Regeneron Pharmaceuticals engage in derivative swaps"
+    },
+    {
+      "source": "c_62",
+      "target": "c_419",
+      "type": "swaps",
+      "description": "Currency swap between Rakuten Inc. and Bessemer Venture Partners"
+    },
+    {
+      "source": "c_182",
+      "target": "c_0",
+      "type": "swaps",
+      "description": "Swap agreement: Asahi Kasei and Apple Inc."
+    },
+    {
+      "source": "c_372",
+      "target": "c_172",
+      "type": "swaps",
+      "description": "Franklin Resources has swap contracts with Heico Corporation"
+    },
+    {
+      "source": "c_127",
+      "target": "c_226",
+      "type": "swaps",
+      "description": "Swap agreement: Ingersoll Rand and South Beach Diet"
+    },
+    {
+      "source": "c_478",
+      "target": "c_31",
+      "type": "swaps",
+      "description": "Genesis Healthcare and Twilio Inc. have interest rate swap agreements"
+    },
+    {
+      "source": "c_255",
+      "target": "c_190",
+      "type": "swaps",
+      "description": "Currency swap between Brazilian Diet and DIC Corporation"
+    },
+    {
+      "source": "c_171",
+      "target": "c_35",
+      "type": "swaps",
+      "description": "TransDigm Group and Qualcomm Inc. engage in derivative swaps"
+    },
+    {
+      "source": "c_268",
+      "target": "c_45",
+      "type": "swaps",
+      "description": "French Guiana Diet and LG Electronics engage in derivative swaps"
+    },
+    {
+      "source": "c_13",
+      "target": "c_359",
+      "type": "swaps",
+      "description": "Netflix Inc. has swap contracts with FNB Financial Services"
+    },
+    {
+      "source": "c_332",
+      "target": "c_336",
+      "type": "swaps",
+      "description": "Swap agreement: Prosperity Bancshares and Texas Capital Bancshares"
+    },
+    {
+      "source": "c_364",
+      "target": "c_461",
+      "type": "swaps",
+      "description": "FNCB Bancorp and Hologic Inc. engage in derivative swaps"
+    },
+    {
+      "source": "c_188",
+      "target": "c_272",
+      "type": "swaps",
+      "description": "Shin-Etsu Chemical and Dominican Diet have interest rate swap agreements"
+    },
+    {
+      "source": "c_385",
+      "target": "c_407",
+      "type": "swaps",
+      "description": "Blackstone Group has swap contracts with Lightspeed Venture Partners"
+    },
+    {
+      "source": "c_162",
+      "target": "c_366",
+      "type": "swaps",
+      "description": "Aecom Technology has swap contracts with BlackRock Inc."
+    },
+    {
+      "source": "c_39",
+      "target": "c_59",
+      "type": "swaps",
+      "description": "Swap agreement: Applied Materials and ByteDance Ltd."
+    },
+    {
+      "source": "c_378",
+      "target": "c_498",
+      "type": "swaps",
+      "description": "Federated Hermes has swap contracts with Allogene Therapeutics"
+    },
+    {
+      "source": "c_233",
+      "target": "c_125",
+      "type": "swaps",
+      "description": "DASH Diet and Pentair plc have interest rate swap agreements"
+    },
+    {
+      "source": "c_312",
+      "target": "c_267",
+      "type": "swaps",
+      "description": "New York Community Bancorp and Surinamese Diet have interest rate swap agreements"
+    },
+    {
+      "source": "c_273",
+      "target": "c_239",
+      "type": "swaps",
+      "description": "Currency swap between Haitian Diet and Raw Food Diet"
+    },
+    {
+      "source": "c_78",
+      "target": "c_426",
+      "type": "swaps",
+      "description": "Hitachi Ltd. has swap contracts with UnitedHealth Group"
+    },
+    {
+      "source": "c_95",
+      "target": "c_244",
+      "type": "swaps",
+      "description": "Swap agreement: Benchmark Electronics and Korean Diet"
+    },
+    {
+      "source": "c_496",
+      "target": "c_74",
+      "type": "swaps",
+      "description": "Prime Medicine Inc. and Capgemini SE have interest rate swap agreements"
+    },
+    {
+      "source": "c_293",
+      "target": "c_201",
+      "type": "swaps",
+      "description": "Swap agreement: PNC Financial Services and Henkel AG"
+    },
+    {
+      "source": "c_305",
+      "target": "c_102",
+      "type": "swaps",
+      "description": "Swap agreement: First Republic Bank and Zhen Ding Technology"
+    },
+    {
+      "source": "c_293",
+      "target": "c_482",
+      "type": "swaps",
+      "description": "PNC Financial Services and Five Star Senior Living engage in derivative swaps"
+    },
+    {
+      "source": "c_168",
+      "target": "c_418",
+      "type": "swaps",
+      "description": "Ultra Electronics has swap contracts with Accel Partners"
+    },
+    {
+      "source": "c_12",
+      "target": "c_192",
+      "type": "swaps",
+      "description": "Swap agreement: IBM Corporation and Nippon Shokubai"
+    },
+    {
+      "source": "c_239",
+      "target": "c_17",
+      "type": "swaps",
+      "description": "Raw Food Diet and Spotify Technology engage in derivative swaps"
+    },
+    {
+      "source": "c_307",
+      "target": "c_103",
+      "type": "swaps",
+      "description": "East West Bancorp has swap contracts with AT&S Austria"
+    },
+    {
+      "source": "c_26",
+      "target": "c_297",
+      "type": "swaps",
+      "description": "Palantir Technologies has swap contracts with Discover Financial"
+    },
+    {
+      "source": "c_88",
+      "target": "c_114",
+      "type": "swaps",
+      "description": "Compal Electronics has swap contracts with Emerson Electric"
+    },
+    {
+      "source": "c_353",
+      "target": "c_243",
+      "type": "swaps",
+      "description": "Swap agreement: FirstBank Holding Company and Japanese Diet"
+    },
+    {
+      "source": "c_340",
+      "target": "c_66",
+      "type": "swaps",
+      "description": "BancFirst Corporation and Mail.ru Group engage in derivative swaps"
+    },
+    {
+      "source": "c_496",
+      "target": "c_5",
+      "type": "swaps",
+      "description": "Prime Medicine Inc. and NVIDIA Corporation have interest rate swap agreements"
+    },
+    {
+      "source": "c_378",
+      "target": "c_454",
+      "type": "swaps",
+      "description": "Currency swap between Federated Hermes and Intuitive Surgical"
+    },
+    {
+      "source": "c_301",
+      "target": "c_251",
+      "type": "swaps",
+      "description": "KeyCorp and Singaporean Diet have interest rate swap agreements"
+    },
+    {
+      "source": "c_67",
+      "target": "c_281",
+      "type": "swaps",
+      "description": "SAP SE and Nicaraguan Diet have interest rate swap agreements"
+    },
+    {
+      "source": "c_346",
+      "target": "c_295",
+      "type": "swaps",
+      "description": "First Mid Bancshares and Capital One Financial engage in derivative swaps"
+    },
+    {
+      "source": "c_398",
+      "target": "c_288",
+      "type": "swaps",
+      "description": "Swap agreement: Benchmark Capital and Citigroup Inc."
+    },
+    {
+      "source": "c_472",
+      "target": "c_434",
+      "type": "swaps",
+      "description": "Chemed Corporation has swap contracts with Regeneron Pharmaceuticals"
+    },
+    {
+      "source": "c_487",
+      "target": "c_32",
+      "type": "swaps",
+      "description": "Sarepta Therapeutics and Atlassian Corporation have interest rate swap agreements"
+    },
+    {
+      "source": "c_179",
+      "target": "c_499",
+      "type": "swaps",
+      "description": "Currency swap between Teijin Limited and Fate Therapeutics"
+    },
+    {
+      "source": "c_204",
+      "target": "c_419",
+      "type": "swaps",
+      "description": "Estée Lauder Companies and Bessemer Venture Partners engage in derivative swaps"
+    },
+    {
+      "source": "c_92",
+      "target": "c_395",
+      "type": "swaps",
+      "description": "Jabil Inc. has swap contracts with Kleiner Perkins"
+    },
+    {
+      "source": "c_56",
+      "target": "c_332",
+      "type": "swaps",
+      "description": "Baidu Inc. and Prosperity Bancshares engage in derivative swaps"
+    },
+    {
+      "source": "c_496",
+      "target": "c_64",
+      "type": "swaps",
+      "description": "Prime Medicine Inc. and Naspers Limited engage in derivative swaps"
+    },
+    {
+      "source": "c_336",
+      "target": "c_493",
+      "type": "swaps",
+      "description": "Currency swap between Texas Capital Bancshares and Editas Medicine"
+    },
+    {
+      "source": "c_317",
+      "target": "c_205",
+      "type": "swaps",
+      "description": "Associated Banc-Corp and Coty Inc. have interest rate swap agreements"
+    },
+    {
+      "source": "c_191",
+      "target": "c_96",
+      "type": "swaps",
+      "description": "Sekisui Chemical has swap contracts with Plexus Corp."
+    },
+    {
+      "source": "c_450",
+      "target": "c_158",
+      "type": "board_interlock",
+      "description": "Shared board members: Becton Dickinson and KBR Inc."
+    },
+    {
+      "source": "c_397",
+      "target": "c_333",
+      "type": "board_interlock",
+      "description": "Accel Partners and SouthState Corporation have overlapping board directors"
+    },
+    {
+      "source": "c_477",
+      "target": "c_125",
+      "type": "board_interlock",
+      "description": "Board member overlap: Kindred Healthcare and Pentair plc"
+    },
+    {
+      "source": "c_148",
+      "target": "c_210",
+      "type": "board_interlock",
+      "description": "Textron Inc. and Herbalife Nutrition have overlapping board directors"
+    },
+    {
+      "source": "c_221",
+      "target": "c_40",
+      "type": "board_interlock",
+      "description": "Board member overlap: Weight Watchers and Lam Research"
+    },
+    {
+      "source": "c_130",
+      "target": "c_66",
+      "type": "board_interlock",
+      "description": "Shared board members: Sandvik AB and Mail.ru Group"
+    },
+    {
+      "source": "c_315",
+      "target": "c_218",
+      "type": "board_interlock",
+      "description": "Board interlock between First Horizon Corporation and Rodan + Fields"
+    },
+    {
+      "source": "c_288",
+      "target": "c_187",
+      "type": "board_interlock",
+      "description": "Citigroup Inc. and Mitsui Chemicals share board members"
+    },
+    {
+      "source": "c_97",
+      "target": "c_32",
+      "type": "board_interlock",
+      "description": "TTM Technologies and Atlassian Corporation have overlapping board directors"
+    },
+    {
+      "source": "c_327",
+      "target": "c_219",
+      "type": "board_interlock",
+      "description": "Wintrust Financial and Beachbody Company have overlapping board directors"
+    },
+    {
+      "source": "c_465",
+      "target": "c_208",
+      "type": "board_interlock",
+      "description": "Board interlock between CONMED Corporation and Mary Kay Inc."
+    },
+    {
+      "source": "c_133",
+      "target": "c_239",
+      "type": "board_interlock",
+      "description": "Board member overlap: Konecranes and Raw Food Diet"
+    },
+    {
+      "source": "c_330",
+      "target": "c_69",
+      "type": "board_interlock",
+      "description": "Shared board members: United Community Banks and Wipro Limited"
+    },
+    {
+      "source": "c_386",
+      "target": "c_106",
+      "type": "board_interlock",
+      "description": "Board interlock between Carlyle Group and Young Poong Corporation"
+    },
+    {
+      "source": "c_98",
+      "target": "c_392",
+      "type": "board_interlock",
+      "description": "Shared board members: Viasystems Group and Insight Partners"
+    },
+    {
+      "source": "c_282",
+      "target": "c_247",
+      "type": "board_interlock",
+      "description": "Board interlock between Honduran Diet and Vietnamese Diet"
+    },
+    {
+      "source": "c_185",
+      "target": "c_21",
+      "type": "board_interlock",
+      "description": "Board member overlap: Kuraray Co. Ltd. and Square Inc."
+    },
+    {
+      "source": "c_244",
+      "target": "c_44",
+      "type": "board_interlock",
+      "description": "Korean Diet and Sony Corporation share board members"
+    },
+    {
+      "source": "c_269",
+      "target": "c_477",
+      "type": "board_interlock",
+      "description": "Board member overlap: Caribbean Diet and Kindred Healthcare"
+    },
+    {
+      "source": "c_188",
+      "target": "c_123",
+      "type": "board_interlock",
+      "description": "Shared board members: Shin-Etsu Chemical and Illinois Tool Works"
+    },
+    {
+      "source": "c_236",
+      "target": "c_490",
+      "type": "board_interlock",
+      "description": "Intermittent Fasting and uniQure N.V. have overlapping board directors"
+    },
+    {
+      "source": "c_181",
+      "target": "c_432",
+      "type": "board_interlock",
+      "description": "Sumitomo Chemical and Amgen Inc. share board members"
+    },
+    {
+      "source": "c_68",
+      "target": "c_344",
+      "type": "board_interlock",
+      "description": "Board member overlap: Infosys Limited and First Bancorp"
+    },
+    {
+      "source": "c_395",
+      "target": "c_216",
+      "type": "board_interlock",
+      "description": "Shared board members: Kleiner Perkins and Young Living"
+    },
+    {
+      "source": "c_486",
+      "target": "c_148",
+      "type": "board_interlock",
+      "description": "Board interlock between Arena Pharmaceuticals and Textron Inc."
+    },
+    {
+      "source": "c_456",
+      "target": "c_455",
+      "type": "board_interlock",
+      "description": "Dexcom Inc. and Align Technology have overlapping board directors"
+    },
+    {
+      "source": "c_321",
+      "target": "c_316",
+      "type": "board_interlock",
+      "description": "Board interlock between First National of Nebraska and Valley National Bancorp"
+    },
+    {
+      "source": "c_44",
+      "target": "c_82",
+      "type": "board_interlock",
+      "description": "Board interlock between Sony Corporation and Kyocera Corporation"
+    },
+    {
+      "source": "c_37",
+      "target": "c_28",
+      "type": "board_interlock",
+      "description": "Shared board members: AMD and Zscaler Inc."
+    },
+    {
+      "source": "c_450",
+      "target": "c_439",
+      "type": "board_interlock",
+      "description": "Becton Dickinson and Novavax Inc. have overlapping board directors"
+    },
+    {
+      "source": "c_392",
+      "target": "c_311",
+      "type": "board_interlock",
+      "description": "Board interlock between Insight Partners and People's United Financial"
+    },
+    {
+      "source": "c_159",
+      "target": "c_120",
+      "type": "board_interlock",
+      "description": "Board member overlap: Tetra Tech and General Electric"
+    },
+    {
+      "source": "c_492",
+      "target": "c_218",
+      "type": "board_interlock",
+      "description": "CRISPR Therapeutics and Rodan + Fields have overlapping board directors"
+    },
+    {
+      "source": "c_254",
+      "target": "c_349",
+      "type": "board_interlock",
+      "description": "Board interlock between South African Diet and First of Long Island Corp"
+    },
+    {
+      "source": "c_245",
+      "target": "c_277",
+      "type": "board_interlock",
+      "description": "Board member overlap: Indian Diet and Bahamian Diet"
+    },
+    {
+      "source": "c_337",
+      "target": "c_369",
+      "type": "board_interlock",
+      "description": "Shared board members: Independent Bank Group and BNY Mellon"
+    },
+    {
+      "source": "c_79",
+      "target": "c_353",
+      "type": "board_interlock",
+      "description": "NEC Corporation and FirstBank Holding Company share board members"
+    },
+    {
+      "source": "c_157",
+      "target": "c_25",
+      "type": "board_interlock",
+      "description": "Fluor Corporation and Snowflake Inc. have overlapping board directors"
+    },
+    {
+      "source": "c_40",
+      "target": "c_474",
+      "type": "board_interlock",
+      "description": "Shared board members: Lam Research and LHC Group Inc."
+    },
+    {
+      "source": "c_35",
+      "target": "c_329",
+      "type": "board_interlock",
+      "description": "Board member overlap: Qualcomm Inc. and Old National Bancorp"
+    },
+    {
+      "source": "c_206",
+      "target": "c_50",
+      "type": "board_interlock",
+      "description": "Revlon Inc. and Dell Technologies share board members"
+    },
+    {
+      "source": "c_109",
+      "target": "c_25",
+      "type": "board_interlock",
+      "description": "Shared board members: TE Connectivity and Snowflake Inc."
+    },
+    {
+      "source": "c_344",
+      "target": "c_310",
+      "type": "board_interlock",
+      "description": "Board member overlap: First Bancorp and Cullen/Frost Bankers"
+    },
+    {
+      "source": "c_136",
+      "target": "c_433",
+      "type": "board_interlock",
+      "description": "Board interlock between MAN Energy Solutions and Gilead Sciences Inc."
+    },
+    {
+      "source": "c_126",
+      "target": "c_196",
+      "type": "board_interlock",
+      "description": "Shared board members: Flowserve Corporation and Procter & Gamble"
+    },
+    {
+      "source": "c_57",
+      "target": "c_103",
+      "type": "board_interlock",
+      "description": "JD.com Inc. and AT&S Austria have overlapping board directors"
+    },
+    {
+      "source": "c_33",
+      "target": "c_385",
+      "type": "board_interlock",
+      "description": "Splunk Inc. and Blackstone Group share board members"
+    },
+    {
+      "source": "c_51",
+      "target": "c_273",
+      "type": "board_interlock",
+      "description": "Lenovo Group and Haitian Diet share board members"
+    },
+    {
+      "source": "c_151",
+      "target": "c_162",
+      "type": "board_interlock",
+      "description": "Booz Allen Hamilton and Aecom Technology share board members"
+    },
+    {
+      "source": "c_38",
+      "target": "c_95",
+      "type": "board_interlock",
+      "description": "Shared board members: Micron Technology and Benchmark Electronics"
+    },
+    {
+      "source": "c_441",
+      "target": "c_162",
+      "type": "board_interlock",
+      "description": "Alexion Pharmaceuticals and Aecom Technology share board members"
+    },
+    {
+      "source": "c_465",
+      "target": "c_348",
+      "type": "board_interlock",
+      "description": "Board member overlap: CONMED Corporation and First Northwest Bancorp"
+    },
+    {
+      "source": "c_74",
+      "target": "c_273",
+      "type": "board_interlock",
+      "description": "Capgemini SE and Haitian Diet share board members"
+    },
+    {
+      "source": "c_499",
+      "target": "c_387",
+      "type": "board_interlock",
+      "description": "Board interlock between Fate Therapeutics and TPG Capital"
+    },
+    {
+      "source": "c_228",
+      "target": "c_196",
+      "type": "board_interlock",
+      "description": "Paleo Diet and Procter & Gamble share board members"
+    },
+    {
+      "source": "c_249",
+      "target": "c_472",
+      "type": "board_interlock",
+      "description": "Board interlock between Indonesian Diet and Chemed Corporation"
+    },
+    {
+      "source": "c_149",
+      "target": "c_233",
+      "type": "board_interlock",
+      "description": "Shared board members: Huntington Ingalls and DASH Diet"
+    },
+    {
+      "source": "c_208",
+      "target": "c_57",
+      "type": "board_interlock",
+      "description": "Mary Kay Inc. and JD.com Inc. have overlapping board directors"
+    },
+    {
+      "source": "c_176",
+      "target": "c_270",
+      "type": "board_interlock",
+      "description": "Board interlock between Hexcel Corporation and Jamaican Diet"
+    },
+    {
+      "source": "c_220",
+      "target": "c_483",
+      "type": "board_interlock",
+      "description": "Board interlock between Medifast Inc. and Capital Senior Living"
     }
   ]
 }

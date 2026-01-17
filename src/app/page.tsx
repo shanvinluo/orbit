@@ -6,7 +6,8 @@ import SearchBar from '@/components/SearchBar';
 import Chatbot from '@/components/Chatbot';
 import TradingCard from '@/components/TradingCard';
 import PathFinder from '@/components/PathFinder';
-import { GraphData, GraphNode, GraphEdge } from '@/types';
+import RelationshipFilter from '@/components/RelationshipFilter';
+import { GraphData, GraphNode, GraphEdge, EdgeType } from '@/types';
 
 export default function Home() {
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
@@ -14,6 +15,9 @@ export default function Home() {
   const [highlightNodes, setHighlightNodes] = useState<Set<string>>(new Set());
   const [highlightEdges, setHighlightEdges] = useState<Set<string>>(new Set());
   const [pathMode, setPathMode] = useState(false);
+  const [enabledEdgeTypes, setEnabledEdgeTypes] = useState<Set<EdgeType>>(
+    new Set(Object.values(EdgeType)) // All types enabled by default
+  );
 
   // Load data
   useEffect(() => {
@@ -73,6 +77,26 @@ export default function Home() {
     handleNodeClick(node);
   }, [handleNodeClick]);
 
+  const handleToggleEdgeType = useCallback((type: EdgeType) => {
+    setEnabledEdgeTypes(prev => {
+      const next = new Set(prev);
+      if (next.has(type)) {
+        next.delete(type);
+      } else {
+        next.add(type);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleToggleAllEdgeTypes = useCallback(() => {
+    setEnabledEdgeTypes(prev => {
+      const allTypes = Object.values(EdgeType);
+      const allEnabled = allTypes.every(type => prev.has(type));
+      return allEnabled ? new Set<EdgeType>() : new Set(allTypes);
+    });
+  }, []);
+
   return (
     <main className="relative w-screen h-screen bg-[#020617] overflow-hidden font-sans selection:bg-violet-500/30">
       {/* Background Gradient */}
@@ -87,11 +111,18 @@ export default function Home() {
           highlightNodes={highlightNodes}
           highlightEdges={highlightEdges}
           focusedNodeId={selectedNode?.id}
+          enabledEdgeTypes={enabledEdgeTypes}
         />
       </div>
 
       {/* UI Layer */}
       <SearchBar nodes={graphData.nodes} onSelect={handleSearchSelect} />
+      
+      <RelationshipFilter 
+        enabledTypes={enabledEdgeTypes}
+        onToggle={handleToggleEdgeType}
+        onToggleAll={handleToggleAllEdgeTypes}
+      />
       
       <Chatbot />
 

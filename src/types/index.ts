@@ -19,16 +19,30 @@ export enum EdgeType {
 }
 
 export const EDGE_COLORS: Record<EdgeType, string> = {
-  [EdgeType.Ownership]: '#e9d5ff', // Purple 200
-  [EdgeType.Partnership]: '#d8b4fe', // Purple 300
-  [EdgeType.Client]: '#c084fc', // Purple 400
-  [EdgeType.Supplier]: '#a855f7', // Purple 500
-  [EdgeType.Creditor]: '#e9d5ff',
-  [EdgeType.Debtor]: '#d8b4fe',
-  [EdgeType.JointVenture]: '#c084fc',
-  [EdgeType.Licensing]: '#a855f7',
-  [EdgeType.Swaps]: '#e9d5ff',
-  [EdgeType.BoardInterlock]: '#d8b4fe'
+  [EdgeType.Ownership]: '#8b5cf6', // Violet 500
+  [EdgeType.Partnership]: '#3b82f6', // Blue 500
+  [EdgeType.Client]: '#10b981', // Emerald 500
+  [EdgeType.Supplier]: '#f59e0b', // Amber 500
+  [EdgeType.Creditor]: '#ef4444', // Red 500
+  [EdgeType.Debtor]: '#ec4899', // Pink 500
+  [EdgeType.JointVenture]: '#06b6d4', // Cyan 500
+  [EdgeType.Licensing]: '#6366f1', // Indigo 500
+  [EdgeType.Swaps]: '#14b8a6', // Teal 500
+  [EdgeType.BoardInterlock]: '#a855f7' // Purple 500
+};
+
+// Human-readable labels for relationship types
+export const EDGE_LABELS: Record<EdgeType, string> = {
+  [EdgeType.Ownership]: 'Ownership',
+  [EdgeType.Partnership]: 'Partnership',
+  [EdgeType.Client]: 'Client',
+  [EdgeType.Supplier]: 'Supplier',
+  [EdgeType.Creditor]: 'Creditor',
+  [EdgeType.Debtor]: 'Debtor',
+  [EdgeType.JointVenture]: 'Joint Venture',
+  [EdgeType.Licensing]: 'Licensing Agreement',
+  [EdgeType.Swaps]: 'Swaps',
+  [EdgeType.BoardInterlock]: 'Board Interlock'
 };
 
 export interface GraphNode {
