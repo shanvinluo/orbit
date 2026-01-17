@@ -98,12 +98,12 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="relative w-screen h-screen bg-[#020617] overflow-hidden font-sans selection:bg-violet-500/30">
-      {/* Background Gradient */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-violet-900/10 via-slate-950/50 to-slate-950 pointer-events-none z-0" />
+    <main className="relative w-screen h-screen bg-[#000011] overflow-hidden font-sans selection:bg-violet-500/30">
+      {/* Background Gradient - Deep space nebula */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-950/20 via-[#000011] to-[#000011] pointer-events-none z-0" />
 
       {/* Graph Layer */}
-      <div className="absolute inset-0 z-0 opacity-80 mix-blend-screen">
+      <div className="absolute inset-0 z-0">
         <GraphViz 
           data={graphData} 
           onNodeClick={handleNodeClick} 
