@@ -21,6 +21,7 @@ interface Props {
   focusedNodeId?: string;
   enabledEdgeTypes?: Set<EdgeType>;
   affectedCompanies?: Map<string, 'positive' | 'negative' | 'neutral' | 'mixed'>;
+  pathMode?: boolean;
 }
 
 // Cosmic nebula color palette: distinct clusters of blue/cyan and amber/gold
@@ -51,20 +52,42 @@ const getNodeColor = (nodeId: string): string => {
 };
 
 
-export default function GraphViz({ data, onNodeClick, onBackgroundClick, highlightNodes, highlightEdges, focusedNodeId, enabledEdgeTypes, affectedCompanies }: Props) {
+export default function GraphViz({ data, onNodeClick, onBackgroundClick, highlightNodes, highlightEdges, focusedNodeId, enabledEdgeTypes, affectedCompanies, pathMode = false }: Props) {
   const fgRef = useRef<any>();
   const [cameraDistance, setCameraDistance] = useState(1000);
 
-  // Filter graph data based on enabled edge types
+  // Filter graph data based on enabled edge types and path mode
   const filteredData = useMemo(() => {
-    if (!enabledEdgeTypes) return data;
+    let filteredLinks = data.links;
+    let filteredNodes = data.nodes;
     
-    const filteredLinks = data.links.filter(link => enabledEdgeTypes.has(link.type));
+    // First filter by enabled edge types
+    if (enabledEdgeTypes) {
+      filteredLinks = filteredLinks.filter(link => enabledEdgeTypes.has(link.type));
+    }
+    
+    // If in path mode and we have highlights, only show highlighted nodes and edges
+    if (pathMode && highlightNodes.size > 0) {
+      // Only include nodes that are highlighted
+      filteredNodes = filteredNodes.filter(node => highlightNodes.has(node.id));
+      
+      // Only include edges that are explicitly highlighted (in the selected path)
+      filteredLinks = filteredLinks.filter(link => {
+        const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+        const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+        const edgeId = `${sourceId}-${targetId}`;
+        const reverseEdgeId = `${targetId}-${sourceId}`;
+        
+        // Only include if edge is in highlightEdges (explicitly selected)
+        return highlightEdges.has(edgeId) || highlightEdges.has(reverseEdgeId);
+      });
+    }
+    
     return {
-      nodes: data.nodes,
+      nodes: filteredNodes,
       links: filteredLinks
     };
-  }, [data, enabledEdgeTypes]);
+  }, [data, enabledEdgeTypes, pathMode, highlightNodes, highlightEdges]);
 
   // Track camera position for distance-based effects
   useEffect(() => {
