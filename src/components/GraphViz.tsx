@@ -289,23 +289,22 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
         nodeResolution={12} // Lower resolution for more particle-like feel
         nodeOpacity={1} // Full opacity, controlled by material
         linkColor={(link: any) => {
-            const id = typeof link.source === 'object' 
-                ? `${link.source.id}-${link.target.id}`
-                : `${link.source}-${link.target}`;
-            
             const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
             const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+            const id = `${sourceId}-${targetId}`;
+            const reverseId = `${targetId}-${sourceId}`;
             
-            // Bright gold when explicitly highlighted
-            if (highlightEdges.has(id)) {
-                return 'rgba(251, 191, 36, 0.6)';
+            // Bright gold when explicitly highlighted (check both directions)
+            const isHighlighted = highlightEdges.has(id) || highlightEdges.has(reverseId);
+            if (isHighlighted) {
+                return 'rgba(251, 191, 36, 0.9)';
             }
             
             // Dim edges connected to highlighted nodes (but not the edge itself)
             if (highlightNodes.size > 0) {
                 const sourceHighlighted = highlightNodes.has(sourceId);
                 const targetHighlighted = highlightNodes.has(targetId);
-                if ((sourceHighlighted || targetHighlighted) && !highlightEdges.has(id)) {
+                if ((sourceHighlighted || targetHighlighted) && !isHighlighted) {
                     return 'rgba(251, 191, 36, 0.03)';
                 }
             }
@@ -313,21 +312,31 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
             // Default: subtle edge color
             return getEdgeColor(link, 'rgba(251, 191, 36, 0.15)');
         }}
-        // linkWidth is controlled by linkThreeObject geometry size
-        // @ts-expect-error - ForceGraph3D type definitions don't properly support function accessors
-        linkOpacity={(link: any) => {
-            const id = typeof link.source === 'object' 
-                ? `${link.source.id}-${link.target.id}`
-                : `${link.source}-${link.target}`;
-            
+        linkWidth={(link: any) => {
             const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
             const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+            const id = `${sourceId}-${targetId}`;
+            const reverseId = `${targetId}-${sourceId}`;
+            
+            // Thicker when highlighted (check both directions)
+            const isHighlighted = highlightEdges.has(id) || highlightEdges.has(reverseId);
+            return isHighlighted ? 3 : 0.5;
+        }}
+        // @ts-expect-error - ForceGraph3D type definitions don't properly support function accessors
+        linkOpacity={(link: any) => {
+            const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+            const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+            const id = `${sourceId}-${targetId}`;
+            const reverseId = `${targetId}-${sourceId}`;
+            
+            // Check both directions for highlight
+            const isHighlighted = highlightEdges.has(id) || highlightEdges.has(reverseId);
             
             let baseOpacity = 0.15; // Default subtle opacity
             
             // Highlighted edges are bright
-            if (highlightEdges.has(id)) {
-                baseOpacity = 0.8;
+            if (isHighlighted) {
+                baseOpacity = 1.0;
             }
             // Dim edges connected to highlighted nodes (but not the edge itself)
             else if (highlightNodes.size > 0) {
