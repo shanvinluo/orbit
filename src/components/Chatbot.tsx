@@ -8,22 +8,94 @@ interface Message {
   id: string;
   role: 'user' | 'ai';
   content: string;
+  suggestions?: string[];
 }
 
 interface ChatbotProps {
   onNewsAnalysis?: (analysis: any) => void;
 }
 
-// Simple heuristic to detect if text is likely news
-const isLikelyNews = (text: string): boolean => {
-  const newsKeywords = ['announced', 'reported', 'according to', 'breaking', 'news', 'article', 'sources', 'confirmed', 'invaded', 'stocks would be affected', 'which stocks', 'affected stocks', 'market impact', 'financial impact'];
+// Detect the type of query: 'news', 'relationship', or 'general'
+const detectQueryType = (text: string): 'news' | 'relationship' | 'general' => {
   const lowerText = text.toLowerCase();
+  
+  // Impact/scenario analysis detection - route to news for bullish/bearish analysis
+  const impactKeywords = ['affected', 'impact', 'crashes', 'crash', 'fails', 'bankrupt', 'goes down', 'drops', 'rises', 'grows', 'expands', 'acquires', 'merges'];
+  const scenarioKeywords = ['if', 'what would', 'what happens', 'which companies', 'which stocks', 'what stocks'];
+  const hasImpactKeywords = impactKeywords.some(keyword => lowerText.includes(keyword));
+  const hasScenarioKeywords = scenarioKeywords.some(keyword => lowerText.includes(keyword));
+  
+  // If asking about impact scenarios, use news analysis for bullish/bearish
+  if (hasImpactKeywords && hasScenarioKeywords) {
+    return 'news';
+  }
+  
+  // News article detection: Long text with news keywords
+  const newsKeywords = ['announced', 'reported', 'according to', 'breaking', 'news', 'article', 'sources', 'confirmed', 'invaded'];
   const hasNewsKeywords = newsKeywords.some(keyword => lowerText.includes(keyword));
   const isLongText = text.length > 200;
   const hasMultipleSentences = (text.match(/[.!?]/g) || []).length >= 3;
-  const asksAboutImpact = lowerText.includes('affected') || lowerText.includes('impact') || lowerText.includes('stocks');
   
-  return (hasNewsKeywords || isLongText || asksAboutImpact) && (hasMultipleSentences || asksAboutImpact);
+  if ((hasNewsKeywords && hasMultipleSentences) || (isLongText && hasMultipleSentences)) {
+    return 'news';
+  }
+  
+  // Relationship detection: Asks about connections between specific companies
+  const relationshipKeywords = ['connection', 'connected', 'relationship', 'between', 'path', 'link', 'linked'];
+  const hasRelationshipKeywords = relationshipKeywords.some(keyword => lowerText.includes(keyword));
+  
+  // Check if two company-like names are mentioned (capitalized words)
+  const capitalizedWords = text.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b/g) || [];
+  const potentialCompanies = capitalizedWords.filter(w => w.length > 3);
+  
+  if (hasRelationshipKeywords && potentialCompanies.length >= 2) {
+    return 'relationship';
+  }
+  
+  // Default to general finance Q&A
+  return 'general';
+};
+
+// Generate contextual suggestions based on the conversation
+const generateSuggestions = (aiContent: string, analysisType: 'news' | 'general' | 'relationship' | 'greeting' | 'error'): string[] => {
+  if (analysisType === 'news') {
+    return [
+      "Show me the supply chain connections",
+      "Which companies are most at risk?",
+      "Find paths between affected companies"
+    ];
+  }
+  
+  if (analysisType === 'greeting') {
+    return [
+      "What is a P/E ratio?",
+      "Tell me about Apple's competitors",
+      "How does the semiconductor industry work?"
+    ];
+  }
+  
+  if (analysisType === 'relationship') {
+    return [
+      "Show me indirect connections",
+      "Which industries are most connected?",
+      "Find the most influential companies"
+    ];
+  }
+  
+  if (analysisType === 'error') {
+    return [
+      "What are ETFs?",
+      "Tell me about NVIDIA",
+      "How do supply chains work?"
+    ];
+  }
+  
+  // General finance Q&A suggestions
+  return [
+    "Tell me more about this",
+    "What companies are involved?",
+    "How does this affect the market?"
+  ];
 };
 
 export default function Chatbot({ onNewsAnalysis }: ChatbotProps = {}) {
@@ -32,7 +104,12 @@ export default function Chatbot({ onNewsAnalysis }: ChatbotProps = {}) {
     {
       id: '1',
       role: 'ai',
-      content: 'Hello! I can analyze relationships in the graph. Paste a news article or ask about connections between companies.'
+      content: 'Hello! I can answer finance questions and analyze company relationships. Ask me anything about stocks, markets, or specific companies!',
+      suggestions: [
+        "What is a P/E ratio?",
+        "Tell me about Apple's competitors",
+        "How does the semiconductor industry work?"
+      ]
     }
   ]);
   const [input, setInput] = useState('');
@@ -43,22 +120,27 @@ export default function Chatbot({ onNewsAnalysis }: ChatbotProps = {}) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = async () => {
-    if (!input.trim()) return;
+  const handleSuggestionClick = (suggestion: string) => {
+    setInput(suggestion);
+    // Auto-send after a brief delay so user can see what's being sent
+    setTimeout(() => {
+      const userMsg: Message = { id: Date.now().toString(), role: 'user', content: suggestion };
+      setMessages(prev => [...prev, userMsg]);
+      setInput('');
+      handleSendWithContent(suggestion);
+    }, 100);
+  };
 
-    const userMsg: Message = { id: Date.now().toString(), role: 'user', content: input };
-    setMessages(prev => [...prev, userMsg]);
-    setInput('');
+  const handleSendWithContent = async (content: string) => {
     setIsLoading(true);
 
     try {
-      const isNews = isLikelyNews(userMsg.content);
-      const analysisType = isNews ? 'news' : 'relationship';
+      const queryType = detectQueryType(content);
       
       const res = await fetch('/api/ai/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: userMsg.content, type: analysisType })
+        body: JSON.stringify({ text: content, type: queryType })
       });
 
       if (!res.ok) {
@@ -72,12 +154,14 @@ export default function Chatbot({ onNewsAnalysis }: ChatbotProps = {}) {
         const aiMsg: Message = {
           id: (Date.now() + 1).toString(),
           role: 'ai',
-          content: data.error
+          content: data.error,
+          suggestions: generateSuggestions(data.error, 'error')
         };
         setMessages(prev => [...prev, aiMsg]);
         return;
       }
       
+      // Handle news analysis
       if (data.analysisType === 'news' && data.affectedCompanies) {
         const affectedCount = data.affectedCompanies.length;
         let responseContent = `Analyzed the news and identified ${affectedCount} affected compan${affectedCount === 1 ? 'y' : 'ies'}. `;
@@ -94,14 +178,45 @@ export default function Chatbot({ onNewsAnalysis }: ChatbotProps = {}) {
         const aiMsg: Message = {
           id: (Date.now() + 1).toString(),
           role: 'ai',
-          content: responseContent
+          content: responseContent,
+          suggestions: generateSuggestions(responseContent, 'news')
         };
         setMessages(prev => [...prev, aiMsg]);
-      } else {
+      } 
+      // Handle general finance Q&A with optional company highlighting
+      else if (data.analysisType === 'general') {
+        const responseContent = data.answer || "I couldn't process that question.";
+        
+        // If companies were mentioned, highlight them
+        if (data.mentionedCompanies && data.mentionedCompanies.length > 0 && onNewsAnalysis) {
+          onNewsAnalysis({ 
+            affectedCompanies: data.mentionedCompanies,
+            analysisType: 'general'
+          });
+        }
+        
+        const companyCount = data.mentionedCompanies?.length || 0;
+        let fullResponse = responseContent;
+        if (companyCount > 0) {
+          fullResponse += ` (${companyCount} compan${companyCount === 1 ? 'y' : 'ies'} highlighted)`;
+        }
+        
         const aiMsg: Message = {
           id: (Date.now() + 1).toString(),
           role: 'ai',
-          content: data.error || data.explanation || "I couldn't analyze that."
+          content: fullResponse,
+          suggestions: generateSuggestions(responseContent, 'general')
+        };
+        setMessages(prev => [...prev, aiMsg]);
+      }
+      // Handle relationship analysis
+      else {
+        const responseContent = data.error || data.explanation || "I couldn't analyze that.";
+        const aiMsg: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'ai',
+          content: responseContent,
+          suggestions: generateSuggestions(responseContent, 'relationship')
         };
         setMessages(prev => [...prev, aiMsg]);
       }
@@ -124,12 +239,24 @@ export default function Chatbot({ onNewsAnalysis }: ChatbotProps = {}) {
       const errorMsg: Message = {
         id: Date.now().toString(),
         role: 'ai',
-        content: userMessage
+        content: userMessage,
+        suggestions: generateSuggestions(userMessage, 'error')
       };
       setMessages(prev => [...prev, errorMsg]);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSend = async () => {
+    if (!input.trim()) return;
+
+    const content = input;
+    const userMsg: Message = { id: Date.now().toString(), role: 'user', content };
+    setMessages(prev => [...prev, userMsg]);
+    setInput('');
+    
+    await handleSendWithContent(content);
   };
 
   return (
@@ -238,50 +365,88 @@ export default function Chatbot({ onNewsAnalysis }: ChatbotProps = {}) {
               maxHeight: '35vh'
             }}>
               {messages.map((msg, idx) => (
-                <motion.div 
-                  key={msg.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                  style={{ 
-                    display: 'flex', 
-                    justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' 
-                  }}
-                >
-                  {msg.role === 'ai' && (
-                    <div style={{
-                      width: 24,
-                      height: 24,
-                      borderRadius: 6,
-                      background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(168, 85, 247, 0.2))',
-                      border: '1px solid rgba(139, 92, 246, 0.3)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginRight: 8,
-                      flexShrink: 0
+                <React.Fragment key={msg.id}>
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                    style={{ 
+                      display: 'flex', 
+                      justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' 
+                    }}
+                  >
+                    {msg.role === 'ai' && (
+                      <div style={{
+                        width: 24,
+                        height: 24,
+                        borderRadius: 6,
+                        background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(168, 85, 247, 0.2))',
+                        border: '1px solid rgba(139, 92, 246, 0.3)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: 8,
+                        flexShrink: 0
+                      }}>
+                        <Sparkles color="#a78bfa" size={12} />
+                      </div>
+                    )}
+                    <div style={{ 
+                      maxWidth: '80%',
+                      padding: '10px 14px',
+                      borderRadius: msg.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
+                      fontSize: 13,
+                      lineHeight: 1.5,
+                      background: msg.role === 'user' 
+                        ? 'linear-gradient(135deg, #8b5cf6, #7c3aed)'
+                        : 'rgba(30, 41, 59, 0.8)',
+                      color: msg.role === 'user' ? 'white' : '#e2e8f0',
+                      border: msg.role === 'user' ? 'none' : '1px solid rgba(255,255,255,0.08)',
+                      boxShadow: msg.role === 'user' 
+                        ? '0 4px 12px rgba(139, 92, 246, 0.3)'
+                        : 'none'
                     }}>
-                      <Sparkles color="#a78bfa" size={12} />
+                      {msg.content}
                     </div>
+                  </motion.div>
+                  {/* Suggestion chips for AI messages */}
+                  {msg.role === 'ai' && msg.suggestions && idx === messages.length - 1 && !isLoading && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                      style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: 8,
+                        marginLeft: 32,
+                        marginTop: 8
+                      }}
+                    >
+                      {msg.suggestions.map((suggestion, sIdx) => (
+                        <motion.button
+                          key={sIdx}
+                          onClick={() => handleSuggestionClick(suggestion)}
+                          whileHover={{ scale: 1.02, backgroundColor: 'rgba(139, 92, 246, 0.25)' }}
+                          whileTap={{ scale: 0.98 }}
+                          style={{
+                            padding: '6px 12px',
+                            fontSize: 11,
+                            color: '#c4b5fd',
+                            background: 'rgba(139, 92, 246, 0.12)',
+                            border: '1px solid rgba(139, 92, 246, 0.3)',
+                            borderRadius: 16,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          {suggestion}
+                        </motion.button>
+                      ))}
+                    </motion.div>
                   )}
-                  <div style={{ 
-                    maxWidth: '80%',
-                    padding: '10px 14px',
-                    borderRadius: msg.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
-                    fontSize: 13,
-                    lineHeight: 1.5,
-                    background: msg.role === 'user' 
-                      ? 'linear-gradient(135deg, #8b5cf6, #7c3aed)'
-                      : 'rgba(30, 41, 59, 0.8)',
-                    color: msg.role === 'user' ? 'white' : '#e2e8f0',
-                    border: msg.role === 'user' ? 'none' : '1px solid rgba(255,255,255,0.08)',
-                    boxShadow: msg.role === 'user' 
-                      ? '0 4px 12px rgba(139, 92, 246, 0.3)'
-                      : 'none'
-                  }}>
-                    {msg.content}
-                  </div>
-                </motion.div>
+                </React.Fragment>
               ))}
               {isLoading && (
                 <motion.div 

@@ -20,47 +20,61 @@ interface NewsImpactPopupProps {
 }
 
 const IMPACT_STYLES: Record<string, { bg: string; border: string; text: string }> = {
-  positive: { bg: 'rgba(34, 197, 94, 0.15)', border: '#22c55e', text: '#86efac' },
-  negative: { bg: 'rgba(239, 68, 68, 0.15)', border: '#ef4444', text: '#fca5a5' },
+  bullish: { bg: 'rgba(34, 197, 94, 0.15)', border: '#22c55e', text: '#86efac' },
+  bearish: { bg: 'rgba(239, 68, 68, 0.15)', border: '#ef4444', text: '#fca5a5' },
   neutral: { bg: 'rgba(100, 116, 139, 0.15)', border: '#64748b', text: '#cbd5e1' },
   mixed: { bg: 'rgba(250, 204, 21, 0.15)', border: '#facc15', text: '#fef08a' }
 };
 
 const IMPACT_ICONS: Record<string, any> = {
-  positive: TrendingUp,
-  negative: TrendingDown,
+  bullish: TrendingUp,
+  bearish: TrendingDown,
   neutral: Minus,
   mixed: AlertCircle
 };
 
 export default function NewsImpactPopup({ analysis, onClose }: NewsImpactPopupProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true); // Start minimized
   const [hasNewUpdate, setHasNewUpdate] = useState(true);
-  const [isFirstRender, setIsFirstRender] = useState(true);
+  const [pulseIntensity, setPulseIntensity] = useState(1);
   const prevAnalysisRef = useRef<string>('');
   
   const { affectedCompanies, summary, newsType } = analysis;
 
-  // Detect when analysis changes
+  // Detect when analysis changes - trigger shine but stay minimized
   useEffect(() => {
     const currentAnalysisKey = JSON.stringify(analysis);
-    if (prevAnalysisRef.current && prevAnalysisRef.current !== currentAnalysisKey) {
-      // New analysis received
+    if (prevAnalysisRef.current !== currentAnalysisKey) {
+      // New analysis received - trigger shine alert
       setHasNewUpdate(true);
-      setIsCollapsed(false); // Auto-expand on new update
+      setPulseIntensity(1);
+      // Keep minimized - don't auto-expand
     }
     prevAnalysisRef.current = currentAnalysisKey;
-    setIsFirstRender(false);
   }, [analysis]);
+  
+  // Gradually reduce pulse intensity over time if not interacted with
+  useEffect(() => {
+    if (!hasNewUpdate) return;
+    
+    const interval = setInterval(() => {
+      setPulseIntensity(prev => Math.max(0.3, prev - 0.1));
+    }, 3000);
+    
+    return () => clearInterval(interval);
+  }, [hasNewUpdate]);
+
+  const dismissAlert = () => {
+    setHasNewUpdate(false);
+    setPulseIntensity(0);
+  };
 
   const handleSheetClick = () => {
-    if (hasNewUpdate) {
-      setHasNewUpdate(false);
-    }
+    dismissAlert();
   };
 
   const sortedCompanies = [...affectedCompanies].sort((a, b) => {
-    const order: Record<string, number> = { negative: 0, positive: 1, mixed: 2, neutral: 3 };
+    const order: Record<string, number> = { bearish: 0, bullish: 1, mixed: 2, neutral: 3 };
     return (order[a.impactType] || 3) - (order[b.impactType] || 3);
   });
 
@@ -84,82 +98,153 @@ export default function NewsImpactPopup({ analysis, onClose }: NewsImpactPopupPr
           maxWidth: '900px',
           maxHeight: isCollapsed ? 'auto' : '70vh',
           backgroundColor: '#0f172a',
-          borderTop: hasNewUpdate ? '3px solid #fca5a5' : '3px solid #8b5cf6',
+          borderTop: hasNewUpdate ? '3px solid #ef4444' : '3px solid #8b5cf6',
           borderRadius: '24px 24px 0 0',
           zIndex: 9999,
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
           boxShadow: hasNewUpdate 
-            ? '0 -10px 60px rgba(252, 165, 165, 0.3), 0 0 30px rgba(252, 165, 165, 0.15)' 
+            ? `0 -10px 60px rgba(239, 68, 68, ${0.4 * pulseIntensity}), 0 0 40px rgba(239, 68, 68, ${0.25 * pulseIntensity}), 0 0 80px rgba(239, 68, 68, ${0.15 * pulseIntensity})` 
             : '0 -10px 40px rgba(0,0,0,0.5)'
         }}
       >
 
-        {/* Pulsing border effect for new updates */}
+        {/* Glowing shine effect for new updates */}
         {hasNewUpdate && (
-          <motion.div
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            transition={{ repeat: Infinity, duration: 2 }}
-            style={{
-              position: 'absolute',
-              inset: 0,
-              borderRadius: '24px 24px 0 0',
-              border: '2px solid #fca5a5',
-              pointerEvents: 'none'
-            }}
-          />
+          <>
+            {/* Outer glow ring */}
+            <motion.div
+              animate={{ 
+                opacity: [0.3 * pulseIntensity, 0.8 * pulseIntensity, 0.3 * pulseIntensity],
+                scale: [1, 1.02, 1]
+              }}
+              transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }}
+              style={{
+                position: 'absolute',
+                inset: -4,
+                borderRadius: '28px 28px 0 0',
+                background: 'linear-gradient(180deg, rgba(239, 68, 68, 0.4) 0%, transparent 50%)',
+                pointerEvents: 'none',
+                filter: 'blur(8px)'
+              }}
+            />
+            {/* Inner border pulse */}
+            <motion.div
+              animate={{ 
+                opacity: [0.4, 1, 0.4],
+                boxShadow: [
+                  'inset 0 2px 20px rgba(239, 68, 68, 0.3)',
+                  'inset 0 2px 40px rgba(239, 68, 68, 0.6)',
+                  'inset 0 2px 20px rgba(239, 68, 68, 0.3)'
+                ]
+              }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                borderRadius: '24px 24px 0 0',
+                border: '2px solid #ef4444',
+                pointerEvents: 'none'
+              }}
+            />
+          </>
         )}
 
         {/* Drag Handle */}
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 8px' }}>
+        <div onClick={dismissAlert} style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 8px', cursor: 'pointer' }}>
           <motion.div 
-            style={{ width: 48, height: 6, backgroundColor: hasNewUpdate ? '#fca5a5' : '#475569', borderRadius: 3 }}
-            animate={hasNewUpdate ? { scaleX: [1, 1.2, 1] } : {}}
+            style={{ 
+              width: 48, 
+              height: 6, 
+              backgroundColor: hasNewUpdate ? '#ef4444' : '#475569', 
+              borderRadius: 3,
+              boxShadow: hasNewUpdate ? '0 0 12px rgba(239, 68, 68, 0.6)' : 'none'
+            }}
+            animate={hasNewUpdate ? { 
+              scaleX: [1, 1.3, 1],
+              opacity: [0.8, 1, 0.8]
+            } : {}}
             transition={{ repeat: Infinity, duration: 1.5 }}
           />
         </div>
 
         {/* Header */}
-        <div style={{ 
-          padding: '16px 24px', 
-          borderBottom: '1px solid rgba(255,255,255,0.1)',
-          background: hasNewUpdate 
-            ? 'linear-gradient(to right, rgba(252, 165, 165, 0.15), transparent)'
-            : 'linear-gradient(to right, rgba(139, 92, 246, 0.2), transparent)'
-        }}>
+        <div 
+          onClick={dismissAlert}
+          style={{ 
+            padding: '16px 24px', 
+            borderBottom: isCollapsed ? 'none' : '1px solid rgba(255,255,255,0.1)',
+            background: hasNewUpdate 
+              ? 'linear-gradient(to right, rgba(239, 68, 68, 0.15), transparent)'
+              : 'linear-gradient(to right, rgba(139, 92, 246, 0.2), transparent)',
+            cursor: 'pointer'
+          }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <motion.div 
                 style={{ 
                   padding: 10, 
-                  backgroundColor: hasNewUpdate ? 'rgba(252, 165, 165, 0.25)' : 'rgba(139, 92, 246, 0.3)', 
+                  backgroundColor: hasNewUpdate ? 'rgba(239, 68, 68, 0.25)' : 'rgba(139, 92, 246, 0.3)', 
                   borderRadius: 12,
-                  border: '1px solid rgba(255,255,255,0.1)'
+                  border: hasNewUpdate ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid rgba(255,255,255,0.1)',
+                  boxShadow: hasNewUpdate ? '0 0 20px rgba(239, 68, 68, 0.4)' : 'none'
                 }}
-                animate={hasNewUpdate ? { scale: [1, 1.1, 1] } : {}}
-                transition={{ repeat: Infinity, duration: 2 }}
+                animate={hasNewUpdate ? { 
+                  scale: [1, 1.15, 1],
+                  boxShadow: [
+                    '0 0 20px rgba(239, 68, 68, 0.4)',
+                    '0 0 35px rgba(239, 68, 68, 0.7)',
+                    '0 0 20px rgba(239, 68, 68, 0.4)'
+                  ]
+                } : {}}
+                transition={{ repeat: Infinity, duration: 1.5 }}
               >
-                <Newspaper color="white" size={20} />
+                <Newspaper color={hasNewUpdate ? '#fca5a5' : 'white'} size={20} />
               </motion.div>
               <div>
-                <h2 style={{ color: 'white', fontSize: 18, fontWeight: 'bold', margin: 0 }}>
-                  News Impact Analysis
-                </h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <h2 style={{ color: 'white', fontSize: 18, fontWeight: 'bold', margin: 0 }}>
+                    News Impact
+                  </h2>
+                  {hasNewUpdate && (
+                    <motion.span
+                      animate={{ opacity: [0.7, 1, 0.7] }}
+                      transition={{ repeat: Infinity, duration: 1.5 }}
+                      style={{
+                        padding: '2px 8px',
+                        backgroundColor: 'rgba(239, 68, 68, 0.3)',
+                        border: '1px solid rgba(239, 68, 68, 0.5)',
+                        borderRadius: 12,
+                        fontSize: 10,
+                        fontWeight: 600,
+                        color: '#fca5a5',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}
+                    >
+                      New
+                    </motion.span>
+                  )}
+                </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
                   <span style={{ 
                     padding: '4px 10px', 
-                    backgroundColor: hasNewUpdate ? 'rgba(252, 165, 165, 0.25)' : 'rgba(139, 92, 246, 0.3)',
+                    backgroundColor: hasNewUpdate ? 'rgba(239, 68, 68, 0.2)' : 'rgba(139, 92, 246, 0.3)',
                     borderRadius: 20,
                     fontSize: 12,
-                    color: 'rgba(255,255,255,0.9)',
-                    border: '1px solid rgba(255,255,255,0.1)'
+                    color: hasNewUpdate ? '#fca5a5' : 'rgba(255,255,255,0.9)',
+                    border: hasNewUpdate ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(255,255,255,0.1)'
                   }}>
                     {newsType}
                   </span>
-                  <span style={{ fontSize: 12, color: '#94a3b8' }}>
+                  <motion.span 
+                    style={{ fontSize: 12, color: hasNewUpdate ? '#fca5a5' : '#94a3b8' }}
+                    animate={hasNewUpdate ? { opacity: [0.7, 1, 0.7] } : {}}
+                    transition={{ repeat: Infinity, duration: 2 }}
+                  >
                     {affectedCompanies.length} companies affected
-                  </span>
+                  </motion.span>
                 </div>
               </div>
             </div>
@@ -167,14 +252,14 @@ export default function NewsImpactPopup({ analysis, onClose }: NewsImpactPopupPr
               onClick={(e) => {
                 e.stopPropagation();
                 setIsCollapsed(!isCollapsed);
-                if (hasNewUpdate) setHasNewUpdate(false);
+                dismissAlert();
               }}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               style={{ 
                 padding: 8, 
-                backgroundColor: 'rgba(0,0,0,0.3)', 
-                border: '1px solid rgba(255,255,255,0.1)',
+                backgroundColor: hasNewUpdate ? 'rgba(239, 68, 68, 0.2)' : 'rgba(0,0,0,0.3)', 
+                border: hasNewUpdate ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(255,255,255,0.1)',
                 borderRadius: 8,
                 cursor: 'pointer',
                 display: 'flex',
@@ -186,7 +271,7 @@ export default function NewsImpactPopup({ analysis, onClose }: NewsImpactPopupPr
                 animate={{ rotate: isCollapsed ? 0 : 180 }}
                 transition={{ duration: 0.3 }}
               >
-                <ChevronUp color="#94a3b8" size={18} />
+                <ChevronUp color={hasNewUpdate ? '#fca5a5' : '#94a3b8'} size={18} />
               </motion.div>
             </motion.button>
           </div>

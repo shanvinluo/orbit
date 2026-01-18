@@ -20,7 +20,7 @@ interface Props {
   highlightEdges: Set<string>;
   focusedNodeId?: string;
   enabledEdgeTypes?: Set<EdgeType>;
-  affectedCompanies?: Map<string, 'positive' | 'negative' | 'neutral' | 'mixed' | 'uncertain'>;
+  affectedCompanies?: Map<string, 'bullish' | 'bearish' | 'neutral' | 'mixed' | 'uncertain'>;
   pathMode?: boolean;
   watchlist?: Set<string>;
 }
@@ -174,15 +174,8 @@ const generateDensityField = (
 
 export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundClick, highlightNodes, highlightEdges, focusedNodeId, enabledEdgeTypes, affectedCompanies, pathMode = false, watchlist }: Props) {
   const fgRef = useRef<any>(null);
-  const [cameraPosition, setCameraPosition] = useState<THREE.Vector3>(new THREE.Vector3(0, 0, 5000));
-  const initialCameraSetRef = useRef(false);
+  const [cameraPosition, setCameraPosition] = useState<THREE.Vector3>(new THREE.Vector3(0, 0, 1000));
   const densityUpdateTimer = useRef<NodeJS.Timeout | null>(null);
-  
-  // Loading state
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadingProgress, setLoadingProgress] = useState(0);
-  const graphReadyRef = useRef(false);
-  const cloudsReadyRef = useRef(false);
 
   // Filter graph data based on enabled edge types, path mode, and watchlist
   const filteredData = useMemo(() => {
@@ -223,50 +216,6 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
     };
   }, [data, enabledEdgeTypes, pathMode, highlightNodes, highlightEdges, watchlist]);
 
-  // Check if everything is loaded
-  useEffect(() => {
-    if (graphReadyRef.current && cloudsReadyRef.current && isLoading) {
-      // Small delay to ensure smooth transition
-      setTimeout(() => setIsLoading(false), 200);
-    }
-  }, [isLoading, loadingProgress]);
-  
-  // Set initial zoomed out camera position
-  useEffect(() => {
-    if (!fgRef.current || initialCameraSetRef.current) return;
-    
-    const setInitialCamera = () => {
-      if (fgRef.current && !initialCameraSetRef.current) {
-        fgRef.current.cameraPosition({ x: 0, y: 0, z: 5000 }, { x: 0, y: 0, z: 0 }, 0);
-        initialCameraSetRef.current = true;
-      }
-    };
-    
-    // Try immediately and after a short delay
-    setInitialCamera();
-    const timer = setTimeout(setInitialCamera, 500);
-    return () => clearTimeout(timer);
-  }, []);
-  
-  // Track when graph nodes have positions
-  useEffect(() => {
-    if (graphReadyRef.current) return;
-    
-    const checkGraphReady = () => {
-      const nodes = filteredData.nodes as Array<{ x?: number; y?: number; z?: number }>;
-      const validNodes = nodes.filter(n => n.x !== undefined);
-      
-      if (validNodes.length >= 2) {
-        graphReadyRef.current = true;
-        setLoadingProgress(prev => Math.max(prev, 50));
-      } else {
-        setTimeout(checkGraphReady, 100);
-      }
-    };
-    
-    checkGraphReady();
-  }, [filteredData.nodes]);
-  
   // Track camera
   useEffect(() => {
     if (!fgRef.current) return;
@@ -413,242 +362,227 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
   }, []);
 
   // Store all milky cloud layers for cleanup
-  const milkyLayersRef = useRef<THREE.Object3D[]>([]);
-  const cloudTextureRef = useRef<THREE.CanvasTexture | null>(null);
-  
-  // Create a VERY BRIGHT circular cloud texture
-  const getCloudTexture = useCallback((): THREE.CanvasTexture => {
-    if (cloudTextureRef.current) return cloudTextureRef.current;
-    
-    const size = 256;
-    const canvas = document.createElement('canvas');
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext('2d')!;
-    
-    // VERY bright gradient - stays opaque longer
-    const gradient = ctx.createRadialGradient(
-      size / 2, size / 2, 0,
-      size / 2, size / 2, size / 2
-    );
-    
-    gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-    gradient.addColorStop(0.3, 'rgba(255, 255, 255, 1)');
-    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.8)');
-    gradient.addColorStop(0.7, 'rgba(255, 255, 255, 0.5)');
-    gradient.addColorStop(0.85, 'rgba(255, 255, 255, 0.2)');
-    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-    
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, size, size);
-    
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.needsUpdate = true;
-    cloudTextureRef.current = texture;
-    return texture;
-  }, []);
+  const milkyLayersRef = useRef<THREE.Points[]>([]);
 
-  // Track if clouds have been created
-  const cloudsCreatedRef = useRef(false);
-  
-  // Create POINT CLOUD based milky nebula effect - ONCE only
+  // Create and update ULTRA milky density clouds
   useEffect(() => {
-    let mounted = true;
+    if (!fgRef.current) return;
     
-    // Skip if clouds already exist
-    if (cloudsCreatedRef.current && milkyLayersRef.current.length > 0) {
-      return;
-    }
-    
-    const waitForScene = () => {
-      if (!mounted) return;
-      
-      if (!fgRef.current) {
-        setTimeout(waitForScene, 200);
-        return;
-      }
-      
-      const scene = fgRef.current.scene?.();
-      if (!scene) {
-        setTimeout(waitForScene, 200);
-        return;
-      }
-      
-      // Wait for nodes to have positions
-      const nodes = filteredData.nodes as Array<{ x?: number; y?: number; z?: number; id: string }>;
-      const validNodes = nodes.filter(n => n.x !== undefined);
-      if (validNodes.length < 2) {
-        setTimeout(waitForScene, 300);
-        return;
-      }
-      
-      console.log('Scene ready, creating clouds once...');
-      createClouds(scene, validNodes);
-    };
-    
-    const createClouds = (scene: THREE.Scene, validNodes: Array<{ x?: number; y?: number; z?: number; id: string }>) => {
-      if (cloudsCreatedRef.current) return;
-      cloudsCreatedRef.current = true;
-      
-      // Get cloud texture
-      const cloudTexture = getCloudTexture();
-      
-      // Calculate bounds of all nodes
-      let sumX = 0, sumY = 0, sumZ = 0;
-      let minX = Infinity, maxX = -Infinity;
-      let minY = Infinity, maxY = -Infinity;
-      let minZ = Infinity, maxZ = -Infinity;
-      
-      for (const node of validNodes) {
-        const x = node.x || 0;
-        const y = node.y || 0;
-        const z = node.z || 0;
-        sumX += x; sumY += y; sumZ += z;
-        minX = Math.min(minX, x); maxX = Math.max(maxX, x);
-        minY = Math.min(minY, y); maxY = Math.max(maxY, y);
-        minZ = Math.min(minZ, z); maxZ = Math.max(maxZ, z);
-      }
-      
-      const centerX = sumX / validNodes.length;
-      const centerY = sumY / validNodes.length;
-      const centerZ = sumZ / validNodes.length;
-      const spreadX = (maxX - minX) || 200;
-      const spreadY = (maxY - minY) || 200;
-      const spreadZ = (maxZ - minZ) || 200;
-      
-      // Gaussian random for natural distribution
-      const gaussianRandom = () => {
-        let u = 0, v = 0;
-        while (u === 0) u = Math.random();
-        while (v === 0) v = Math.random();
-        return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
-      };
+    const scene = fgRef.current.scene();
+    if (!scene) return;
 
-      // Create evenly distributed cloud throughout space
-      const createDistributedCloud = (
-        count: number,
-        particleSize: number,
+    const updateMilkyCloud = () => {
+      // Remove all existing cloud layers
+      for (const layer of milkyLayersRef.current) {
+        scene.remove(layer);
+        layer.geometry.dispose();
+        if (layer.material instanceof THREE.Material) {
+          layer.material.dispose();
+        }
+      }
+      milkyLayersRef.current = [];
+
+      // Get current node positions from the graph
+      const nodes = filteredData.nodes as Array<{ x?: number; y?: number; z?: number; id: string }>;
+      
+      // Generate density field - larger bandwidth and finer grid for smooth, thick clouds
+      const densityPoints = generateDensityField(nodes, 35, 100);
+      
+      if (densityPoints.length === 0) return;
+
+      // Find max density for normalization
+      const maxDensity = Math.max(...densityPoints.map(p => p.density));
+      
+      // Helper to create a cloud layer
+      const createCloudLayer = (
+        particleMultiplier: number,
+        scatter: number,
+        size: number,
         opacity: number,
-        spreadScale: number
+        colorMult: number,
+        whiteMix: number,
+        renderOrder: number
       ) => {
-        const positions = new Float32Array(count * 3);
-        const colors = new Float32Array(count * 3);
+        const count = Math.floor(densityPoints.length * particleMultiplier);
+        const pos = new Float32Array(count * 3);
+        const col = new Float32Array(count * 3);
         
         for (let i = 0; i < count; i++) {
-          // Use gaussian distribution for natural spread from center
-          const gx = gaussianRandom() * 0.4; // Spread factor
-          const gy = gaussianRandom() * 0.4;
-          const gz = gaussianRandom() * 0.4;
+          const point = densityPoints[i % densityPoints.length];
+          const normalizedDensity = point.density / maxDensity;
+          const dynamicScatter = scatter * (1 - normalizedDensity * 0.3);
           
-          const px = centerX + gx * spreadX * spreadScale;
-          const py = centerY + gy * spreadY * spreadScale;
-          const pz = centerZ + gz * spreadZ * spreadScale;
+          pos[i * 3] = point.x + (Math.random() - 0.5) * dynamicScatter;
+          pos[i * 3 + 1] = point.y + (Math.random() - 0.5) * dynamicScatter;
+          pos[i * 3 + 2] = point.z + (Math.random() - 0.5) * dynamicScatter;
           
-          positions[i * 3] = px;
-          positions[i * 3 + 1] = py;
-          positions[i * 3 + 2] = pz;
-          
-          // Blend colors from multiple nearby nodes for smoother transitions
-          let totalWeight = 0;
-          let r = 0, g = 0, b = 0;
-          
-          for (const node of validNodes) {
-            const dx = px - (node.x || 0);
-            const dy = py - (node.y || 0);
-            const dz = pz - (node.z || 0);
-            const distSq = dx * dx + dy * dy + dz * dz;
-            const weight = 1 / (1 + distSq * 0.0001); // Inverse distance weight
-            
-            const palette = getStarPalette(node.id);
-            const nodeColor = new THREE.Color(palette.glow);
-            r += nodeColor.r * weight;
-            g += nodeColor.g * weight;
-            b += nodeColor.b * weight;
-            totalWeight += weight;
-          }
-          
-          // Normalize and mix with white for milky effect
-          if (totalWeight > 0) {
-            colors[i * 3] = Math.min(1, (r / totalWeight) * 0.7 + 0.3);
-            colors[i * 3 + 1] = Math.min(1, (g / totalWeight) * 0.7 + 0.3);
-            colors[i * 3 + 2] = Math.min(1, (b / totalWeight) * 0.7 + 0.3);
-          }
+          // Mix original color with white for milky effect
+          const variation = 0.8 + Math.random() * 0.4;
+          col[i * 3] = Math.min(1, point.color.r * colorMult * variation + whiteMix);
+          col[i * 3 + 1] = Math.min(1, point.color.g * colorMult * variation + whiteMix);
+          col[i * 3 + 2] = Math.min(1, point.color.b * colorMult * variation + whiteMix);
         }
         
-        const geometry = new THREE.BufferGeometry();
-        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
         
-        const material = new THREE.PointsMaterial({
-          size: particleSize,
-          map: cloudTexture,
+        const mat = new THREE.PointsMaterial({
+          size,
           vertexColors: true,
           transparent: true,
-          opacity: opacity,
+          opacity,
           blending: THREE.AdditiveBlending,
           depthWrite: false,
-          sizeAttenuation: false,
+          sizeAttenuation: true,
         });
         
-        const cloud = new THREE.Points(geometry, material);
-        cloud.renderOrder = -1;
+        const cloud = new THREE.Points(geo, mat);
+        cloud.renderOrder = renderOrder;
         scene.add(cloud);
         milkyLayersRef.current.push(cloud);
       };
 
-      // === CREATE SMOOTH, DISTRIBUTED CLOUD LAYERS ===
-      // Multiple layers with gaussian distribution for natural look
+      // === LAYER 1: Ultra-fine dense core particles ===
+      createCloudLayer(120, 15, 40, 1.0, 1.3, 0.15, -0.5);
       
-      // Core dense layer (closer to center)
-      createDistributedCloud(5000, 10, 0.05, 0.7);
+      // === LAYER 2: Dense inner cloud ===
+      createCloudLayer(100, 25, 60, 1.0, 1.1, 0.18, -1);
       
-      // Mid dense layer
-      createDistributedCloud(4000, 16, 0.045, 1.0);
+      // === LAYER 3: Medium cloud layer ===
+      createCloudLayer(90, 45, 90, 0.9, 1.0, 0.22, -2);
       
-      // Mid density layer
-      createDistributedCloud(3500, 22, 0.04, 1.3);
+      // === LAYER 4: Soft diffuse cloud ===
+      createCloudLayer(80, 70, 130, 0.8, 0.9, 0.26, -3);
       
-      // Outer diffuse layer
-      createDistributedCloud(3000, 30, 0.035, 1.7);
+      // === LAYER 5: Large fluffy cloud ===
+      createCloudLayer(70, 100, 180, 0.7, 0.8, 0.3, -4);
       
-      // Very outer haze
-      createDistributedCloud(2500, 40, 0.025, 2.2);
+      // === LAYER 6: Massive outer haze ===
+      createCloudLayer(60, 140, 250, 0.55, 0.7, 0.35, -5);
       
-      console.log('Natural clouds created:', milkyLayersRef.current.length, 'layers');
+      // === LAYER 7: Ultra-wide atmospheric glow ===
+      createCloudLayer(50, 200, 350, 0.4, 0.6, 0.4, -6);
       
-      // Mark clouds as ready
-      cloudsReadyRef.current = true;
-      setLoadingProgress(100);
+      // === LAYER 8: Extreme outer envelope ===
+      createCloudLayer(40, 280, 500, 0.3, 0.5, 0.45, -7);
+      
+      // === LAYER 9: Extra diffuse cloud ===
+      createCloudLayer(35, 350, 600, 0.2, 0.4, 0.5, -8);
+      
+      // === LAYER 10: Atmospheric mist ===
+      createCloudLayer(30, 450, 750, 0.15, 0.35, 0.55, -9);
+      
+      // === LAYER 9: Bright white milky highlights ===
+      const whiteCount = Math.floor(densityPoints.length * 20);
+      const whitePos = new Float32Array(whiteCount * 3);
+      const whiteCol = new Float32Array(whiteCount * 3);
+      
+      // Sort by density and only use top 40%
+      const sorted = [...densityPoints].sort((a, b) => b.density - a.density);
+      const topPoints = sorted.slice(0, Math.floor(sorted.length * 0.4));
+      
+      for (let i = 0; i < whiteCount; i++) {
+        const point = topPoints[i % topPoints.length];
+        const normalizedDensity = point.density / maxDensity;
+        
+        whitePos[i * 3] = point.x + (Math.random() - 0.5) * 40;
+        whitePos[i * 3 + 1] = point.y + (Math.random() - 0.5) * 40;
+        whitePos[i * 3 + 2] = point.z + (Math.random() - 0.5) * 40;
+        
+        // Bright white/cream color with hint of original
+        const whiteness = 0.7 + normalizedDensity * 0.3;
+        whiteCol[i * 3] = Math.min(1, whiteness + point.color.r * 0.2);
+        whiteCol[i * 3 + 1] = Math.min(1, whiteness + point.color.g * 0.15);
+        whiteCol[i * 3 + 2] = Math.min(1, whiteness + point.color.b * 0.1);
+      }
+      
+      const whiteGeo = new THREE.BufferGeometry();
+      whiteGeo.setAttribute('position', new THREE.BufferAttribute(whitePos, 3));
+      whiteGeo.setAttribute('color', new THREE.BufferAttribute(whiteCol, 3));
+      
+      const whiteMat = new THREE.PointsMaterial({
+        size: 55,
+        vertexColors: true,
+        transparent: true,
+        opacity: 1.0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        sizeAttenuation: true,
+      });
+      
+      const whiteCloud = new THREE.Points(whiteGeo, whiteMat);
+      whiteCloud.renderOrder = -0.3;
+      scene.add(whiteCloud);
+      milkyLayersRef.current.push(whiteCloud);
+      
+      // === LAYER 10: Glowing hot cores at densest points ===
+      const coreCount = Math.floor(topPoints.length * 8);
+      const corePos = new Float32Array(coreCount * 3);
+      const coreCol = new Float32Array(coreCount * 3);
+      
+      for (let i = 0; i < coreCount; i++) {
+        const point = topPoints[Math.floor(i / 8)];
+        
+        corePos[i * 3] = point.x + (Math.random() - 0.5) * 25;
+        corePos[i * 3 + 1] = point.y + (Math.random() - 0.5) * 25;
+        corePos[i * 3 + 2] = point.z + (Math.random() - 0.5) * 25;
+        
+        // Intensified original color
+        coreCol[i * 3] = Math.min(1, point.color.r * 1.5 + 0.2);
+        coreCol[i * 3 + 1] = Math.min(1, point.color.g * 1.5 + 0.2);
+        coreCol[i * 3 + 2] = Math.min(1, point.color.b * 1.5 + 0.2);
+      }
+      
+      const coreGeo = new THREE.BufferGeometry();
+      coreGeo.setAttribute('position', new THREE.BufferAttribute(corePos, 3));
+      coreGeo.setAttribute('color', new THREE.BufferAttribute(coreCol, 3));
+      
+      const coreMat = new THREE.PointsMaterial({
+        size: 80,
+        vertexColors: true,
+        transparent: true,
+        opacity: 1.0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        sizeAttenuation: true,
+      });
+      
+      const coreCloud = new THREE.Points(coreGeo, coreMat);
+      coreCloud.renderOrder = -0.1;
+      scene.add(coreCloud);
+      milkyLayersRef.current.push(coreCloud);
     };
-    
-    // Start waiting for scene
-    waitForScene();
+
+    // Initial delay to let nodes settle
+    const initialTimer = setTimeout(() => {
+      updateMilkyCloud();
+      
+      // Update periodically as nodes move
+      densityUpdateTimer.current = setInterval(updateMilkyCloud, 2500);
+    }, 1200);
 
     return () => {
-      mounted = false;
+      clearTimeout(initialTimer);
       if (densityUpdateTimer.current) {
         clearInterval(densityUpdateTimer.current);
       }
-    };
-  }, [filteredData.nodes, getCloudTexture]);
-  
-  // Cleanup clouds on unmount only
-  useEffect(() => {
-    return () => {
+      // Clean up all layers
       if (fgRef.current) {
-        const scene = fgRef.current.scene?.();
+        const scene = fgRef.current.scene();
         if (scene) {
           for (const layer of milkyLayersRef.current) {
             scene.remove(layer);
-            if ((layer as any).geometry) (layer as any).geometry.dispose();
-            if ((layer as any).material) (layer as any).material.dispose();
+            layer.geometry.dispose();
+            if (layer.material instanceof THREE.Material) {
+              layer.material.dispose();
+            }
           }
         }
       }
       milkyLayersRef.current = [];
-      cloudsCreatedRef.current = false;
     };
-  }, []);
+  }, [filteredData.nodes]);
 
   // Store original positions for restoring when deselecting
   const originalPositions = useRef<Map<string, {x: number, y: number, z: number}>>(new Map());
@@ -756,8 +690,8 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
     // Override for affected companies
     if (affectedCompanies?.has(node.id)) {
       const impact = affectedCompanies.get(node.id);
-      if (impact === 'positive') palette = STAR_COLORS.green;
-      else if (impact === 'negative') palette = STAR_COLORS.red;
+      if (impact === 'bullish') palette = STAR_COLORS.green;
+      else if (impact === 'bearish') palette = STAR_COLORS.red;
       else if (impact === 'mixed') palette = STAR_COLORS.gold;
     }
     
@@ -774,7 +708,6 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
       depthWrite: false,
     });
     const outerGlow = new THREE.Mesh(outerGlowGeometry, outerGlowMaterial);
-    outerGlow.raycast = () => {}; // Disable raycasting so edges behind are clickable
     group.add(outerGlow);
     
     // Layer 2: Middle glow
@@ -787,7 +720,6 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
       depthWrite: false,
     });
     const midGlow = new THREE.Mesh(midGlowGeometry, midGlowMaterial);
-    midGlow.raycast = () => {}; // Disable raycasting so edges behind are clickable
     group.add(midGlow);
     
     // Layer 3: Inner glow
@@ -800,7 +732,6 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
       depthWrite: false,
     });
     const innerGlow = new THREE.Mesh(innerGlowGeometry, innerGlowMaterial);
-    innerGlow.raycast = () => {}; // Disable raycasting so edges behind are clickable
     group.add(innerGlow);
     
     // Layer 4: Bright core
@@ -826,26 +757,22 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
         side: THREE.DoubleSide,
       });
       const spike1 = new THREE.Mesh(spikeGeometry, spikeMaterial);
-      spike1.raycast = () => {}; // Disable raycasting so edges behind are clickable
       group.add(spike1);
       
       // Vertical spike
       const spike2 = new THREE.Mesh(spikeGeometry, spikeMaterial);
       spike2.rotation.z = Math.PI / 2;
-      spike2.raycast = () => {}; // Disable raycasting so edges behind are clickable
       group.add(spike2);
       
       // Diagonal spikes
       const spike3 = new THREE.Mesh(spikeGeometry, spikeMaterial.clone());
       spike3.material.opacity = 0.2;
       spike3.rotation.z = Math.PI / 4;
-      spike3.raycast = () => {}; // Disable raycasting so edges behind are clickable
       group.add(spike3);
       
       const spike4 = new THREE.Mesh(spikeGeometry, spikeMaterial.clone());
       spike4.material.opacity = 0.2;
       spike4.rotation.z = -Math.PI / 4;
-      spike4.raycast = () => {}; // Disable raycasting so edges behind are clickable
       group.add(spike4);
     }
     
@@ -867,24 +794,7 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
   }, [affectedCompanies]);
 
   return (
-    <div className="w-full h-full relative">
-      {/* Loading overlay */}
-      {isLoading && (
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#000008]">
-          <div className="text-white/80 text-lg mb-4 font-light tracking-wider">
-            Loading Galaxy...
-          </div>
-          <div className="w-64 h-1 bg-white/10 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-amber-500 rounded-full transition-all duration-500 ease-out"
-              style={{ width: `${loadingProgress}%` }}
-            />
-          </div>
-          <div className="text-white/40 text-sm mt-2">
-            {loadingProgress < 50 ? 'Positioning stars...' : 'Creating nebula...'}
-          </div>
-        </div>
-      )}
+    <div className="w-full h-full">
       {/* @ts-ignore */}
       <ForceGraph3D
         ref={fgRef}
