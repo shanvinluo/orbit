@@ -15,7 +15,8 @@ export enum EdgeType {
   JointVenture = 'JOINT_VENTURE',
   Licensing = 'LICENSING',
   Swaps = 'SWAPS',
-  BoardInterlock = 'BOARD_INTERLOCK'
+  BoardInterlock = 'BOARD_INTERLOCK',
+  Competitor = 'COMPETITOR'
 }
 
 export const EDGE_COLORS: Record<EdgeType, string> = {
@@ -28,7 +29,8 @@ export const EDGE_COLORS: Record<EdgeType, string> = {
   [EdgeType.JointVenture]: '#06b6d4', // Cyan 500
   [EdgeType.Licensing]: '#6366f1', // Indigo 500
   [EdgeType.Swaps]: '#14b8a6', // Teal 500
-  [EdgeType.BoardInterlock]: '#a855f7' // Purple 500
+  [EdgeType.BoardInterlock]: '#a855f7', // Purple 500
+  [EdgeType.Competitor]: '#f97316' // Orange 500
 };
 
 // Human-readable labels for relationship types
@@ -42,7 +44,8 @@ export const EDGE_LABELS: Record<EdgeType, string> = {
   [EdgeType.JointVenture]: 'Joint Venture',
   [EdgeType.Licensing]: 'Licensing Agreement',
   [EdgeType.Swaps]: 'Swaps',
-  [EdgeType.BoardInterlock]: 'Board Interlock'
+  [EdgeType.BoardInterlock]: 'Board Interlock',
+  [EdgeType.Competitor]: 'Competitor'
 };
 
 export interface GraphNode {
