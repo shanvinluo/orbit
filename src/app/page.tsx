@@ -204,6 +204,7 @@ export default function Home() {
           highlightEdges={highlightEdges}
           focusedNodeId={selectedNode?.id}
           enabledEdgeTypes={enabledEdgeTypes}
+          pathMode={pathMode}
           affectedCompanies={affectedCompaniesMap}
         />
       </div>
