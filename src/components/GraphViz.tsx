@@ -56,9 +56,126 @@ const getNodeColor = (nodeId: string): string => {
   return getStarPalette(nodeId).glow;
 };
 
+// Density cloud calculation for milky effect
+interface DensityPoint {
+  x: number;
+  y: number;
+  z: number;
+  density: number;
+  color: THREE.Color;
+}
+
+// Calculate density at a point using Gaussian kernel
+const calculateDensity = (
+  point: THREE.Vector3,
+  nodes: Array<{ x?: number; y?: number; z?: number; id: string }>,
+  bandwidth: number
+): { density: number; color: THREE.Color } => {
+  let density = 0;
+  const colorAccum = new THREE.Color(0, 0, 0);
+  let colorWeight = 0;
+
+  for (const node of nodes) {
+    if (node.x === undefined) continue;
+    
+    const dx = point.x - (node.x || 0);
+    const dy = point.y - (node.y || 0);
+    const dz = point.z - (node.z || 0);
+    const distSq = dx * dx + dy * dy + dz * dz;
+    
+    // Gaussian kernel
+    const weight = Math.exp(-distSq / (2 * bandwidth * bandwidth));
+    density += weight;
+    
+    // Accumulate color weighted by proximity
+    if (weight > 0.01) {
+      const palette = getStarPalette(node.id);
+      const nodeColor = new THREE.Color(palette.glow);
+      colorAccum.r += nodeColor.r * weight;
+      colorAccum.g += nodeColor.g * weight;
+      colorAccum.b += nodeColor.b * weight;
+      colorWeight += weight;
+    }
+  }
+
+  // Normalize color
+  if (colorWeight > 0) {
+    colorAccum.r /= colorWeight;
+    colorAccum.g /= colorWeight;
+    colorAccum.b /= colorWeight;
+  }
+
+  return { density, color: colorAccum };
+};
+
+// Generate density field sample points
+const generateDensityField = (
+  nodes: Array<{ x?: number; y?: number; z?: number; id: string }>,
+  gridSize: number = 20,
+  bandwidth: number = 50
+): DensityPoint[] => {
+  if (nodes.length === 0) return [];
+
+  // Find bounding box of nodes
+  let minX = Infinity, maxX = -Infinity;
+  let minY = Infinity, maxY = -Infinity;
+  let minZ = Infinity, maxZ = -Infinity;
+  let validNodes = 0;
+
+  for (const node of nodes) {
+    if (node.x === undefined) continue;
+    validNodes++;
+    minX = Math.min(minX, node.x || 0);
+    maxX = Math.max(maxX, node.x || 0);
+    minY = Math.min(minY, node.y || 0);
+    maxY = Math.max(maxY, node.y || 0);
+    minZ = Math.min(minZ, node.z || 0);
+    maxZ = Math.max(maxZ, node.z || 0);
+  }
+
+  if (validNodes < 3) return [];
+
+  // Expand bounds slightly
+  const padding = bandwidth * 2;
+  minX -= padding; maxX += padding;
+  minY -= padding; maxY += padding;
+  minZ -= padding; maxZ += padding;
+
+  const stepX = (maxX - minX) / gridSize;
+  const stepY = (maxY - minY) / gridSize;
+  const stepZ = (maxZ - minZ) / gridSize;
+
+  const densityPoints: DensityPoint[] = [];
+
+  // Sample density at grid points
+  for (let ix = 0; ix <= gridSize; ix++) {
+    for (let iy = 0; iy <= gridSize; iy++) {
+      for (let iz = 0; iz <= gridSize; iz++) {
+        const x = minX + ix * stepX;
+        const y = minY + iy * stepY;
+        const z = minZ + iz * stepZ;
+        
+        const { density, color } = calculateDensity(
+          new THREE.Vector3(x, y, z),
+          nodes,
+          bandwidth
+        );
+        
+        // Very low threshold for maximum cloud coverage
+        if (density > 0.1) {
+          densityPoints.push({ x, y, z, density, color });
+        }
+      }
+    }
+  }
+
+  return densityPoints;
+};
+
 export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundClick, highlightNodes, highlightEdges, focusedNodeId, enabledEdgeTypes, affectedCompanies, pathMode = false, watchlist }: Props) {
   const fgRef = useRef<any>(null);
   const [cameraPosition, setCameraPosition] = useState<THREE.Vector3>(new THREE.Vector3(0, 0, 1000));
+  const densityUpdateTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Filter graph data based on enabled edge types, path mode, and watchlist
   const filteredData = useMemo(() => {
@@ -243,6 +360,275 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
       fgRef.current.d3Force('charge').strength(-80);
     }
   }, []);
+
+  // Store all milky cloud layers for cleanup
+  const milkyLayersRef = useRef<THREE.Object3D[]>([]);
+  const cloudTextureRef = useRef<THREE.CanvasTexture | null>(null);
+  
+  // Create a VERY BRIGHT circular cloud texture
+  const getCloudTexture = useCallback((): THREE.CanvasTexture => {
+    if (cloudTextureRef.current) return cloudTextureRef.current;
+    
+    const size = 256;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d')!;
+    
+    // VERY bright gradient - stays opaque longer
+    const gradient = ctx.createRadialGradient(
+      size / 2, size / 2, 0,
+      size / 2, size / 2, size / 2
+    );
+    
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+    gradient.addColorStop(0.3, 'rgba(255, 255, 255, 1)');
+    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.8)');
+    gradient.addColorStop(0.7, 'rgba(255, 255, 255, 0.5)');
+    gradient.addColorStop(0.85, 'rgba(255, 255, 255, 0.2)');
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, size, size);
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+    cloudTextureRef.current = texture;
+    return texture;
+  }, []);
+
+  // Create POINT CLOUD based milky nebula effect
+  useEffect(() => {
+    let mounted = true;
+    
+    const waitForScene = () => {
+      if (!mounted) return;
+      
+      if (!fgRef.current) {
+        setTimeout(waitForScene, 200);
+        return;
+      }
+      
+      const scene = fgRef.current.scene?.();
+      if (!scene) {
+        setTimeout(waitForScene, 200);
+        return;
+      }
+      
+      console.log('Scene ready, creating clouds...');
+      startCloudEffect(scene);
+    };
+    
+    const startCloudEffect = (scene: THREE.Scene) => {
+      const updateMilkyCloud = () => {
+        if (!mounted || !fgRef.current) return;
+      // Remove all existing cloud elements
+      for (const layer of milkyLayersRef.current) {
+        scene.remove(layer);
+        if ((layer as any).geometry) (layer as any).geometry.dispose();
+        if ((layer as any).material) {
+          if ((layer as any).material.map) (layer as any).material.map.dispose();
+          (layer as any).material.dispose();
+        }
+      }
+      milkyLayersRef.current = [];
+
+      // Get current node positions
+      const nodes = filteredData.nodes as Array<{ x?: number; y?: number; z?: number; id: string }>;
+      const validNodes = nodes.filter(n => n.x !== undefined);
+      if (validNodes.length < 2) return;
+
+      // Get cloud texture
+      const cloudTexture = getCloudTexture();
+      
+      // Calculate center and spread of all nodes
+      let sumX = 0, sumY = 0, sumZ = 0;
+      let minX = Infinity, maxX = -Infinity;
+      let minY = Infinity, maxY = -Infinity;
+      let minZ = Infinity, maxZ = -Infinity;
+      
+      for (const node of validNodes) {
+        const x = node.x || 0;
+        const y = node.y || 0;
+        const z = node.z || 0;
+        sumX += x; sumY += y; sumZ += z;
+        minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+        minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+        minZ = Math.min(minZ, z); maxZ = Math.max(maxZ, z);
+      }
+      
+      const centerX = sumX / validNodes.length;
+      const centerY = sumY / validNodes.length;
+      const centerZ = sumZ / validNodes.length;
+      const spreadX = (maxX - minX) || 200;
+      const spreadY = (maxY - minY) || 200;
+      const spreadZ = (maxZ - minZ) || 200;
+
+      // Create colored point clouds around each node
+      const createCloudAroundNodes = (
+        particlesPerNode: number,
+        spread: number,
+        particleSize: number,
+        opacity: number,
+        colorBoost: number
+      ) => {
+        const totalParticles = validNodes.length * particlesPerNode;
+        const positions = new Float32Array(totalParticles * 3);
+        const colors = new Float32Array(totalParticles * 3);
+        
+        let idx = 0;
+        for (const node of validNodes) {
+          const nx = node.x || 0;
+          const ny = node.y || 0;
+          const nz = node.z || 0;
+          
+          const palette = getStarPalette(node.id);
+          const baseColor = new THREE.Color(palette.glow);
+          
+          for (let i = 0; i < particlesPerNode; i++) {
+            // Random position around node with gaussian-like distribution
+            const angle1 = Math.random() * Math.PI * 2;
+            const angle2 = Math.random() * Math.PI * 2;
+            const dist = spread * (0.3 + Math.random() * 0.7);
+            
+            positions[idx * 3] = nx + Math.cos(angle1) * Math.sin(angle2) * dist;
+            positions[idx * 3 + 1] = ny + Math.sin(angle1) * Math.sin(angle2) * dist;
+            positions[idx * 3 + 2] = nz + Math.cos(angle2) * dist;
+            
+            // Boosted color with some white mix
+            colors[idx * 3] = Math.min(1, baseColor.r + colorBoost);
+            colors[idx * 3 + 1] = Math.min(1, baseColor.g + colorBoost);
+            colors[idx * 3 + 2] = Math.min(1, baseColor.b + colorBoost);
+            
+            idx++;
+          }
+        }
+        
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        
+        const material = new THREE.PointsMaterial({
+          size: particleSize,
+          map: cloudTexture,
+          vertexColors: true,
+          transparent: true,
+          opacity: opacity,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          sizeAttenuation: false, // Fixed size regardless of distance!
+        });
+        
+        const cloud = new THREE.Points(geometry, material);
+        cloud.renderOrder = 1; // Render on top
+        scene.add(cloud);
+        milkyLayersRef.current.push(cloud);
+      };
+      
+      // Create ambient cloud filling the space
+      const createAmbientCloud = (
+        count: number,
+        spreadMult: number,
+        particleSize: number,
+        opacity: number
+      ) => {
+        const positions = new Float32Array(count * 3);
+        const colors = new Float32Array(count * 3);
+        
+        for (let i = 0; i < count; i++) {
+          // Random position in the node field area
+          const px = centerX + (Math.random() - 0.5) * spreadX * spreadMult;
+          const py = centerY + (Math.random() - 0.5) * spreadY * spreadMult;
+          const pz = centerZ + (Math.random() - 0.5) * spreadZ * spreadMult;
+          
+          positions[i * 3] = px;
+          positions[i * 3 + 1] = py;
+          positions[i * 3 + 2] = pz;
+          
+          // Find nearest node for color
+          let minDist = Infinity;
+          let nearestColor = new THREE.Color(0.5, 0.6, 0.8);
+          
+          for (const node of validNodes) {
+            const dx = px - (node.x || 0);
+            const dy = py - (node.y || 0);
+            const dz = pz - (node.z || 0);
+            const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+            if (dist < minDist) {
+              minDist = dist;
+              const palette = getStarPalette(node.id);
+              nearestColor = new THREE.Color(palette.glow);
+            }
+          }
+          
+          // Mix with white for milky effect
+          colors[i * 3] = Math.min(1, nearestColor.r * 0.7 + 0.3);
+          colors[i * 3 + 1] = Math.min(1, nearestColor.g * 0.7 + 0.3);
+          colors[i * 3 + 2] = Math.min(1, nearestColor.b * 0.7 + 0.3);
+        }
+        
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        
+        const material = new THREE.PointsMaterial({
+          size: particleSize,
+          map: cloudTexture,
+          vertexColors: true,
+          transparent: true,
+          opacity: opacity,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          sizeAttenuation: false, // Fixed size regardless of distance!
+        });
+        
+        const cloud = new THREE.Points(geometry, material);
+        cloud.renderOrder = 0; // Render on top
+        scene.add(cloud);
+        milkyLayersRef.current.push(cloud);
+      };
+
+      // === CREATE SUBTLE CLOUD LAYERS ===
+      // Note: sizeAttenuation is FALSE so sizes are in PIXELS
+      
+      // Clouds around each node
+      createCloudAroundNodes(20, 25, 10, 0.035, 0.04);  // Close
+      createCloudAroundNodes(15, 50, 18, 0.028, 0.03);  // Medium
+      createCloudAroundNodes(12, 80, 25, 0.022, 0.025); // Far
+      
+      // Ambient fill clouds
+      createAmbientCloud(2500, 1.3, 12, 0.032);
+      createAmbientCloud(1800, 1.8, 20, 0.025);
+      createAmbientCloud(1200, 2.2, 30, 0.018);
+      
+        console.log('BRIGHT clouds created:', milkyLayersRef.current.length, 'layers from', validNodes.length, 'nodes');
+      };
+
+      // Run immediately and then on interval
+      console.log('Starting cloud updates...');
+      updateMilkyCloud();
+      densityUpdateTimer.current = setInterval(updateMilkyCloud, 3000);
+    };
+    
+    // Start waiting for scene
+    waitForScene();
+
+    return () => {
+      mounted = false;
+      if (densityUpdateTimer.current) {
+        clearInterval(densityUpdateTimer.current);
+      }
+      if (fgRef.current) {
+        const scene = fgRef.current.scene?.();
+        if (scene) {
+          for (const layer of milkyLayersRef.current) {
+            scene.remove(layer);
+          }
+        }
+      }
+      milkyLayersRef.current = [];
+    };
+  }, [filteredData.nodes, getCloudTexture]);
 
   // Store original positions for restoring when deselecting
   const originalPositions = useRef<Map<string, {x: number, y: number, z: number}>>(new Map());
