@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Search, X, Route, ArrowRight, CheckCircle2, Loader2, AlertCircle, CheckSquare, Square, Info } from 'lucide-react';
+import { Search, X, Route, ArrowDown, CheckCircle2, Loader2, AlertCircle, CheckSquare, Square, Building2, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GraphNode, PathItem, PathsResponse } from '@/types';
 
@@ -21,14 +21,13 @@ export default function PathFinder({ nodes, onPathFound }: PathFinderProps) {
   const [isToFocused, setIsToFocused] = useState(false);
   const [fromSelectedIndex, setFromSelectedIndex] = useState(0);
   const [toSelectedIndex, setToSelectedIndex] = useState(0);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [pathError, setPathError] = useState<string | null>(null);
   const [paths, setPaths] = useState<PathItem[]>([]);
   const [selectedPathIds, setSelectedPathIds] = useState<Set<string>>(new Set());
   const [maxDepth, setMaxDepth] = useState<number>(4);
 
-  // Update highlighting when selection changes
   useEffect(() => {
     if (selectedPathIds.size === 0) {
       onPathFound(null);
@@ -41,7 +40,6 @@ export default function PathFinder({ nodes, onPathFound }: PathFinderProps) {
       return;
     }
 
-    // Union of all nodes and edges from selected paths
     const allNodes = new Set<string>();
     const allEdgeIds = new Set<string>();
 
@@ -58,7 +56,6 @@ export default function PathFinder({ nodes, onPathFound }: PathFinderProps) {
     onPathFound({ nodes: Array.from(allNodes), edges: Array.from(allEdgeIds) });
   }, [selectedPathIds, paths, onPathFound]);
 
-  // Clear selection when A/B changes
   useEffect(() => {
     setPaths([]);
     setSelectedPathIds(new Set());
@@ -69,10 +66,8 @@ export default function PathFinder({ nodes, onPathFound }: PathFinderProps) {
     setFromQuery(val);
     setFromSelectedIndex(0);
     if (val.length > 1) {
-      const filtered = nodes.filter(n =>
-        n.label.toLowerCase().includes(val.toLowerCase())
-      );
-      setFromResults(filtered.slice(0, 8));
+      const filtered = nodes.filter(n => n.label.toLowerCase().includes(val.toLowerCase()));
+      setFromResults(filtered.slice(0, 6));
     } else {
       setFromResults([]);
     }
@@ -82,10 +77,8 @@ export default function PathFinder({ nodes, onPathFound }: PathFinderProps) {
     setToQuery(val);
     setToSelectedIndex(0);
     if (val.length > 1) {
-      const filtered = nodes.filter(n =>
-        n.label.toLowerCase().includes(val.toLowerCase())
-      );
-      setToResults(filtered.slice(0, 8));
+      const filtered = nodes.filter(n => n.label.toLowerCase().includes(val.toLowerCase()));
+      setToResults(filtered.slice(0, 6));
     } else {
       setToResults([]);
     }
@@ -123,38 +116,31 @@ export default function PathFinder({ nodes, onPathFound }: PathFinderProps) {
     try {
       const response = await fetch(`/api/paths?from=${fromSelected.id}&to=${toSelected.id}&depth=${maxDepth}`);
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       const text = await response.text();
-      if (!text) {
-        throw new Error('Empty response from server');
-      }
+      if (!text) throw new Error('Empty response from server');
 
       let data: PathsResponse;
       try {
         data = JSON.parse(text);
-      } catch (parseError) {
-        console.error('Failed to parse JSON:', parseError, 'Response text:', text);
+      } catch {
         throw new Error('Invalid JSON response from server');
       }
       
       if (data.paths && data.paths.length > 0) {
         setPaths(data.paths);
-        // Default: select the shortest path (first one)
         if (data.shortestPath) {
           setSelectedPathIds(new Set([data.shortestPath.pathId]));
         }
       } else {
-        setPathError('No paths found within depth 4.');
+        setPathError('No paths found within specified depth.');
         setPaths([]);
         setSelectedPathIds(new Set());
         onPathFound(null);
       }
     } catch (error) {
-      console.error('Failed to find paths:', error);
-      setPathError(error instanceof Error ? error.message : 'Failed to find paths. Please try again.');
+      setPathError(error instanceof Error ? error.message : 'Failed to find paths.');
       setPaths([]);
       setSelectedPathIds(new Set());
       onPathFound(null);
@@ -166,21 +152,10 @@ export default function PathFinder({ nodes, onPathFound }: PathFinderProps) {
   const handleTogglePath = (pathId: string) => {
     setSelectedPathIds(prev => {
       const next = new Set(prev);
-      if (next.has(pathId)) {
-        next.delete(pathId);
-      } else {
-        next.add(pathId);
-      }
+      if (next.has(pathId)) next.delete(pathId);
+      else next.add(pathId);
       return next;
     });
-  };
-
-  const handleSelectAll = () => {
-    setSelectedPathIds(new Set(paths.map(p => p.pathId)));
-  };
-
-  const handleClearSelection = () => {
-    setSelectedPathIds(new Set());
   };
 
   const handleClear = () => {
@@ -230,385 +205,495 @@ export default function PathFinder({ nodes, onPathFound }: PathFinderProps) {
     return nodeLabels.join(' → ');
   };
 
-  if (!isOpen) {
-    return (
-      <motion.button
-        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setIsOpen(true)}
-        className="absolute top-[140px] left-8 z-40 bg-gradient-to-r from-violet-600/90 to-purple-600/90 hover:from-violet-500 hover:to-purple-500 text-white px-6 py-3.5 rounded-2xl backdrop-blur-xl border border-violet-400/30 shadow-lg shadow-violet-900/30 hover:shadow-violet-500/40 transition-all flex items-center gap-2.5 font-medium"
-      >
-        <Route size={20} className="drop-shadow-sm" />
-        <span>Find Paths</span>
-      </motion.button>
-    );
-  }
-
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 20, scale: 0.95 }}
-      transition={{ type: "spring", damping: 25, stiffness: 300 }}
-      className="absolute top-[140px] left-8 z-40 w-[520px] max-w-[90vw] bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden"
+      initial={{ y: '100%', opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ type: 'spring', damping: 25, stiffness: 300, delay: 0.2 }}
+      style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 24,
+        width: 340,
+        maxHeight: isCollapsed ? 'auto' : '55vh',
+        backgroundColor: '#0f172a',
+        borderTop: '3px solid #8b5cf6',
+        borderRight: '1px solid rgba(255,255,255,0.1)',
+        borderRadius: '24px 24px 0 0',
+        zIndex: 9997,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        boxShadow: '0 -10px 40px rgba(0,0,0,0.5), 0 0 20px rgba(139, 92, 246, 0.1)'
+      }}
     >
-      {/* Header with gradient */}
-      <div className="relative bg-gradient-to-r from-violet-900/30 via-purple-900/20 to-transparent border-b border-white/5 px-6 py-5 flex-shrink-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(139,92,246,0.15),transparent_70%)]" />
-        <div className="relative flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-violet-600/20 rounded-lg border border-violet-500/30">
-              <Route className="text-violet-400" size={22} />
+      {/* Drag Handle */}
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 6px' }}>
+        <div style={{ width: 40, height: 5, backgroundColor: '#475569', borderRadius: 3 }} />
+      </div>
+
+      {/* Header */}
+      <div style={{ 
+        padding: '12px 20px 16px', 
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        background: 'linear-gradient(to right, rgba(139, 92, 246, 0.15), transparent)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ 
+              padding: 8, 
+              background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+              borderRadius: 10,
+              boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)'
+            }}>
+              <Route color="white" size={16} />
             </div>
             <div>
-              <h3 className="text-white font-semibold text-lg tracking-tight">Find Paths</h3>
-              <p className="text-slate-400 text-xs mt-0.5">Discover connections between nodes</p>
+              <h2 style={{ color: 'white', fontSize: 15, fontWeight: 600, margin: 0 }}>
+                Path Finder
+              </h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                <div style={{ 
+                  width: 6, 
+                  height: 6, 
+                  borderRadius: '50%', 
+                  backgroundColor: '#22c55e',
+                  boxShadow: '0 0 8px rgba(34, 197, 94, 0.6)'
+                }} />
+                <span style={{ fontSize: 11, color: '#94a3b8' }}>Discover connections</span>
+              </div>
             </div>
           </div>
-          <button
-            onClick={() => {
-              setIsOpen(false);
-              handleClear();
+          <motion.button 
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            style={{ 
+              padding: 6, 
+              backgroundColor: 'rgba(0,0,0,0.3)', 
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 6,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
-            className="p-2 bg-black/20 hover:bg-black/40 rounded-lg text-slate-400 hover:text-white transition-all backdrop-blur-sm border border-white/5"
           >
-            <X size={18} />
-          </button>
+            <motion.div
+              animate={{ rotate: isCollapsed ? 0 : 180 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ChevronUp color="#94a3b8" size={16} />
+            </motion.div>
+          </motion.button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-5">
-        {/* From Node */}
-        <div className="relative">
-          <label className="block text-xs font-medium text-slate-400 mb-2.5 uppercase tracking-wider">Starting Node</label>
-          {fromSelected ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="relative bg-gradient-to-r from-violet-600/20 to-purple-600/20 border border-violet-500/30 rounded-xl px-4 py-3.5 flex items-center justify-between"
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-1.5 bg-violet-600/30 rounded-lg">
-                  <CheckCircle2 className="text-violet-400" size={16} />
-                </div>
-                <div>
-                  <div className="text-white font-medium text-sm">{fromSelected.label}</div>
-                  <div className="text-xs text-slate-400">{fromSelected.type}</div>
-                </div>
-              </div>
-              <button
-                onClick={() => {
-                  setFromSelected(null);
-                  setFromQuery('');
-                }}
-                className="p-1.5 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors"
-              >
-                <X size={14} />
-              </button>
-            </motion.div>
-          ) : (
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
-              <input
-                type="text"
-                value={fromQuery}
-                onChange={(e) => handleFromSearch(e.target.value)}
-                onFocus={() => setIsFromFocused(true)}
-                onBlur={() => setTimeout(() => setIsFromFocused(false), 200)}
-                onKeyDown={handleFromKeyDown}
-                placeholder="Search for starting node..."
-                className="w-full bg-slate-800/60 border border-white/10 rounded-xl px-12 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition-all text-sm"
-              />
-              <AnimatePresence>
-                {isFromFocused && fromQuery.length > 1 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="absolute top-full left-0 right-0 mt-2 bg-slate-800/98 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50 max-h-64 overflow-y-auto"
-                  >
-                    {fromResults.length > 0 ? (
-                      fromResults.map((node, idx) => (
-                        <button
-                          key={node.id}
-                          onClick={() => handleSelectFrom(node)}
-                          className={`w-full text-left px-4 py-3 border-b border-white/5 last:border-none flex justify-between items-center transition-colors ${
-                            idx === fromSelectedIndex ? 'bg-violet-600/20 border-l-2 border-l-violet-500' : 'hover:bg-white/5'
-                          }`}
-                        >
-                          <span className="text-slate-200 text-sm font-medium">{node.label}</span>
-                          <span className="text-xs text-slate-500 uppercase border border-white/10 px-2 py-1 rounded-md bg-white/5">
-                            {node.type}
-                          </span>
-                        </button>
-                      ))
-                    ) : (
-                      <div className="px-4 py-4 text-slate-400 text-center text-sm">
-                        No nodes found
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          )}
-        </div>
-
-        {/* Arrow Divider */}
-        <div className="flex items-center justify-center py-2">
-          <div className="flex items-center gap-2 text-slate-500">
-            <div className="h-px w-16 bg-gradient-to-r from-transparent to-white/10" />
-            <ArrowRight size={18} className="text-violet-400/60" />
-            <div className="h-px w-16 bg-gradient-to-l from-transparent to-white/10" />
-          </div>
-        </div>
-
-        {/* To Node */}
-        <div className="relative">
-          <label className="block text-xs font-medium text-slate-400 mb-2.5 uppercase tracking-wider">Destination Node</label>
-          {toSelected ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="relative bg-gradient-to-r from-violet-600/20 to-purple-600/20 border border-violet-500/30 rounded-xl px-4 py-3.5 flex items-center justify-between"
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-1.5 bg-violet-600/30 rounded-lg">
-                  <CheckCircle2 className="text-violet-400" size={16} />
-                </div>
-                <div>
-                  <div className="text-white font-medium text-sm">{toSelected.label}</div>
-                  <div className="text-xs text-slate-400">{toSelected.type}</div>
-                </div>
-              </div>
-              <button
-                onClick={() => {
-                  setToSelected(null);
-                  setToQuery('');
-                }}
-                className="p-1.5 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors"
-              >
-                <X size={14} />
-              </button>
-            </motion.div>
-          ) : (
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
-              <input
-                type="text"
-                value={toQuery}
-                onChange={(e) => handleToSearch(e.target.value)}
-                onFocus={() => setIsToFocused(true)}
-                onBlur={() => setTimeout(() => setIsToFocused(false), 200)}
-                onKeyDown={handleToKeyDown}
-                placeholder="Search for destination node..."
-                className="w-full bg-slate-800/60 border border-white/10 rounded-xl px-12 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition-all text-sm"
-              />
-              <AnimatePresence>
-                {isToFocused && toQuery.length > 1 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="absolute top-full left-0 right-0 mt-2 bg-slate-800/98 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50 max-h-64 overflow-y-auto"
-                  >
-                    {toResults.length > 0 ? (
-                      toResults.map((node, idx) => (
-                        <button
-                          key={node.id}
-                          onClick={() => handleSelectTo(node)}
-                          className={`w-full text-left px-4 py-3 border-b border-white/5 last:border-none flex justify-between items-center transition-colors ${
-                            idx === toSelectedIndex ? 'bg-violet-600/20 border-l-2 border-l-violet-500' : 'hover:bg-white/5'
-                          }`}
-                        >
-                          <span className="text-slate-200 text-sm font-medium">{node.label}</span>
-                          <span className="text-xs text-slate-500 uppercase border border-white/10 px-2 py-1 rounded-md bg-white/5">
-                            {node.type}
-                          </span>
-                        </button>
-                      ))
-                    ) : (
-                      <div className="px-4 py-4 text-slate-400 text-center text-sm">
-                        No nodes found
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          )}
-        </div>
-
-        {/* Depth Selector */}
-        <div className="relative">
-          <label className="block text-xs font-medium text-slate-400 mb-2.5 uppercase tracking-wider">
-            Max Depth (Hops)
-          </label>
-          <select
-            value={maxDepth}
-            onChange={(e) => setMaxDepth(parseInt(e.target.value))}
-            className="w-full bg-slate-800/60 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition-all"
+      {/* Content - Animated collapse */}
+      <AnimatePresence>
+        {!isCollapsed && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}
           >
-            <option value={2}>2 hops</option>
-            <option value={3}>3 hops</option>
-            <option value={4}>4 hops</option>
-            <option value={5}>5 hops</option>
-            <option value={6}>6 hops</option>
-            <option value={7}>7 hops</option>
-          </select>
-          <div className="text-xs text-slate-500 mt-1.5">
-            Search up to {maxDepth} hops to find paths with varying exposure levels
-          </div>
-        </div>
-
-        {/* Path Results */}
-        <AnimatePresence>
-          {paths.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="space-y-3"
-            >
-              <div className="flex items-center justify-between">
-                <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">
-                  Found {paths.length} path{paths.length !== 1 ? 's' : ''}
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleSelectAll}
-                    className="text-xs text-violet-400 hover:text-violet-300 px-2 py-1 rounded border border-violet-500/30 hover:border-violet-400/50 transition-colors"
+            <div style={{ 
+              flex: 1, 
+              overflowY: 'auto', 
+              padding: '16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 12,
+              maxHeight: '40vh'
+            }}>
+              {/* From Node */}
+              <div>
+                <label style={{ display: 'block', fontSize: 10, color: '#64748b', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>
+                  From
+                </label>
+                {fromSelected ? (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(168, 85, 247, 0.1))',
+                      border: '1px solid rgba(139, 92, 246, 0.4)',
+                      borderRadius: 10,
+                      padding: '8px 12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between'
+                    }}
                   >
-                    Select All
-                  </button>
-                  <button
-                    onClick={handleClearSelection}
-                    className="text-xs text-slate-400 hover:text-slate-300 px-2 py-1 rounded border border-white/10 hover:border-white/20 transition-colors"
-                  >
-                    Clear
-                  </button>
-                </div>
-              </div>
-              {selectedPathIds.size > 0 && (
-                <div className="text-xs text-violet-400 bg-violet-500/10 border border-violet-500/30 rounded-lg px-3 py-2">
-                  Selected: {selectedPathIds.size} path{selectedPathIds.size !== 1 ? 's' : ''}
-                </div>
-              )}
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {paths.map((path, idx) => {
-                  const isSelected = selectedPathIds.has(path.pathId);
-                  return (
-                    <motion.button
-                      key={path.pathId}
-                      onClick={() => handleTogglePath(path.pathId)}
-                      className={`w-full text-left p-3 rounded-xl border transition-all ${
-                        isSelected
-                          ? 'bg-violet-600/20 border-violet-500/50'
-                          : 'bg-slate-800/60 border-white/10 hover:border-white/20'
-                      }`}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <CheckCircle2 color="#a78bfa" size={14} />
+                      <span style={{ color: 'white', fontSize: 12, fontWeight: 500 }}>{fromSelected.label}</span>
+                    </div>
+                    <button
+                      onClick={() => { setFromSelected(null); setFromQuery(''); }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}
                     >
-                      <div className="flex items-start gap-3">
-                        <div className="mt-0.5">
-                          {isSelected ? (
-                            <CheckSquare className="text-violet-400" size={18} />
-                          ) : (
-                            <Square className="text-slate-500" size={18} />
+                      <X color="#94a3b8" size={12} />
+                    </button>
+                  </motion.div>
+                ) : (
+                  <div style={{ position: 'relative' }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '8px 10px',
+                      backgroundColor: '#1e293b',
+                      border: isFromFocused ? '1px solid #8b5cf6' : '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: 10
+                    }}>
+                      <Search color="#64748b" size={14} />
+                      <input
+                        type="text"
+                        value={fromQuery}
+                        onChange={(e) => handleFromSearch(e.target.value)}
+                        onFocus={() => setIsFromFocused(true)}
+                        onBlur={() => setTimeout(() => setIsFromFocused(false), 200)}
+                        onKeyDown={handleFromKeyDown}
+                        placeholder="Search..."
+                        style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontSize: 12, color: 'white' }}
+                      />
+                    </div>
+                    <AnimatePresence>
+                      {isFromFocused && fromQuery.length > 1 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -5 }}
+                          style={{
+                            position: 'absolute',
+                            top: '100%',
+                            left: 0,
+                            right: 0,
+                            marginTop: 4,
+                            backgroundColor: '#0f172a',
+                            border: '1px solid rgba(139, 92, 246, 0.3)',
+                            borderRadius: 8,
+                            boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                            overflow: 'hidden',
+                            zIndex: 50
+                          }}
+                        >
+                          {fromResults.length > 0 ? fromResults.map((node, idx) => (
+                            <button
+                              key={node.id}
+                              onClick={() => handleSelectFrom(node)}
+                              style={{
+                                width: '100%',
+                                textAlign: 'left',
+                                padding: '8px 10px',
+                                border: 'none',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 8,
+                                background: idx === fromSelectedIndex ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
+                                borderBottom: '1px solid rgba(255,255,255,0.05)'
+                              }}
+                            >
+                              <Building2 color={idx === fromSelectedIndex ? '#c4b5fd' : '#64748b'} size={12} />
+                              <span style={{ color: idx === fromSelectedIndex ? 'white' : '#e2e8f0', fontSize: 12 }}>{node.label}</span>
+                            </button>
+                          )) : (
+                            <div style={{ padding: 12, textAlign: 'center', color: '#64748b', fontSize: 11 }}>No results</div>
                           )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            <span className="text-white font-medium text-sm">
-                              #{idx + 1}
-                            </span>
-                            <span className="text-slate-300 text-xs">
-                              ({path.length} {path.length === 1 ? 'hop' : 'hops'})
-                            </span>
-                            <div className="flex items-center gap-1.5 group relative">
-                              <span className="text-slate-400 text-xs">
-                                Exposure Index:
-                              </span>
-                              <span className="text-slate-300 text-xs">
-                                {path.exposureIndex.toFixed(1)}
-                              </span>
-                              <div className="relative">
-                                <Info 
-                                  size={14} 
-                                  className="text-slate-500 hover:text-slate-400 cursor-help transition-colors" 
-                                />
-                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-2 bg-slate-800 border border-white/20 rounded-lg text-xs text-slate-300 shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
-                                  Relative measure of financial or structural exposure along this path. Not a percentage or probability.
-                                </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
+              </div>
+
+              {/* Arrow */}
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <ArrowDown color="#64748b" size={16} />
+              </div>
+
+              {/* To Node */}
+              <div>
+                <label style={{ display: 'block', fontSize: 10, color: '#64748b', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>
+                  To
+                </label>
+                {toSelected ? (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(168, 85, 247, 0.1))',
+                      border: '1px solid rgba(139, 92, 246, 0.4)',
+                      borderRadius: 10,
+                      padding: '8px 12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <CheckCircle2 color="#a78bfa" size={14} />
+                      <span style={{ color: 'white', fontSize: 12, fontWeight: 500 }}>{toSelected.label}</span>
+                    </div>
+                    <button
+                      onClick={() => { setToSelected(null); setToQuery(''); }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}
+                    >
+                      <X color="#94a3b8" size={12} />
+                    </button>
+                  </motion.div>
+                ) : (
+                  <div style={{ position: 'relative' }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '8px 10px',
+                      backgroundColor: '#1e293b',
+                      border: isToFocused ? '1px solid #8b5cf6' : '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: 10
+                    }}>
+                      <Search color="#64748b" size={14} />
+                      <input
+                        type="text"
+                        value={toQuery}
+                        onChange={(e) => handleToSearch(e.target.value)}
+                        onFocus={() => setIsToFocused(true)}
+                        onBlur={() => setTimeout(() => setIsToFocused(false), 200)}
+                        onKeyDown={handleToKeyDown}
+                        placeholder="Search..."
+                        style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontSize: 12, color: 'white' }}
+                      />
+                    </div>
+                    <AnimatePresence>
+                      {isToFocused && toQuery.length > 1 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -5 }}
+                          style={{
+                            position: 'absolute',
+                            top: '100%',
+                            left: 0,
+                            right: 0,
+                            marginTop: 4,
+                            backgroundColor: '#0f172a',
+                            border: '1px solid rgba(139, 92, 246, 0.3)',
+                            borderRadius: 8,
+                            boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                            overflow: 'hidden',
+                            zIndex: 50
+                          }}
+                        >
+                          {toResults.length > 0 ? toResults.map((node, idx) => (
+                            <button
+                              key={node.id}
+                              onClick={() => handleSelectTo(node)}
+                              style={{
+                                width: '100%',
+                                textAlign: 'left',
+                                padding: '8px 10px',
+                                border: 'none',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 8,
+                                background: idx === toSelectedIndex ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
+                                borderBottom: '1px solid rgba(255,255,255,0.05)'
+                              }}
+                            >
+                              <Building2 color={idx === toSelectedIndex ? '#c4b5fd' : '#64748b'} size={12} />
+                              <span style={{ color: idx === toSelectedIndex ? 'white' : '#e2e8f0', fontSize: 12 }}>{node.label}</span>
+                            </button>
+                          )) : (
+                            <div style={{ padding: 12, textAlign: 'center', color: '#64748b', fontSize: 11 }}>No results</div>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
+              </div>
+
+              {/* Depth Selector */}
+              <div>
+                <label style={{ display: 'block', fontSize: 10, color: '#64748b', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>
+                  Max Depth
+                </label>
+                <select
+                  value={maxDepth}
+                  onChange={(e) => setMaxDepth(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    padding: '8px 10px',
+                    backgroundColor: '#1e293b',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: 10,
+                    fontSize: 12,
+                    color: 'white',
+                    outline: 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {[2, 3, 4, 5, 6].map(d => (
+                    <option key={d} value={d} style={{ backgroundColor: '#1e293b' }}>{d} hops</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Path Results */}
+              <AnimatePresence>
+                {paths.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase' }}>
+                        {paths.length} path{paths.length !== 1 ? 's' : ''} found
+                      </span>
+                      <span style={{ fontSize: 10, color: '#a78bfa' }}>
+                        {selectedPathIds.size} selected
+                      </span>
+                    </div>
+                    <div style={{ maxHeight: 120, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      {paths.map((path, idx) => {
+                        const isSelected = selectedPathIds.has(path.pathId);
+                        return (
+                          <motion.button
+                            key={path.pathId}
+                            onClick={() => handleTogglePath(path.pathId)}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: idx * 0.03 }}
+                            style={{
+                              width: '100%',
+                              textAlign: 'left',
+                              padding: 10,
+                              borderRadius: 8,
+                              border: isSelected ? '1px solid rgba(139, 92, 246, 0.5)' : '1px solid rgba(255,255,255,0.1)',
+                              background: isSelected ? 'rgba(139, 92, 246, 0.15)' : 'rgba(30, 41, 59, 0.4)',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              gap: 8
+                            }}
+                          >
+                            {isSelected ? <CheckSquare color="#a78bfa" size={14} /> : <Square color="#64748b" size={14} />}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                                <span style={{ color: 'white', fontSize: 11, fontWeight: 500 }}>#{idx + 1}</span>
+                                <span style={{ color: '#94a3b8', fontSize: 10 }}>({path.length} hops)</span>
+                              </div>
+                              <div style={{ color: '#e2e8f0', fontSize: 10, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {formatPathSequence(path)}
                               </div>
                             </div>
-                          </div>
-                          <div className="text-slate-300 text-xs mb-1.5 truncate">
-                            {formatPathSequence(path)}
-                          </div>
-                          <div className="text-slate-400 text-xs italic">
-                            {path.summary}
-                          </div>
-                          {path.summary.includes('High exposure:') && (
-                            <div className="text-slate-500 text-xs mt-0.5">
-                              Estimated total magnitude observed along the path (demo data)
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </motion.button>
-                  );
-                })}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-        {/* Error */}
-        <AnimatePresence>
-          {pathError && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3.5 flex items-center gap-3"
-            >
-              <AlertCircle className="text-red-400" size={18} />
-              <div className="flex-1">
-                <div className="text-red-400 font-medium text-sm">No Paths Found</div>
-                <div className="text-xs text-red-400/70">{pathError}</div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              {/* Error */}
+              <AnimatePresence>
+                {pathError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    style={{
+                      padding: 10,
+                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                      borderRadius: 8,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8
+                    }}
+                  >
+                    <AlertCircle color="#f87171" size={14} />
+                    <span style={{ color: '#fca5a5', fontSize: 11 }}>{pathError}</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
-        {/* Actions */}
-        <div className="flex gap-3 pt-2 flex-shrink-0">
-          <button
-            onClick={handleFindPaths}
-            disabled={!fromSelected || !toSelected || isLoading}
-            className="flex-1 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 disabled:from-slate-700 disabled:to-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed text-white px-5 py-3.5 rounded-xl transition-all font-medium shadow-lg shadow-violet-900/30 hover:shadow-violet-500/40 flex items-center justify-center gap-2"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="animate-spin" size={18} />
-                <span>Finding...</span>
-              </>
-            ) : (
-              <>
-                <Route size={18} />
-                <span>Find Paths</span>
-              </>
-            )}
-          </button>
-          <button
-            onClick={handleClear}
-            className="px-5 py-3.5 bg-slate-800/60 hover:bg-slate-700/60 text-slate-300 rounded-xl transition-all border border-white/10 hover:border-white/20 font-medium"
-          >
-            Clear
-          </button>
-        </div>
-      </div>
+            {/* Footer Actions */}
+            <div style={{ 
+              padding: '12px 16px 16px',
+              borderTop: '1px solid rgba(255,255,255,0.08)',
+              background: 'rgba(15, 23, 42, 0.5)',
+              display: 'flex',
+              gap: 8
+            }}>
+              <motion.button
+                onClick={handleFindPaths}
+                disabled={!fromSelected || !toSelected || isLoading}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                style={{
+                  flex: 1,
+                  padding: '10px 14px',
+                  borderRadius: 10,
+                  border: 'none',
+                  background: fromSelected && toSelected && !isLoading 
+                    ? 'linear-gradient(135deg, #8b5cf6, #7c3aed)'
+                    : 'rgba(100, 116, 139, 0.3)',
+                  color: 'white',
+                  fontSize: 12,
+                  fontWeight: 500,
+                  cursor: fromSelected && toSelected && !isLoading ? 'pointer' : 'not-allowed',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  boxShadow: fromSelected && toSelected && !isLoading 
+                    ? '0 4px 12px rgba(139, 92, 246, 0.4)'
+                    : 'none'
+                }}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 color="white" size={14} className="animate-spin" />
+                    <span>Finding...</span>
+                  </>
+                ) : (
+                  <>
+                    <Route color="white" size={14} />
+                    <span>Find</span>
+                  </>
+                )}
+              </motion.button>
+              <motion.button
+                onClick={handleClear}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: 10,
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  background: '#1e293b',
+                  color: '#e2e8f0',
+                  fontSize: 12,
+                  fontWeight: 500,
+                  cursor: 'pointer'
+                }}
+              >
+                Clear
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
