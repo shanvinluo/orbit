@@ -11,7 +11,7 @@ import RelationshipFilter from '@/components/RelationshipFilter';
 import ToolsNavbar from '@/components/ToolsNavbar';
 import WatchlistPopup from '@/components/WatchlistPopup';
 
-import NewsImpactPopup from '@/components/NewsImpactPopup';
+import MarketPulse from '@/components/MarketPulse';
 import { GraphData, GraphNode, GraphEdge, EdgeType, CycleResultWithEdges } from '@/types';
 import { NewsAnalysis } from '@/services/aiService';
 
@@ -312,7 +312,7 @@ export default function Home() {
       <Chatbot onNewsAnalysis={handleNewsAnalysis} />
 
       {newsAnalysis && (
-        <NewsImpactPopup analysis={newsAnalysis} onClose={handleCloseNewsPopup} />
+        <MarketPulse analysis={newsAnalysis} onClose={handleCloseNewsPopup} />
       )}
 
       {showWatchlist && (

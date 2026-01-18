@@ -164,12 +164,24 @@ export const analyzeText = async (text: string) => {
   return { nodeA, nodeB, paths, explanation };
 };
 
+export interface NewsArticle {
+  title: string;
+  summary: string;
+  source: string;
+  url: string;
+  publishedAt: string;
+  sentiment: 'positive' | 'negative' | 'neutral';
+}
+
 export interface AffectedCompany {
   companyId: string;
   companyName: string;
+  ticker?: string;
   impactType: 'bullish' | 'bearish' | 'neutral' | 'mixed';
   impactDescription: string;
   confidence: number; // 0-1
+  news?: NewsArticle[]; // Scraped news articles
+  newsLoading?: boolean; // Loading state for news
 }
 
 export interface GeneralFinanceResponse {
