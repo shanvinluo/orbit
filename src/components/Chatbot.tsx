@@ -147,73 +147,71 @@ export default function Chatbot({ onNewsAnalysis }: ChatbotProps = {}) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 50 }}
-            className="w-[400px] h-[550px] max-h-[80vh] bg-slate-900/90 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl flex flex-col overflow-hidden"
+            className="w-[360px] h-[480px] max-h-[75vh] bg-[#0a0a0f]/90 backdrop-blur-2xl border border-white/[0.08] rounded-[28px] shadow-[0_20px_60px_rgba(0,0,0,0.6)] flex flex-col"
           >
-            {/* Header with gradient */}
-            <div className="relative border-b border-white/5 px-6 py-5 bg-gradient-to-r from-violet-900/30 via-purple-900/20 to-transparent">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(139,92,246,0.15),transparent_70%)]" />
-              <div className="relative flex items-center">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-violet-600/20 rounded-xl border border-violet-500/30">
-                    <Sparkles size={20} className="text-violet-400" />
-                  </div>
-                  <div>
-                    <span className="font-semibold text-white text-lg tracking-tight">Orbit AI</span>
-                    <p className="text-xs text-slate-400 mt-0.5">Analyze relationships & news</p>
-                  </div>
-                </div>
+            {/* Header */}
+            <div className="px-5 py-4 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
+                <Sparkles size={14} className="text-white" />
               </div>
+              <h3 className="text-white font-medium text-sm flex-1">Orbit AI</h3>
+              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
               {messages.map((msg) => (
                 <motion.div 
                   key={msg.id} 
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.15 }}
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`max-w-[85%] px-4 py-3 text-sm leading-relaxed ${
+                  <div className={`max-w-[85%] px-4 py-2.5 text-[13px] leading-[1.5] ${
                     msg.role === 'user' 
-                      ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-2xl rounded-br-md shadow-lg shadow-violet-900/20' 
-                      : 'bg-white/5 border border-white/10 text-slate-200 rounded-2xl rounded-bl-md'
+                      ? 'bg-violet-500 text-white rounded-2xl rounded-br-md' 
+                      : 'bg-white/[0.05] text-white/70 rounded-2xl rounded-bl-md border border-white/[0.03]'
                   }`}>
                     {msg.content}
                   </div>
                 </motion.div>
               ))}
               {isLoading && (
-                <div className="flex justify-start">
-                  <div className="bg-white/5 border border-white/10 px-5 py-3 rounded-2xl rounded-bl-md">
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex justify-start"
+                >
+                  <div className="bg-white/[0.05] border border-white/[0.03] px-4 py-3 rounded-2xl rounded-bl-md">
                     <span className="flex gap-1.5">
-                      <span className="w-2 h-2 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}/>
-                      <span className="w-2 h-2 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}/>
-                      <span className="w-2 h-2 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}/>
+                      <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}/>
+                      <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}/>
+                      <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}/>
                     </span>
                   </div>
-                </div>
+                </motion.div>
               )}
               <div ref={messagesEndRef} />
             </div>
 
             {/* Input */}
-            <div className="p-5 border-t border-white/5 bg-slate-800/30">
-              <div className="flex gap-3">
+            <div className="px-4 pb-4">
+              <div className="flex items-center gap-2">
                 <input
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder="Ask anything..."
-                  className="flex-1 bg-slate-800/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition-all"
+                  placeholder="Ask something..."
+                  className="flex-1 bg-transparent text-sm text-white placeholder-white/25 focus:outline-none"
                 />
                 <button 
                   onClick={handleSend}
                   disabled={!input.trim() || isLoading}
-                  className="p-3 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 disabled:from-slate-700 disabled:to-slate-700 disabled:cursor-not-allowed rounded-xl text-white transition-all shadow-lg shadow-violet-900/30 hover:shadow-violet-500/40"
+                  className="w-8 h-8 flex items-center justify-center bg-violet-500 hover:bg-violet-400 disabled:opacity-30 disabled:cursor-not-allowed rounded-full text-white transition-all shrink-0"
                 >
-                  <Send size={18} />
+                  <Send size={14} />
                 </button>
               </div>
             </div>

@@ -207,19 +207,9 @@ export default function GraphViz({ data, onNodeClick, onBackgroundClick, highlig
     }
   }, [focusedNodeId, data.nodes, filteredData]);
 
-  // Calculate node size based on distance (smaller when further away)
+  // Calculate node size - tiny like real constellation stars
   const getNodeSize = (node: any) => {
-    const baseSize = (node.val || 1) * 0.4; // Smaller base size for particle-like feel
-    
-    if (node.x !== undefined && node.y !== undefined && node.z !== undefined) {
-      const nodePos = new THREE.Vector3(node.x, node.y || 0, node.z || 0);
-      const distanceToNode = nodePos.distanceTo(cameraPosition);
-      const scaleFactor = Math.max(0.15, Math.min(1, 250 / Math.max(distanceToNode, 100)));
-      return baseSize * scaleFactor;
-    }
-    
-    const scaleFactor = Math.max(0.15, Math.min(1, 250 / Math.max(cameraDistance, 100)));
-    return baseSize * scaleFactor;
+    return 0.5; // Uniform tiny size for all stars
   };
 
   // Get edge color based on connected nodes
@@ -335,63 +325,32 @@ export default function GraphViz({ data, onNodeClick, onBackgroundClick, highlig
             const nodeColor = isSelected ? NODE_COLOR_SELECTED : (isHighlighted ? NODE_COLOR_HIGHLIGHT : getNodeColor(node.id));
             const size = getNodeSize(node);
             
-            // Create constellation star with reflection, lighting, and glow
-            const coreSize = size;
-            const glowSize = size * 3;
+            // Tiny constellation star
+            const starSize = isSelected || isHighlighted ? 1.2 : 0.4;
             
-            // Outer glow halo - additive blending for bloom effect
-            const outerGlowMaterial = new THREE.MeshBasicMaterial({
+            // Soft glow halo
+            const glowMaterial = new THREE.MeshBasicMaterial({
                 color: nodeColor,
                 transparent: true,
-                opacity: isSelected || isHighlighted ? 0.25 : 0.12,
+                opacity: isSelected || isHighlighted ? 0.25 : 0.1,
                 blending: THREE.AdditiveBlending,
                 depthWrite: false,
             });
-            const outerGlowGeometry = new THREE.SphereGeometry(glowSize, 12, 12);
-            const outerGlow = new THREE.Mesh(outerGlowGeometry, outerGlowMaterial);
+            const glowGeometry = new THREE.SphereGeometry(starSize * 6, 8, 8);
+            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
             
-            // Middle glow layer - soft transition
-            const middleGlowMaterial = new THREE.MeshBasicMaterial({
-                color: nodeColor,
+            // Tiny bright core
+            const coreMaterial = new THREE.MeshBasicMaterial({
+                color: 0xffffff,
                 transparent: true,
-                opacity: isSelected || isHighlighted ? 0.35 : 0.2,
-                blending: THREE.AdditiveBlending,
-                depthWrite: false,
+                opacity: isSelected || isHighlighted ? 1 : 0.8,
             });
-            const middleGlowGeometry = new THREE.SphereGeometry(size * 1.8, 12, 12);
-            const middleGlow = new THREE.Mesh(middleGlowGeometry, middleGlowMaterial);
-            
-            // Main star core with reflection and lighting (MeshStandardMaterial for realistic look)
-            const coreMaterial = new THREE.MeshStandardMaterial({
-                color: nodeColor,
-                emissive: nodeColor,
-                emissiveIntensity: isSelected || isHighlighted ? 0.8 : 0.5, // Strong emission for star glow
-                metalness: 0.2, // Subtle metallic reflection
-                roughness: 0.1, // Smooth, reflective surface (like a polished star)
-                transparent: true,
-                opacity: 1.0,
-            });
-            const coreGeometry = new THREE.SphereGeometry(coreSize, 16, 16);
+            const coreGeometry = new THREE.SphereGeometry(starSize, 6, 6);
             const core = new THREE.Mesh(coreGeometry, coreMaterial);
             
-            // Add reflective sphere for enhanced shine (like star twinkling)
-            const reflectionMaterial = new THREE.MeshPhongMaterial({
-                color: nodeColor,
-                emissive: nodeColor,
-                emissiveIntensity: 0.3,
-                shininess: 100, // High shininess for reflection
-                specular: new THREE.Color(nodeColor),
-                transparent: true,
-                opacity: 0.6,
-            });
-            const reflectionGeometry = new THREE.SphereGeometry(coreSize * 0.9, 16, 16);
-            const reflection = new THREE.Mesh(reflectionGeometry, reflectionMaterial);
-            
             const group = new THREE.Group();
-            group.add(outerGlow); // Outermost
-            group.add(middleGlow); // Middle glow
-            group.add(core); // Main body with lighting
-            group.add(reflection); // Inner reflective layer
+            group.add(glow);
+            group.add(core);
             
             // Show text for highlighted/selected nodes
             if (isSelected || isHighlighted) {
@@ -452,28 +411,58 @@ export default function GraphViz({ data, onNodeClick, onBackgroundClick, highlig
             const targetPos = new THREE.Vector3(target.x, target.y || 0, target.z || 0);
             const distance = sourcePos.distanceTo(targetPos);
             
-            // Create thin cylinder for edge
-            const geometry = new THREE.CylinderGeometry(0.3, 0.3, distance, 4, 1);
-            const material = new THREE.MeshBasicMaterial({
-                color: new THREE.Color(r, g, b),
+            const edgeOpacity = a * getEdgeOpacity(link, 1);
+            const edgeColor = new THREE.Color(r, g, b);
+            
+            const group = new THREE.Group();
+            
+            // Outer glow for edge
+            const outerGlowGeometry = new THREE.CylinderGeometry(isHighlighted ? 4 : 2, isHighlighted ? 4 : 2, distance, 8, 1);
+            const outerGlowMaterial = new THREE.MeshBasicMaterial({
+                color: edgeColor,
                 transparent: true,
-                opacity: a * getEdgeOpacity(link, 1),
+                opacity: edgeOpacity * 0.15,
                 blending: THREE.AdditiveBlending,
                 depthWrite: false,
             });
+            const outerGlow = new THREE.Mesh(outerGlowGeometry, outerGlowMaterial);
             
-            const cylinder = new THREE.Mesh(geometry, material);
+            // Inner glow for edge
+            const innerGlowGeometry = new THREE.CylinderGeometry(isHighlighted ? 2 : 1, isHighlighted ? 2 : 1, distance, 8, 1);
+            const innerGlowMaterial = new THREE.MeshBasicMaterial({
+                color: edgeColor,
+                transparent: true,
+                opacity: edgeOpacity * 0.3,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false,
+            });
+            const innerGlow = new THREE.Mesh(innerGlowGeometry, innerGlowMaterial);
             
-            // Position and orient cylinder
+            // Core line
+            const coreGeometry = new THREE.CylinderGeometry(isHighlighted ? 0.8 : 0.4, isHighlighted ? 0.8 : 0.4, distance, 6, 1);
+            const coreMaterial = new THREE.MeshBasicMaterial({
+                color: edgeColor,
+                transparent: true,
+                opacity: edgeOpacity * 0.8,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false,
+            });
+            const core = new THREE.Mesh(coreGeometry, coreMaterial);
+            
+            group.add(outerGlow);
+            group.add(innerGlow);
+            group.add(core);
+            
+            // Position and orient
             const midPoint = new THREE.Vector3().addVectors(sourcePos, targetPos).multiplyScalar(0.5);
-            cylinder.position.copy(midPoint);
+            group.position.copy(midPoint);
             
             const direction = new THREE.Vector3().subVectors(targetPos, sourcePos).normalize();
             const up = new THREE.Vector3(0, 1, 0);
             const quaternion = new THREE.Quaternion().setFromUnitVectors(up, direction);
-            cylinder.quaternion.copy(quaternion);
+            group.quaternion.copy(quaternion);
             
-            return cylinder;
+            return group;
         }}
         backgroundColor="#000011" // Deep space blue-black
         showNavInfo={false}

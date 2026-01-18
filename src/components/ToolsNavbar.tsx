@@ -31,35 +31,35 @@ export default function ToolsNavbar({
   };
 
   return (
-    <div className="absolute top-24 left-8 z-40">
+    <div className="absolute top-24 left-6 z-40">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col gap-3"
       >
-        {/* Toolbar buttons */}
-        <div className="flex gap-2 bg-slate-900/90 backdrop-blur-2xl border border-white/10 rounded-2xl p-2 shadow-xl">
+        {/* Pill-style toolbar */}
+        <div className="flex gap-1.5 bg-black/30 backdrop-blur-2xl border border-white/[0.06] rounded-full p-1.5 shadow-[0_4px_24px_rgba(0,0,0,0.3)]">
           <button
             onClick={() => handleToolClick('filter')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 ${
               activeTool === 'filter'
-                ? 'bg-violet-600 text-white'
-                : 'text-slate-300 hover:bg-white/10'
+                ? 'bg-white/10 text-white'
+                : 'text-white/50 hover:text-white/80'
             }`}
           >
-            <Filter size={18} />
-            <span className="text-sm font-medium">Relationships</span>
+            <Filter size={16} />
+            <span className="text-[13px] font-medium">Filters</span>
           </button>
           <button
             onClick={() => handleToolClick('path')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 ${
               activeTool === 'path'
-                ? 'bg-violet-600 text-white'
-                : 'text-slate-300 hover:bg-white/10'
+                ? 'bg-white/10 text-white'
+                : 'text-white/50 hover:text-white/80'
             }`}
           >
-            <Route size={18} />
-            <span className="text-sm font-medium">Find Path</span>
+            <Route size={16} />
+            <span className="text-[13px] font-medium">Path</span>
           </button>
         </div>
 
@@ -98,46 +98,48 @@ function RelationshipFilterPanel({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+      initial={{ opacity: 0, y: -10, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -10, scale: 0.95 }}
-      className="w-[340px] bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+      exit={{ opacity: 0, y: -10, scale: 0.98 }}
+      className="w-[300px] bg-black/40 backdrop-blur-2xl border border-white/[0.06] rounded-[1.5rem] shadow-[0_8px_32px_rgba(0,0,0,0.4)] overflow-hidden"
     >
-      <div className="px-5 py-4 border-b border-white/5 bg-gradient-to-r from-violet-900/20 to-transparent">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-white font-semibold text-sm">Filter Relationships</h3>
-          <button
-            onClick={onToggleAll}
-            className="text-xs text-violet-400 hover:text-violet-300 transition-colors font-medium"
-          >
-            {allEnabled ? 'Hide All' : 'Show All'}
-          </button>
+      <div className="px-5 py-4 flex items-center justify-between">
+        <div>
+          <h3 className="text-white font-medium text-[14px]">Relationships</h3>
+          <p className="text-[11px] text-white/40 mt-0.5">{enabledTypes.size} of {allTypes.length} active</p>
         </div>
-        <div className="text-xs text-slate-400">
-          {enabledTypes.size} of {allTypes.length} visible
-        </div>
+        <button
+          onClick={onToggleAll}
+          className="text-[11px] text-white/50 hover:text-white/80 transition-colors px-2.5 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.08]"
+        >
+          {allEnabled ? 'None' : 'All'}
+        </button>
       </div>
-      <div className="max-h-72 overflow-y-auto">
-        {allTypes.map((type) => {
-          const isEnabled = enabledTypes.has(type);
-          const color = EDGE_COLORS[type];
-          const label = EDGE_LABELS[type];
-          return (
-            <button
-              key={type}
-              onClick={() => onToggle(type)}
-              className="w-full px-5 py-3 border-b border-white/5 last:border-none flex items-center gap-3 hover:bg-white/5 transition-colors"
-            >
-              <div
-                className="w-3 h-3 rounded-full border-2 border-white/20"
-                style={{ backgroundColor: isEnabled ? color : 'transparent' }}
-              />
-              <span className={`text-sm flex-1 text-left ${isEnabled ? 'text-white' : 'text-slate-500'}`}>
-                {label}
-              </span>
-            </button>
-          );
-        })}
+      <div className="max-h-64 overflow-y-auto px-3 pb-3">
+        <div className="grid grid-cols-2 gap-1.5">
+          {allTypes.map((type) => {
+            const isEnabled = enabledTypes.has(type);
+            const color = EDGE_COLORS[type];
+            const label = EDGE_LABELS[type];
+            return (
+              <button
+                key={type}
+                onClick={() => onToggle(type)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-150 ${
+                  isEnabled ? 'bg-white/[0.08]' : 'bg-transparent hover:bg-white/[0.04]'
+                }`}
+              >
+                <div
+                  className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: isEnabled ? color : 'rgba(255,255,255,0.15)' }}
+                />
+                <span className={`text-[12px] truncate ${isEnabled ? 'text-white/90' : 'text-white/40'}`}>
+                  {label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </motion.div>
   );
@@ -234,44 +236,43 @@ function PathFinderPanel({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+      initial={{ opacity: 0, y: -10, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      className="w-[400px] bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+      className="w-[320px] bg-black/40 backdrop-blur-2xl border border-white/[0.06] rounded-[1.5rem] shadow-[0_8px_32px_rgba(0,0,0,0.4)] overflow-hidden"
     >
-      <div className="px-5 py-4 border-b border-white/5 bg-gradient-to-r from-violet-900/20 to-transparent">
-        <h3 className="text-white font-semibold text-sm">Find Shortest Path</h3>
-        <p className="text-xs text-slate-400 mt-1">Discover connections between nodes</p>
+      <div className="px-5 py-4">
+        <h3 className="text-white font-medium text-[14px]">Find Path</h3>
+        <p className="text-[11px] text-white/40 mt-0.5">Discover connections</p>
       </div>
 
-      <div className="p-4 space-y-4">
+      <div className="px-4 pb-4 space-y-3">
         {/* From Node */}
         <div className="relative">
-          <label className="block text-xs text-slate-400 mb-2">From</label>
           {fromSelected ? (
-            <div className="flex items-center justify-between bg-violet-600/20 border border-violet-500/30 rounded-xl px-3 py-2">
-              <span className="text-white text-sm">{fromSelected.label}</span>
-              <button onClick={() => { setFromSelected(null); setFromQuery(''); }} className="text-slate-400 hover:text-white">
+            <div className="flex items-center justify-between bg-white/[0.06] rounded-xl px-3.5 py-2.5">
+              <span className="text-white/90 text-[13px]">{fromSelected.label}</span>
+              <button onClick={() => { setFromSelected(null); setFromQuery(''); }} className="text-white/30 hover:text-white/70">
                 <X size={14} />
               </button>
             </div>
           ) : (
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" size={15} />
               <input
                 value={fromQuery}
                 onChange={(e) => handleFromSearch(e.target.value)}
                 onFocus={() => setIsFromFocused(true)}
                 onBlur={() => setTimeout(() => setIsFromFocused(false), 200)}
-                placeholder="Search node..."
-                className="w-full bg-slate-800/60 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-violet-500/50"
+                placeholder="From..."
+                className="w-full bg-white/[0.04] border border-white/[0.06] rounded-xl pl-9 pr-3 py-2.5 text-white text-[13px] placeholder-white/30 focus:outline-none focus:border-white/[0.12] transition-colors"
               />
               {isFromFocused && fromResults.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-white/10 rounded-xl overflow-hidden z-50">
+                <div className="absolute top-full left-0 right-0 mt-1.5 bg-black/80 backdrop-blur-xl border border-white/[0.08] rounded-xl overflow-hidden z-50">
                   {fromResults.map(node => (
                     <button
                       key={node.id}
                       onClick={() => { setFromSelected(node); setFromQuery(node.label); setFromResults([]); }}
-                      className="w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-white/10"
+                      className="w-full px-3.5 py-2.5 text-left text-[13px] text-white/70 hover:bg-white/[0.06] hover:text-white transition-colors"
                     >
                       {node.label}
                     </button>
@@ -283,37 +284,38 @@ function PathFinderPanel({
         </div>
 
         <div className="flex justify-center">
-          <ArrowRight size={16} className="text-slate-500" />
+          <div className="w-6 h-6 rounded-full bg-white/[0.04] flex items-center justify-center">
+            <ArrowRight size={12} className="text-white/30" />
+          </div>
         </div>
 
         {/* To Node */}
         <div className="relative">
-          <label className="block text-xs text-slate-400 mb-2">To</label>
           {toSelected ? (
-            <div className="flex items-center justify-between bg-violet-600/20 border border-violet-500/30 rounded-xl px-3 py-2">
-              <span className="text-white text-sm">{toSelected.label}</span>
-              <button onClick={() => { setToSelected(null); setToQuery(''); }} className="text-slate-400 hover:text-white">
+            <div className="flex items-center justify-between bg-white/[0.06] rounded-xl px-3.5 py-2.5">
+              <span className="text-white/90 text-[13px]">{toSelected.label}</span>
+              <button onClick={() => { setToSelected(null); setToQuery(''); }} className="text-white/30 hover:text-white/70">
                 <X size={14} />
               </button>
             </div>
           ) : (
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" size={15} />
               <input
                 value={toQuery}
                 onChange={(e) => handleToSearch(e.target.value)}
                 onFocus={() => setIsToFocused(true)}
                 onBlur={() => setTimeout(() => setIsToFocused(false), 200)}
-                placeholder="Search node..."
-                className="w-full bg-slate-800/60 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-violet-500/50"
+                placeholder="To..."
+                className="w-full bg-white/[0.04] border border-white/[0.06] rounded-xl pl-9 pr-3 py-2.5 text-white text-[13px] placeholder-white/30 focus:outline-none focus:border-white/[0.12] transition-colors"
               />
               {isToFocused && toResults.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-white/10 rounded-xl overflow-hidden z-50">
+                <div className="absolute top-full left-0 right-0 mt-1.5 bg-black/80 backdrop-blur-xl border border-white/[0.08] rounded-xl overflow-hidden z-50">
                   {toResults.map(node => (
                     <button
                       key={node.id}
                       onClick={() => { setToSelected(node); setToQuery(node.label); setToResults([]); }}
-                      className="w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-white/10"
+                      className="w-full px-3.5 py-2.5 text-left text-[13px] text-white/70 hover:bg-white/[0.06] hover:text-white transition-colors"
                     >
                       {node.label}
                     </button>
@@ -326,31 +328,31 @@ function PathFinderPanel({
 
         {/* Result */}
         {pathLength !== null && (
-          <div className="flex items-center gap-2 text-green-400 text-sm">
-            <CheckCircle2 size={16} />
-            <span>Path found: {pathLength} steps</span>
+          <div className="flex items-center gap-2 text-emerald-400/90 text-[12px] bg-emerald-500/10 rounded-lg px-3 py-2">
+            <CheckCircle2 size={14} />
+            <span>{pathLength} steps found</span>
           </div>
         )}
         {pathError && (
-          <div className="flex items-center gap-2 text-red-400 text-sm">
-            <AlertCircle size={16} />
+          <div className="flex items-center gap-2 text-red-400/90 text-[12px] bg-red-500/10 rounded-lg px-3 py-2">
+            <AlertCircle size={14} />
             <span>{pathError}</span>
           </div>
         )}
 
         {/* Actions */}
-        <div className="flex gap-2 pt-2">
+        <div className="flex gap-2 pt-1">
           <button
             onClick={handleFindPath}
             disabled={!fromSelected || !toSelected || isLoading}
-            className="flex-1 bg-violet-600 hover:bg-violet-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-2"
+            className="flex-1 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-400 hover:to-purple-400 disabled:opacity-30 disabled:cursor-not-allowed text-white py-2.5 rounded-xl text-[13px] font-medium flex items-center justify-center gap-2 transition-all"
           >
-            {isLoading ? <Loader2 className="animate-spin" size={16} /> : <Route size={16} />}
-            {isLoading ? 'Finding...' : 'Find Path'}
+            {isLoading ? <Loader2 className="animate-spin" size={14} /> : <Route size={14} />}
+            {isLoading ? 'Finding...' : 'Find'}
           </button>
           <button
             onClick={handleClear}
-            className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm"
+            className="px-4 py-2.5 bg-white/[0.04] hover:bg-white/[0.08] text-white/60 hover:text-white/80 rounded-xl text-[13px] transition-colors"
           >
             Clear
           </button>
