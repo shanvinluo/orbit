@@ -244,6 +244,51 @@ export default function Home() {
     setHighlightNodes(nodes);
     setHighlightEdges(edges);
   }, []);
+
+  // AI Command Handlers
+  const handleAISearch = useCallback((companyId: string, companyName: string) => {
+    const node = graphData.nodes.find(n => n.id === companyId);
+    if (node) {
+      handleNodeClick(node);
+    }
+  }, [graphData.nodes, handleNodeClick]);
+
+  const handleAIFilter = useCallback((edgeTypes: string[]) => {
+    const newEnabled = new Set<EdgeType>();
+    edgeTypes.forEach(type => {
+      if (Object.values(EdgeType).includes(type as EdgeType)) {
+        newEnabled.add(type as EdgeType);
+      }
+    });
+    setEnabledEdgeTypes(newEnabled);
+  }, []);
+
+  const handleAIClearFilter = useCallback(() => {
+    setEnabledEdgeTypes(new Set(Object.values(EdgeType)));
+  }, []);
+
+  const handleAIFindPath = useCallback(async (fromId: string, toId: string) => {
+    try {
+      const res = await fetch(`/api/paths?from=${fromId}&to=${toId}&depth=4`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.shortestPath) {
+          const pathNodes = data.shortestPath.nodes;
+          const pathEdges: string[] = [];
+          
+          // Build edge IDs from the path
+          for (let i = 0; i < pathNodes.length - 1; i++) {
+            pathEdges.push(`${pathNodes[i]}-${pathNodes[i + 1]}`);
+            pathEdges.push(`${pathNodes[i + 1]}-${pathNodes[i]}`);
+          }
+          
+          handlePathFound({ nodes: pathNodes, edges: pathEdges });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to find path:', error);
+    }
+  }, [handlePathFound]);
   
   // Create map of affected companies for GraphViz
   const affectedCompaniesMap = newsAnalysis 
@@ -309,7 +354,13 @@ export default function Home() {
         selectedNodeId={selectedNode?.id}
       />
       
-      <Chatbot onNewsAnalysis={handleNewsAnalysis} />
+      <Chatbot 
+        onNewsAnalysis={handleNewsAnalysis}
+        onSearch={handleAISearch}
+        onFilter={handleAIFilter}
+        onClearFilter={handleAIClearFilter}
+        onFindPath={handleAIFindPath}
+      />
 
       {newsAnalysis && (
         <MarketPulse analysis={newsAnalysis} onClose={handleCloseNewsPopup} />

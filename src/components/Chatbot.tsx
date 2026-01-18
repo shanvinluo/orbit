@@ -9,11 +9,31 @@ interface Message {
   role: 'user' | 'ai';
   content: string;
   suggestions?: string[];
+  actionType?: 'search' | 'filter' | 'find_path' | 'clear_filter';
 }
 
 interface ChatbotProps {
   onNewsAnalysis?: (analysis: any) => void;
+  onSearch?: (companyId: string, companyName: string) => void;
+  onFilter?: (edgeTypes: string[]) => void;
+  onClearFilter?: () => void;
+  onFindPath?: (fromId: string, toId: string) => void;
 }
+
+// Detect if the query is a command (search, filter, path) or content query
+const isCommandQuery = (text: string): boolean => {
+  const lowerText = text.toLowerCase();
+  
+  // Command keywords
+  const commandKeywords = [
+    'show me', 'find', 'search', 'look up', 'select', 'go to', 'focus on',
+    'filter', 'only show', 'hide', 'show only',
+    'path from', 'path between', 'connected to', 'connection from', 'how is', 'relationship between',
+    'clear filter', 'reset', 'show all', 'show everything'
+  ];
+  
+  return commandKeywords.some(keyword => lowerText.includes(keyword));
+};
 
 // Detect the type of query: 'news', 'relationship', or 'general'
 const detectQueryType = (text: string): 'news' | 'relationship' | 'general' => {
@@ -98,17 +118,17 @@ const generateSuggestions = (aiContent: string, analysisType: 'news' | 'general'
   ];
 };
 
-export default function Chatbot({ onNewsAnalysis }: ChatbotProps = {}) {
+export default function Chatbot({ onNewsAnalysis, onSearch, onFilter, onClearFilter, onFindPath }: ChatbotProps = {}) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       role: 'ai',
-      content: 'Hello! I can answer finance questions and analyze company relationships. Ask me anything about stocks, markets, or specific companies!',
+      content: 'Hello! I can answer questions, analyze news, and control the graph. Try commands like "Show me Apple", "Filter to ownership", or "Find path from Tesla to NVIDIA"!',
       suggestions: [
-        "What is a P/E ratio?",
-        "Tell me about Apple's competitors",
-        "How does the semiconductor industry work?"
+        "Show me Microsoft",
+        "Filter to supplier relationships",
+        "Find path from Apple to NVIDIA"
       ]
     }
   ]);
@@ -135,6 +155,82 @@ export default function Chatbot({ onNewsAnalysis }: ChatbotProps = {}) {
     setIsLoading(true);
 
     try {
+      // Check if this is a command query first
+      if (isCommandQuery(content)) {
+        const cmdRes = await fetch('/api/ai/command', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: content })
+        });
+
+        if (cmdRes.ok) {
+          const cmdData = await cmdRes.json();
+          const { command, message } = cmdData;
+
+          // Execute the command if it's actionable
+          if (command.type !== 'none') {
+            let actionTaken = false;
+            let actionType: 'search' | 'filter' | 'find_path' | 'clear_filter' | undefined;
+
+            switch (command.type) {
+              case 'search':
+                if (command.params.companyId && onSearch) {
+                  onSearch(command.params.companyId, command.params.companyName);
+                  actionTaken = true;
+                  actionType = 'search';
+                }
+                break;
+              case 'filter':
+                if (command.params.edgeTypes && onFilter) {
+                  onFilter(command.params.edgeTypes);
+                  actionTaken = true;
+                  actionType = 'filter';
+                }
+                break;
+              case 'find_path':
+                if (command.params.fromId && command.params.toId && onFindPath) {
+                  onFindPath(command.params.fromId, command.params.toId);
+                  actionTaken = true;
+                  actionType = 'find_path';
+                }
+                break;
+              case 'clear_filter':
+                if (onClearFilter) {
+                  onClearFilter();
+                  actionTaken = true;
+                  actionType = 'clear_filter';
+                }
+                break;
+            }
+
+            if (actionTaken) {
+              const aiMsg: Message = {
+                id: (Date.now() + 1).toString(),
+                role: 'ai',
+                content: message,
+                actionType,
+                suggestions: generateCommandSuggestions(command.type)
+              };
+              setMessages(prev => [...prev, aiMsg]);
+              setIsLoading(false);
+              return;
+            }
+          }
+
+          // Command not actionable, show the message
+          const aiMsg: Message = {
+            id: (Date.now() + 1).toString(),
+            role: 'ai',
+            content: message,
+            suggestions: generateSuggestions(message, 'error')
+          };
+          setMessages(prev => [...prev, aiMsg]);
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      // Not a command - proceed with normal analysis
       const queryType = detectQueryType(content);
       
       const res = await fetch('/api/ai/analyze', {
@@ -245,6 +341,42 @@ export default function Chatbot({ onNewsAnalysis }: ChatbotProps = {}) {
       setMessages(prev => [...prev, errorMsg]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Generate suggestions after executing a command
+  const generateCommandSuggestions = (commandType: string): string[] => {
+    switch (commandType) {
+      case 'search':
+        return [
+          "Find path to another company",
+          "Show supplier relationships",
+          "What companies are connected?"
+        ];
+      case 'filter':
+        return [
+          "Clear all filters",
+          "Also show ownership",
+          "Find a company"
+        ];
+      case 'find_path':
+        return [
+          "Find another path",
+          "Show me the starting company",
+          "Filter to this relationship type"
+        ];
+      case 'clear_filter':
+        return [
+          "Filter to ownership only",
+          "Show me Apple",
+          "Find path between companies"
+        ];
+      default:
+        return [
+          "Show me Microsoft",
+          "Filter to suppliers",
+          "Find path from Apple to NVIDIA"
+        ];
     }
   };
 
