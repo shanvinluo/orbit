@@ -76,10 +76,11 @@ export default function Home() {
   }, []);
 
   const handleNodeClick = useCallback((node: GraphNode) => {
+    // Always allow selecting the node to show its card
+    setSelectedNode(node);
+
     // If in path mode or news mode, don't change highlighting on node click
     if (pathMode || newsMode) return;
-
-    setSelectedNode(node);
 
     // Simple neighbor highlighting
     const newHighlightNodes = new Set<string>([node.id]);
@@ -100,7 +101,7 @@ export default function Home() {
 
     setHighlightNodes(newHighlightNodes);
     setHighlightEdges(newHighlightEdges);
-  }, [graphData.links, pathMode]);
+  }, [graphData.links, pathMode, newsMode]);
 
   const handlePathFound = useCallback((path: { nodes: string[]; edges: string[] } | null) => {
     if (path) {
