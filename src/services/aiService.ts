@@ -306,6 +306,27 @@ export interface NewsAnalysis {
   newsType: 'merger' | 'partnership' | 'regulation' | 'financial' | 'technology' | 'market' | 'other';
 }
 
+// AI Action Types - Actions the AI can trigger in the UI
+export type AIActionType = 'search' | 'findPath' | 'filter' | 'showOnly' | 'clearFilters';
+
+export interface AIAction {
+  type: AIActionType;
+  params: {
+    companyName?: string;      // For search action
+    fromCompany?: string;      // For findPath action
+    toCompany?: string;        // For findPath action
+    edgeTypes?: string[];      // For filter/showOnly actions
+    enable?: boolean;          // For filter action (true = enable, false = disable)
+  };
+  explanation: string;         // What the action does (for user feedback)
+}
+
+export interface AIActionResponse {
+  message: string;             // Response message to show user
+  actions: AIAction[];         // Actions to execute
+  suggestions?: string[];      // Follow-up suggestions
+}
+
 export const analyzeNews = async (newsText: string): Promise<NewsAnalysis | { error: string }> => {
   // Step 1: Load all available companies from the graph
   const graphData = loadGraph();
@@ -439,5 +460,139 @@ export const analyzeNews = async (newsText: string): Promise<NewsAnalysis | { er
     }
     
     return { error: `Failed to analyze news: ${errorMsg}` };
+  }
+};
+
+// AI Action Handler - Detects user intent and triggers UI actions
+export const analyzeUserIntent = async (
+  userMessage: string, 
+  availableCompanies: string[],
+  availableEdgeTypes: string[]
+): Promise<AIActionResponse | { error: string }> => {
+  
+  const prompt = `
+    You are an AI assistant for a financial knowledge graph visualization tool called Orbit.
+    Analyze the user's message and determine what actions they want to perform.
+    
+    Available companies in the graph:
+    ${availableCompanies.slice(0, 150).join(', ')}
+    
+    Available relationship/edge types to filter:
+    ${availableEdgeTypes.join(', ')}
+    
+    You can trigger these actions:
+    1. "search" - Focus on and select a specific company. Use when user wants to view, find, or learn about a company.
+    2. "findPath" - Find the shortest path/connection between two companies. Use when user asks about connections, paths, or relationships between two specific companies.
+    3. "filter" - Enable or disable specific relationship types. Use when user wants to show/hide certain types of connections.
+    4. "showOnly" - Show ONLY the specified relationship types (disable all others). Use when user wants to focus on specific relationship types exclusively.
+    5. "clearFilters" - Reset all filters to show everything. Use when user wants to see all relationships again.
+    
+    Rules:
+    - Match company names to the EXACT names in the available companies list (fuzzy match if needed)
+    - For "findPath", you need exactly TWO companies
+    - For "filter" or "showOnly", match edge types to available types (case-insensitive)
+    - You can return multiple actions if needed (e.g., search + filter)
+    - Always provide a helpful, conversational message explaining what you're doing
+    
+    User message: "${userMessage.substring(0, 1000)}"
+    
+    Output strictly valid JSON with no markdown:
+    {
+      "message": "Conversational response explaining what you're doing",
+      "actions": [
+        {
+          "type": "search|findPath|filter|showOnly|clearFilters",
+          "params": {
+            "companyName": "For search - exact company name from list",
+            "fromCompany": "For findPath - source company name",
+            "toCompany": "For findPath - target company name",
+            "edgeTypes": ["For filter/showOnly - array of edge types"],
+            "enable": true
+          },
+          "explanation": "Brief explanation of this action"
+        }
+      ],
+      "suggestions": ["Follow-up suggestion 1", "Follow-up suggestion 2", "Follow-up suggestion 3"]
+    }
+    
+    If the user's message doesn't require any graph actions (just a general question), return:
+    {
+      "message": "Your helpful response to their question",
+      "actions": [],
+      "suggestions": ["Relevant follow-up suggestions"]
+    }
+  `;
+
+  try {
+    let txt = await generateContentWithFallback(prompt);
+    
+    // Clean up JSON
+    txt = txt.replace(/```json/g, '').replace(/```/g, '').trim();
+    const firstBrace = txt.indexOf('{');
+    const lastBrace = txt.lastIndexOf('}');
+    
+    if (firstBrace !== -1 && lastBrace !== -1) {
+      txt = txt.substring(firstBrace, lastBrace + 1);
+      const response: AIActionResponse = JSON.parse(txt);
+      
+      // Validate and clean up company names in actions
+      const companyMapLower = new Map(availableCompanies.map(c => [c.toLowerCase(), c]));
+      
+      for (const action of response.actions) {
+        if (action.type === 'search' && action.params.companyName) {
+          // Try to find exact match
+          const exactMatch = companyMapLower.get(action.params.companyName.toLowerCase());
+          if (exactMatch) {
+            action.params.companyName = exactMatch;
+          } else {
+            // Fuzzy match
+            const fuzzy = availableCompanies.find(c => 
+              c.toLowerCase().includes(action.params.companyName!.toLowerCase()) ||
+              action.params.companyName!.toLowerCase().includes(c.toLowerCase().split(' ')[0])
+            );
+            if (fuzzy) action.params.companyName = fuzzy;
+          }
+        }
+        
+        if (action.type === 'findPath') {
+          // Match fromCompany
+          if (action.params.fromCompany) {
+            const fromMatch = companyMapLower.get(action.params.fromCompany.toLowerCase()) ||
+              availableCompanies.find(c => 
+                c.toLowerCase().includes(action.params.fromCompany!.toLowerCase()) ||
+                action.params.fromCompany!.toLowerCase().includes(c.toLowerCase().split(' ')[0])
+              );
+            if (fromMatch) action.params.fromCompany = fromMatch;
+          }
+          // Match toCompany
+          if (action.params.toCompany) {
+            const toMatch = companyMapLower.get(action.params.toCompany.toLowerCase()) ||
+              availableCompanies.find(c => 
+                c.toLowerCase().includes(action.params.toCompany!.toLowerCase()) ||
+                action.params.toCompany!.toLowerCase().includes(c.toLowerCase().split(' ')[0])
+              );
+            if (toMatch) action.params.toCompany = toMatch;
+          }
+        }
+        
+        // Normalize edge types
+        if (action.params.edgeTypes) {
+          const edgeMapLower = new Map(availableEdgeTypes.map(e => [e.toLowerCase().replace(/_/g, ' '), e]));
+          action.params.edgeTypes = action.params.edgeTypes.map(et => {
+            const normalized = et.toLowerCase().replace(/_/g, ' ');
+            return edgeMapLower.get(normalized) || 
+              availableEdgeTypes.find(e => e.toLowerCase().includes(normalized)) ||
+              et;
+          }).filter(et => availableEdgeTypes.includes(et));
+        }
+      }
+      
+      return response;
+    } else {
+      throw new Error("Invalid JSON response");
+    }
+  } catch (e: any) {
+    console.error("Intent analysis failed:", e);
+    return { error: `Failed to understand request: ${e?.message || 'Unknown error'}` };
   }
 };

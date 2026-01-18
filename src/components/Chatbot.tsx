@@ -1,43 +1,56 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Sparkles, ChevronDown, ChevronUp, Newspaper } from 'lucide-react';
+import { Send, Sparkles, ChevronDown, ChevronUp, Newspaper, Search, GitBranch, Filter } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AIAction, AIActionResponse } from '@/services/aiService';
+import { GraphNode, EdgeType } from '@/types';
 
 interface Message {
   id: string;
   role: 'user' | 'ai';
   content: string;
   suggestions?: string[];
-  actionType?: 'search' | 'filter' | 'find_path' | 'clear_filter';
+  actions?: AIAction[]; // Actions that were executed
 }
 
 interface ChatbotProps {
   onNewsAnalysis?: (analysis: any) => void;
-  onSearch?: (companyId: string, companyName: string) => void;
-  onFilter?: (edgeTypes: string[]) => void;
-  onClearFilter?: () => void;
+  // New action callbacks
+  nodes?: GraphNode[];
+  onSearchSelect?: (node: GraphNode) => void;
   onFindPath?: (fromId: string, toId: string) => void;
+  onFilterToggle?: (edgeType: EdgeType, enable: boolean) => void;
+  onShowOnlyFilters?: (edgeTypes: EdgeType[]) => void;
+  onClearFilters?: () => void;
 }
 
-// Detect if the query is a command (search, filter, path) or content query
-const isCommandQuery = (text: string): boolean => {
+// Detect the type of query: 'news', 'relationship', 'general', or 'action'
+const detectQueryType = (text: string): 'news' | 'relationship' | 'general' | 'action' => {
   const lowerText = text.toLowerCase();
   
-  // Command keywords
-  const commandKeywords = [
-    'show me', 'find', 'search', 'look up', 'select', 'go to', 'focus on',
-    'filter', 'only show', 'hide', 'show only',
-    'path from', 'path between', 'connected to', 'connection from', 'how is', 'relationship between',
-    'clear filter', 'reset', 'show all', 'show everything'
+  // Action detection - Commands to interact with the graph
+  const actionKeywords = [
+    'show me', 'find', 'search for', 'look up', 'select', 'focus on', 'zoom to',
+    'path between', 'connection between', 'how is .* connected to', 'route from',
+    'filter', 'show only', 'hide', 'display only', 'turn on', 'turn off',
+    'enable', 'disable', 'clear filters', 'reset filters', 'show all'
   ];
+  const hasActionKeywords = actionKeywords.some(keyword => {
+    if (keyword.includes('.*')) {
+      return new RegExp(keyword).test(lowerText);
+    }
+    return lowerText.includes(keyword);
+  });
   
-  return commandKeywords.some(keyword => lowerText.includes(keyword));
-};
-
-// Detect the type of query: 'news', 'relationship', or 'general'
-const detectQueryType = (text: string): 'news' | 'relationship' | 'general' => {
-  const lowerText = text.toLowerCase();
+  // Specific action patterns
+  const pathPattern = /(?:path|connection|route|link)\s+(?:between|from)\s+.+\s+(?:to|and)\s+/i;
+  const searchPattern = /(?:show|find|search|select|focus|look up|zoom)\s+(?:me\s+)?(?:the\s+)?[A-Z]/i;
+  const filterPattern = /(?:filter|show only|hide|display only|enable|disable)\s+(?:the\s+)?(?:\w+\s+)?(?:relationship|edge|connection|type)/i;
+  
+  if (hasActionKeywords || pathPattern.test(text) || searchPattern.test(text) || filterPattern.test(text)) {
+    return 'action';
+  }
   
   // Impact/scenario analysis detection - route to news for bullish/bearish analysis
   const impactKeywords = ['affected', 'impact', 'crashes', 'crash', 'fails', 'bankrupt', 'goes down', 'drops', 'rises', 'grows', 'expands', 'acquires', 'merges'];
@@ -76,21 +89,48 @@ const detectQueryType = (text: string): 'news' | 'relationship' | 'general' => {
   return 'general';
 };
 
+// Industries for dynamic suggestions
+const INDUSTRIES = [
+  'semiconductor', 'automotive', 'tech', 'banking', 'oil & gas', 
+  'pharmaceutical', 'retail', 'cloud computing', 'social media', 'AI'
+];
+
+// Get a random industry for dynamic suggestions
+const getRandomIndustry = (): string => {
+  return INDUSTRIES[Math.floor(Math.random() * INDUSTRIES.length)];
+};
+
 // Generate contextual suggestions based on the conversation
-const generateSuggestions = (aiContent: string, analysisType: 'news' | 'general' | 'relationship' | 'greeting' | 'error'): string[] => {
+const generateSuggestions = (aiContent: string, analysisType: 'news' | 'general' | 'relationship' | 'greeting' | 'error' | 'action'): string[] => {
+  const industryImpact = `What stocks would be affected if the ${getRandomIndustry()} industry crashes?`;
+  
   if (analysisType === 'news') {
     return [
       "Show me the supply chain connections",
       "Which companies are most at risk?",
-      "Find paths between affected companies"
+      "Find paths between affected companies",
+      "Show only supplier relationships",
+      industryImpact
     ];
   }
   
   if (analysisType === 'greeting') {
     return [
-      "What is a P/E ratio?",
-      "Tell me about Apple's competitors",
-      "How does the semiconductor industry work?"
+      "Show me Apple",
+      "Find path between Tesla and NVIDIA",
+      "Show only ownership relationships",
+      "What is market capitalization?",
+      industryImpact
+    ];
+  }
+  
+  if (analysisType === 'action') {
+    return [
+      "Show me Microsoft",
+      "Find path between Amazon and Google",
+      "Show only partnership connections",
+      "Clear all filters",
+      industryImpact
     ];
   }
   
@@ -98,15 +138,19 @@ const generateSuggestions = (aiContent: string, analysisType: 'news' | 'general'
     return [
       "Show me indirect connections",
       "Which industries are most connected?",
-      "Find the most influential companies"
+      "Find the most influential companies",
+      "Show only joint venture relationships",
+      industryImpact
     ];
   }
   
   if (analysisType === 'error') {
     return [
+      "Show me Apple",
       "What are ETFs?",
-      "Tell me about NVIDIA",
-      "How do supply chains work?"
+      "Find path between Microsoft and Google",
+      "How do supply chains work?",
+      industryImpact
     ];
   }
   
@@ -114,27 +158,94 @@ const generateSuggestions = (aiContent: string, analysisType: 'news' | 'general'
   return [
     "Tell me more about this",
     "What companies are involved?",
-    "How does this affect the market?"
+    "Show only supplier relationships",
+    "Find connected companies",
+    industryImpact
   ];
 };
 
-export default function Chatbot({ onNewsAnalysis, onSearch, onFilter, onClearFilter, onFindPath }: ChatbotProps = {}) {
+export default function Chatbot({ 
+  onNewsAnalysis,
+  nodes = [],
+  onSearchSelect,
+  onFindPath,
+  onFilterToggle,
+  onShowOnlyFilters,
+  onClearFilters
+}: ChatbotProps = {}) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       role: 'ai',
-      content: 'Hello! I can answer questions, analyze news, and control the graph. Try commands like "Show me Apple", "Filter to ownership", or "Find path from Tesla to NVIDIA"!',
+      content: 'Hello! I can answer finance questions, analyze relationships, and control the graph. Try commands like "Show me Apple" or "Find path between Microsoft and NVIDIA"!',
       suggestions: [
-        "Show me Microsoft",
-        "Filter to supplier relationships",
-        "Find path from Apple to NVIDIA"
+        "Show me Apple",
+        "Find path between Tesla and NVIDIA",
+        "Show only supplier relationships",
+        "What is market capitalization?",
+        "What stocks would be affected if the semiconductor industry crashes?"
       ]
     }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Execute AI actions
+  const executeActions = (actions: AIAction[]) => {
+    for (const action of actions) {
+      switch (action.type) {
+        case 'search':
+          if (action.params.companyName && onSearchSelect) {
+            const node = nodes.find(n => 
+              n.label.toLowerCase() === action.params.companyName!.toLowerCase() ||
+              n.label.toLowerCase().includes(action.params.companyName!.toLowerCase())
+            );
+            if (node) {
+              onSearchSelect(node);
+            }
+          }
+          break;
+          
+        case 'findPath':
+          if (action.params.fromCompany && action.params.toCompany && onFindPath) {
+            const fromNode = nodes.find(n => 
+              n.label.toLowerCase() === action.params.fromCompany!.toLowerCase() ||
+              n.label.toLowerCase().includes(action.params.fromCompany!.toLowerCase())
+            );
+            const toNode = nodes.find(n => 
+              n.label.toLowerCase() === action.params.toCompany!.toLowerCase() ||
+              n.label.toLowerCase().includes(action.params.toCompany!.toLowerCase())
+            );
+            if (fromNode && toNode) {
+              onFindPath(fromNode.id, toNode.id);
+            }
+          }
+          break;
+          
+        case 'filter':
+          if (action.params.edgeTypes && onFilterToggle) {
+            for (const edgeType of action.params.edgeTypes) {
+              onFilterToggle(edgeType as EdgeType, action.params.enable !== false);
+            }
+          }
+          break;
+          
+        case 'showOnly':
+          if (action.params.edgeTypes && onShowOnlyFilters) {
+            onShowOnlyFilters(action.params.edgeTypes as EdgeType[]);
+          }
+          break;
+          
+        case 'clearFilters':
+          if (onClearFilters) {
+            onClearFilters();
+          }
+          break;
+      }
+    }
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -155,83 +266,54 @@ export default function Chatbot({ onNewsAnalysis, onSearch, onFilter, onClearFil
     setIsLoading(true);
 
     try {
-      // Check if this is a command query first
-      if (isCommandQuery(content)) {
-        const cmdRes = await fetch('/api/ai/command', {
+      const queryType = detectQueryType(content);
+      
+      // Handle action type queries with the new intent analyzer
+      if (queryType === 'action') {
+        const res = await fetch('/api/ai/action', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: content })
+          body: JSON.stringify({ 
+            text: content,
+            companies: nodes.map(n => n.label),
+            edgeTypes: Object.values(EdgeType)
+          })
         });
 
-        if (cmdRes.ok) {
-          const cmdData = await cmdRes.json();
-          const { command, message } = cmdData;
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({ error: `Server error: ${res.status}` }));
+          throw new Error(errorData.error || `Request failed with status ${res.status}`);
+        }
 
-          // Execute the command if it's actionable
-          if (command.type !== 'none') {
-            let actionTaken = false;
-            let actionType: 'search' | 'filter' | 'find_path' | 'clear_filter' | undefined;
-
-            switch (command.type) {
-              case 'search':
-                if (command.params.companyId && onSearch) {
-                  onSearch(command.params.companyId, command.params.companyName);
-                  actionTaken = true;
-                  actionType = 'search';
-                }
-                break;
-              case 'filter':
-                if (command.params.edgeTypes && onFilter) {
-                  onFilter(command.params.edgeTypes);
-                  actionTaken = true;
-                  actionType = 'filter';
-                }
-                break;
-              case 'find_path':
-                if (command.params.fromId && command.params.toId && onFindPath) {
-                  onFindPath(command.params.fromId, command.params.toId);
-                  actionTaken = true;
-                  actionType = 'find_path';
-                }
-                break;
-              case 'clear_filter':
-                if (onClearFilter) {
-                  onClearFilter();
-                  actionTaken = true;
-                  actionType = 'clear_filter';
-                }
-                break;
-            }
-
-            if (actionTaken) {
-              const aiMsg: Message = {
-                id: (Date.now() + 1).toString(),
-                role: 'ai',
-                content: message,
-                actionType,
-                suggestions: generateCommandSuggestions(command.type)
-              };
-              setMessages(prev => [...prev, aiMsg]);
-              setIsLoading(false);
-              return;
-            }
-          }
-
-          // Command not actionable, show the message
+        const data = await res.json();
+        
+        if (data.error) {
           const aiMsg: Message = {
             id: (Date.now() + 1).toString(),
             role: 'ai',
-            content: message,
-            suggestions: generateSuggestions(message, 'error')
+            content: data.error,
+            suggestions: generateSuggestions(data.error, 'error')
           };
           setMessages(prev => [...prev, aiMsg]);
-          setIsLoading(false);
           return;
         }
-      }
 
-      // Not a command - proceed with normal analysis
-      const queryType = detectQueryType(content);
+        // Execute the actions
+        if (data.actions && data.actions.length > 0) {
+          executeActions(data.actions);
+        }
+
+        // Show the response message
+        const aiMsg: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'ai',
+          content: data.message,
+          suggestions: data.suggestions || generateSuggestions(data.message, 'relationship'),
+          actions: data.actions
+        };
+        setMessages(prev => [...prev, aiMsg]);
+        return;
+      }
       
       const res = await fetch('/api/ai/analyze', {
         method: 'POST',
@@ -341,42 +423,6 @@ export default function Chatbot({ onNewsAnalysis, onSearch, onFilter, onClearFil
       setMessages(prev => [...prev, errorMsg]);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  // Generate suggestions after executing a command
-  const generateCommandSuggestions = (commandType: string): string[] => {
-    switch (commandType) {
-      case 'search':
-        return [
-          "Find path to another company",
-          "Show supplier relationships",
-          "What companies are connected?"
-        ];
-      case 'filter':
-        return [
-          "Clear all filters",
-          "Also show ownership",
-          "Find a company"
-        ];
-      case 'find_path':
-        return [
-          "Find another path",
-          "Show me the starting company",
-          "Filter to this relationship type"
-        ];
-      case 'clear_filter':
-        return [
-          "Filter to ownership only",
-          "Show me Apple",
-          "Find path between companies"
-        ];
-      default:
-        return [
-          "Show me Microsoft",
-          "Filter to suppliers",
-          "Find path from Apple to NVIDIA"
-        ];
     }
   };
 
@@ -549,28 +595,31 @@ export default function Chatbot({ onNewsAnalysis, onSearch, onFilter, onClearFil
                       transition={{ delay: 0.2 }}
                       style={{
                         display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: 8,
+                        flexDirection: 'column',
+                        gap: 6,
                         marginLeft: 32,
-                        marginTop: 8
+                        marginTop: 8,
+                        marginRight: 8
                       }}
                     >
                       {msg.suggestions.map((suggestion, sIdx) => (
                         <motion.button
                           key={sIdx}
                           onClick={() => handleSuggestionClick(suggestion)}
-                          whileHover={{ scale: 1.02, backgroundColor: 'rgba(139, 92, 246, 0.25)' }}
-                          whileTap={{ scale: 0.98 }}
+                          whileHover={{ scale: 1.01, backgroundColor: 'rgba(139, 92, 246, 0.25)' }}
+                          whileTap={{ scale: 0.99 }}
                           style={{
-                            padding: '6px 12px',
+                            padding: '8px 12px',
                             fontSize: 11,
                             color: '#c4b5fd',
                             background: 'rgba(139, 92, 246, 0.12)',
                             border: '1px solid rgba(139, 92, 246, 0.3)',
-                            borderRadius: 16,
+                            borderRadius: 10,
                             cursor: 'pointer',
                             transition: 'all 0.2s',
-                            whiteSpace: 'nowrap'
+                            textAlign: 'left',
+                            lineHeight: 1.4,
+                            width: 'fit-content'
                           }}
                         >
                           {suggestion}

@@ -146,6 +146,40 @@ export default function Home() {
     });
   }, []);
 
+  // AI-triggered path finding
+  const handleAIFindPath = useCallback(async (fromId: string, toId: string) => {
+    try {
+      const res = await fetch(`/api/paths?from=${fromId}&to=${toId}&depth=4`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.shortestPath) {
+          const pathNodes = data.shortestPath.nodes;
+          const pathEdges: string[] = [];
+          
+          // Build edge keys from the path
+          for (let i = 0; i < pathNodes.length - 1; i++) {
+            pathEdges.push(`${pathNodes[i]}-${pathNodes[i + 1]}`);
+            pathEdges.push(`${pathNodes[i + 1]}-${pathNodes[i]}`); // Both directions
+          }
+          
+          handlePathFound({ nodes: pathNodes, edges: pathEdges });
+        }
+      }
+    } catch (error) {
+      console.error('AI path finding failed:', error);
+    }
+  }, [handlePathFound]);
+
+  // AI-triggered filter - show only specific types
+  const handleShowOnlyFilters = useCallback((edgeTypes: EdgeType[]) => {
+    setEnabledEdgeTypes(new Set(edgeTypes));
+  }, []);
+
+  // AI-triggered clear filters
+  const handleClearAllFilters = useCallback(() => {
+    setEnabledEdgeTypes(new Set(Object.values(EdgeType)));
+  }, []);
+
   const handleLinkClick = useCallback((edge: GraphEdge, source: GraphNode, target: GraphNode) => {
     // Find ALL relationships between these two companies (bidirectional check)
     const allEdges: Array<{ edge: GraphEdge; source: GraphNode; target: GraphNode }> = [];
@@ -244,51 +278,6 @@ export default function Home() {
     setHighlightNodes(nodes);
     setHighlightEdges(edges);
   }, []);
-
-  // AI Command Handlers
-  const handleAISearch = useCallback((companyId: string, companyName: string) => {
-    const node = graphData.nodes.find(n => n.id === companyId);
-    if (node) {
-      handleNodeClick(node);
-    }
-  }, [graphData.nodes, handleNodeClick]);
-
-  const handleAIFilter = useCallback((edgeTypes: string[]) => {
-    const newEnabled = new Set<EdgeType>();
-    edgeTypes.forEach(type => {
-      if (Object.values(EdgeType).includes(type as EdgeType)) {
-        newEnabled.add(type as EdgeType);
-      }
-    });
-    setEnabledEdgeTypes(newEnabled);
-  }, []);
-
-  const handleAIClearFilter = useCallback(() => {
-    setEnabledEdgeTypes(new Set(Object.values(EdgeType)));
-  }, []);
-
-  const handleAIFindPath = useCallback(async (fromId: string, toId: string) => {
-    try {
-      const res = await fetch(`/api/paths?from=${fromId}&to=${toId}&depth=4`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.shortestPath) {
-          const pathNodes = data.shortestPath.nodes;
-          const pathEdges: string[] = [];
-          
-          // Build edge IDs from the path
-          for (let i = 0; i < pathNodes.length - 1; i++) {
-            pathEdges.push(`${pathNodes[i]}-${pathNodes[i + 1]}`);
-            pathEdges.push(`${pathNodes[i + 1]}-${pathNodes[i]}`);
-          }
-          
-          handlePathFound({ nodes: pathNodes, edges: pathEdges });
-        }
-      }
-    } catch (error) {
-      console.error('Failed to find path:', error);
-    }
-  }, [handlePathFound]);
   
   // Create map of affected companies for GraphViz
   const affectedCompaniesMap = newsAnalysis 
@@ -356,10 +345,12 @@ export default function Home() {
       
       <Chatbot 
         onNewsAnalysis={handleNewsAnalysis}
-        onSearch={handleAISearch}
-        onFilter={handleAIFilter}
-        onClearFilter={handleAIClearFilter}
+        nodes={graphData.nodes}
+        onSearchSelect={handleSearchSelect}
         onFindPath={handleAIFindPath}
+        onFilterToggle={handleToggleEdgeType}
+        onShowOnlyFilters={handleShowOnlyFilters}
+        onClearFilters={handleClearAllFilters}
       />
 
       {newsAnalysis && (
