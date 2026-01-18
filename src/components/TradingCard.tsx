@@ -2,15 +2,17 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GraphNode, NodeType } from '@/types';
-import { X, TrendingUp, DollarSign, Activity, Globe, Building2 } from 'lucide-react';
+import { GraphNode, GraphEdge, NodeType } from '@/types';
+import { X, TrendingUp, DollarSign, Activity, Globe, Building2, Link2, ChevronRight } from 'lucide-react';
 
 interface TradingCardProps {
   node: GraphNode;
   onClose: () => void;
+  connectedNodes?: GraphNode[];
+  onNodeSelect?: (node: GraphNode) => void;
 }
 
-export default function TradingCard({ node, onClose }: TradingCardProps) {
+export default function TradingCard({ node, onClose, connectedNodes = [], onNodeSelect }: TradingCardProps) {
   // Determine if we have financial data
   const hasFinancials = node.data && (node.data.price || node.data.volume);
 
@@ -102,7 +104,7 @@ export default function TradingCard({ node, onClose }: TradingCardProps) {
           )}
 
           {/* Actions */}
-          <div className="space-y-2">
+          <div className="space-y-2 mb-6">
             <button className="w-full py-3 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-400 hover:to-purple-400 text-white rounded-2xl text-[13px] font-medium transition-all">
               Trade {node.ticker || node.label}
             </button>
@@ -110,6 +112,39 @@ export default function TradingCard({ node, onClose }: TradingCardProps) {
               View Analysis
             </button>
           </div>
+
+          {/* Connected Companies */}
+          {connectedNodes.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Link2 size={14} className="text-white/30" />
+                <span className="text-[12px] text-white/40 uppercase tracking-wider">Connected ({connectedNodes.length})</span>
+              </div>
+              <div className="space-y-2">
+                {connectedNodes.map((connNode) => (
+                  <button
+                    key={connNode.id}
+                    onClick={() => onNodeSelect?.(connNode)}
+                    className="w-full flex items-center gap-3 bg-white/[0.02] hover:bg-white/[0.06] rounded-xl p-3 transition-all group"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-white/[0.04] flex items-center justify-center shrink-0">
+                      <Building2 size={14} className="text-white/30" />
+                    </div>
+                    <div className="flex-1 text-left min-w-0">
+                      <div className="text-[13px] text-white/80 truncate">{connNode.label}</div>
+                      <div className="text-[11px] text-white/30">{connNode.ticker || connNode.type}</div>
+                    </div>
+                    {connNode.data?.change !== undefined && (
+                      <span className={`text-[11px] font-medium ${connNode.data.change >= 0 ? 'text-emerald-400/70' : 'text-red-400/70'}`}>
+                        {connNode.data.change >= 0 ? '+' : ''}{connNode.data.change}%
+                      </span>
+                    )}
+                    <ChevronRight size={14} className="text-white/20 group-hover:text-white/40 transition-colors" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </motion.div>
     </AnimatePresence>

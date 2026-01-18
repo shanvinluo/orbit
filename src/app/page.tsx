@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import GraphViz from '@/components/GraphViz';
 import SearchBar from '@/components/SearchBar';
 import Chatbot from '@/components/Chatbot';
@@ -136,6 +136,25 @@ export default function Home() {
     ? new Map(newsAnalysis.affectedCompanies.map(c => [c.companyId, c.impactType]))
     : undefined;
 
+  // Get connected nodes for the selected node
+  const connectedNodes = useMemo(() => {
+    if (!selectedNode) return [];
+    
+    const connectedIds = new Set<string>();
+    graphData.links.forEach(link => {
+      const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+      const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+      
+      if (sourceId === selectedNode.id) {
+        connectedIds.add(targetId);
+      } else if (targetId === selectedNode.id) {
+        connectedIds.add(sourceId);
+      }
+    });
+    
+    return graphData.nodes.filter(n => connectedIds.has(n.id));
+  }, [selectedNode, graphData]);
+
   return (
     <main className="relative w-screen h-screen bg-[#000011] overflow-hidden font-sans selection:bg-violet-500/30">
       {/* Background Gradient - Deep space nebula */}
@@ -173,7 +192,12 @@ export default function Home() {
       )}
 
       {selectedNode && (
-        <TradingCard node={selectedNode} onClose={clearSelection} />
+        <TradingCard 
+          node={selectedNode} 
+          onClose={clearSelection}
+          connectedNodes={connectedNodes}
+          onNodeSelect={handleNodeClick}
+        />
       )}
       
       {/* Overlay Title */}
