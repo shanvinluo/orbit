@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Sparkles, X, MessageSquare } from 'lucide-react';
+import { Send, Sparkles, ChevronDown, ChevronUp, Newspaper } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Message {
@@ -19,7 +19,7 @@ const isLikelyNews = (text: string): boolean => {
   const newsKeywords = ['announced', 'reported', 'according to', 'breaking', 'news', 'article', 'sources', 'confirmed', 'invaded', 'stocks would be affected', 'which stocks', 'affected stocks', 'market impact', 'financial impact'];
   const lowerText = text.toLowerCase();
   const hasNewsKeywords = newsKeywords.some(keyword => lowerText.includes(keyword));
-  const isLongText = text.length > 200; // News articles are typically longer
+  const isLongText = text.length > 200;
   const hasMultipleSentences = (text.match(/[.!?]/g) || []).length >= 3;
   const asksAboutImpact = lowerText.includes('affected') || lowerText.includes('impact') || lowerText.includes('stocks');
   
@@ -27,12 +27,12 @@ const isLikelyNews = (text: string): boolean => {
 };
 
 export default function Chatbot({ onNewsAnalysis }: ChatbotProps = {}) {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       role: 'ai',
-      content: 'Hello! I can analyze the relationships in the graph. Paste a news article or ask about a connection.'
+      content: 'Hello! I can analyze relationships in the graph. Paste a news article or ask about connections between companies.'
     }
   ]);
   const [input, setInput] = useState('');
@@ -52,7 +52,6 @@ export default function Chatbot({ onNewsAnalysis }: ChatbotProps = {}) {
     setIsLoading(true);
 
     try {
-      // Detect if this is news
       const isNews = isLikelyNews(userMsg.content);
       const analysisType = isNews ? 'news' : 'relationship';
       
@@ -69,7 +68,6 @@ export default function Chatbot({ onNewsAnalysis }: ChatbotProps = {}) {
 
       const data = await res.json();
       
-      // Handle errors first
       if (data.error) {
         const aiMsg: Message = {
           id: (Date.now() + 1).toString(),
@@ -80,19 +78,17 @@ export default function Chatbot({ onNewsAnalysis }: ChatbotProps = {}) {
         return;
       }
       
-      // Handle news analysis
       if (data.analysisType === 'news' && data.affectedCompanies) {
         const affectedCount = data.affectedCompanies.length;
-        let responseContent = `📰 Analyzed the news article and identified ${affectedCount} affected compan${affectedCount === 1 ? 'y' : 'ies'} in the graph. `;
+        let responseContent = `Analyzed the news and identified ${affectedCount} affected compan${affectedCount === 1 ? 'y' : 'ies'}. `;
         
         if (affectedCount > 0) {
-          responseContent += `The companies have been highlighted in the graph. Click to see detailed impact analysis.`;
-          // Pass to parent for highlighting and popup
+          responseContent += `Companies highlighted in the graph.`;
           if (onNewsAnalysis) {
             onNewsAnalysis(data);
           }
         } else {
-          responseContent += `However, none of the mentioned companies were found in the current graph.`;
+          responseContent += `No matching companies found in the graph.`;
         }
         
         const aiMsg: Message = {
@@ -102,7 +98,6 @@ export default function Chatbot({ onNewsAnalysis }: ChatbotProps = {}) {
         };
         setMessages(prev => [...prev, aiMsg]);
       } else {
-        // Handle relationship analysis (existing logic)
         const aiMsg: Message = {
           id: (Date.now() + 1).toString(),
           role: 'ai',
@@ -114,17 +109,16 @@ export default function Chatbot({ onNewsAnalysis }: ChatbotProps = {}) {
       console.error('Chatbot error:', e);
       const errorMessage = e?.message || String(e);
       
-      let userMessage = "Sorry, I encountered an error connecting to the AI service.";
+      let userMessage = "Error connecting to AI service.";
       
-      // Provide more specific error messages
       if (errorMessage.includes('Failed to fetch') || errorMessage.includes('network')) {
-        userMessage = "Network error: Could not connect to the server. Please check your internet connection.";
+        userMessage = "Network error. Check your connection.";
       } else if (errorMessage.includes('API key') || errorMessage.includes('401') || errorMessage.includes('403')) {
-        userMessage = "API key error: Your Gemini API key may be invalid or expired. Please check your .env.local file.";
+        userMessage = "API key error. Check your .env.local file.";
       } else if (errorMessage.includes('404') || errorMessage.includes('not found')) {
-        userMessage = "Model not found: The AI model is not available. This may be an API key permissions issue.";
+        userMessage = "Model not available. Check API key permissions.";
       } else if (errorMessage) {
-        userMessage = `Error: ${errorMessage.substring(0, 200)}`;
+        userMessage = `Error: ${errorMessage.substring(0, 150)}`;
       }
       
       const errorMsg: Message = {
@@ -139,40 +133,152 @@ export default function Chatbot({ onNewsAnalysis }: ChatbotProps = {}) {
   };
 
   return (
-    <>
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 50 }}
-            className="w-[360px] h-[480px] max-h-[75vh] bg-[#0a0a0f]/90 backdrop-blur-2xl border border-white/[0.08] rounded-[28px] shadow-[0_20px_60px_rgba(0,0,0,0.6)] flex flex-col"
-          >
-            {/* Header */}
-            <div className="px-5 py-4 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
-                <Sparkles size={14} className="text-white" />
-              </div>
-              <h3 className="text-white font-medium text-sm flex-1">Orbit AI</h3>
-              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            </div>
+    <motion.div
+      initial={{ y: '100%', opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ type: 'spring', damping: 25, stiffness: 300, delay: 0.1 }}
+      style={{
+        position: 'fixed',
+        bottom: 0,
+        right: 24,
+        width: 380,
+        maxHeight: isCollapsed ? 'auto' : '60vh',
+        backgroundColor: '#0f172a',
+        borderTop: '3px solid #8b5cf6',
+        borderLeft: '1px solid rgba(255,255,255,0.1)',
+        borderRight: '1px solid rgba(255,255,255,0.1)',
+        borderRadius: '24px 24px 0 0',
+        zIndex: 9998,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        boxShadow: '0 -10px 40px rgba(0,0,0,0.5), 0 0 20px rgba(139, 92, 246, 0.1)'
+      }}
+    >
+      {/* Drag Handle */}
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 6px' }}>
+        <div style={{ width: 40, height: 5, backgroundColor: '#475569', borderRadius: 3 }} />
+      </div>
 
+      {/* Header */}
+      <div style={{ 
+        padding: '12px 20px 16px', 
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        background: 'linear-gradient(to right, rgba(139, 92, 246, 0.15), transparent)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ 
+              padding: 8, 
+              background: 'linear-gradient(135deg, #8b5cf6, #a855f7)',
+              borderRadius: 10,
+              boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)'
+            }}>
+              <Sparkles color="white" size={16} />
+            </div>
+            <div>
+              <h2 style={{ color: 'white', fontSize: 15, fontWeight: 600, margin: 0 }}>
+                Orbit AI
+              </h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                <div style={{ 
+                  width: 6, 
+                  height: 6, 
+                  borderRadius: '50%', 
+                  backgroundColor: '#22c55e',
+                  boxShadow: '0 0 8px rgba(34, 197, 94, 0.6)'
+                }} />
+                <span style={{ fontSize: 11, color: '#94a3b8' }}>Ready to analyze</span>
+              </div>
+            </div>
+          </div>
+          <motion.button 
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            style={{ 
+              padding: 6, 
+              backgroundColor: 'rgba(0,0,0,0.3)', 
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 6,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <motion.div
+              animate={{ rotate: isCollapsed ? 0 : 180 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ChevronUp color="#94a3b8" size={16} />
+            </motion.div>
+          </motion.button>
+        </div>
+      </div>
+
+      {/* Content - Animated collapse */}
+      <AnimatePresence>
+        {!isCollapsed && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}
+          >
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
-              {messages.map((msg) => (
+            <div style={{ 
+              flex: 1, 
+              overflowY: 'auto', 
+              padding: '16px 16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 10,
+              maxHeight: '35vh'
+            }}>
+              {messages.map((msg, idx) => (
                 <motion.div 
-                  key={msg.id} 
-                  initial={{ opacity: 0, y: 6 }}
+                  key={msg.id}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.15 }}
-                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  transition={{ delay: idx * 0.05 }}
+                  style={{ 
+                    display: 'flex', 
+                    justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' 
+                  }}
                 >
-                  <div className={`max-w-[85%] px-4 py-2.5 text-[13px] leading-[1.5] ${
-                    msg.role === 'user' 
-                      ? 'bg-violet-500 text-white rounded-2xl rounded-br-md' 
-                      : 'bg-white/[0.05] text-white/70 rounded-2xl rounded-bl-md border border-white/[0.03]'
-                  }`}>
+                  {msg.role === 'ai' && (
+                    <div style={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: 6,
+                      background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(168, 85, 247, 0.2))',
+                      border: '1px solid rgba(139, 92, 246, 0.3)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginRight: 8,
+                      flexShrink: 0
+                    }}>
+                      <Sparkles color="#a78bfa" size={12} />
+                    </div>
+                  )}
+                  <div style={{ 
+                    maxWidth: '80%',
+                    padding: '10px 14px',
+                    borderRadius: msg.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
+                    fontSize: 13,
+                    lineHeight: 1.5,
+                    background: msg.role === 'user' 
+                      ? 'linear-gradient(135deg, #8b5cf6, #7c3aed)'
+                      : 'rgba(30, 41, 59, 0.8)',
+                    color: msg.role === 'user' ? 'white' : '#e2e8f0',
+                    border: msg.role === 'user' ? 'none' : '1px solid rgba(255,255,255,0.08)',
+                    boxShadow: msg.role === 'user' 
+                      ? '0 4px 12px rgba(139, 92, 246, 0.3)'
+                      : 'none'
+                  }}>
                     {msg.content}
                   </div>
                 </motion.div>
@@ -181,13 +287,44 @@ export default function Chatbot({ onNewsAnalysis }: ChatbotProps = {}) {
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="flex justify-start"
+                  style={{ display: 'flex', justifyContent: 'flex-start' }}
                 >
-                  <div className="bg-white/[0.05] border border-white/[0.03] px-4 py-3 rounded-2xl rounded-bl-md">
-                    <span className="flex gap-1.5">
-                      <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}/>
-                      <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}/>
-                      <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}/>
+                  <div style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: 6,
+                    background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(168, 85, 247, 0.2))',
+                    border: '1px solid rgba(139, 92, 246, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: 8,
+                    flexShrink: 0
+                  }}>
+                    <Sparkles color="#a78bfa" size={12} />
+                  </div>
+                  <div style={{
+                    padding: '12px 16px',
+                    borderRadius: '14px 14px 14px 4px',
+                    background: 'rgba(30, 41, 59, 0.8)',
+                    border: '1px solid rgba(255,255,255,0.08)'
+                  }}>
+                    <span style={{ display: 'flex', gap: 5 }}>
+                      <motion.span 
+                        animate={{ y: [0, -4, 0] }}
+                        transition={{ repeat: Infinity, duration: 0.6, delay: 0 }}
+                        style={{ width: 6, height: 6, backgroundColor: '#a78bfa', borderRadius: '50%' }}
+                      />
+                      <motion.span 
+                        animate={{ y: [0, -4, 0] }}
+                        transition={{ repeat: Infinity, duration: 0.6, delay: 0.15 }}
+                        style={{ width: 6, height: 6, backgroundColor: '#a78bfa', borderRadius: '50%' }}
+                      />
+                      <motion.span 
+                        animate={{ y: [0, -4, 0] }}
+                        transition={{ repeat: Infinity, duration: 0.6, delay: 0.3 }}
+                        style={{ width: 6, height: 6, backgroundColor: '#a78bfa', borderRadius: '50%' }}
+                      />
                     </span>
                   </div>
                 </motion.div>
@@ -196,28 +333,66 @@ export default function Chatbot({ onNewsAnalysis }: ChatbotProps = {}) {
             </div>
 
             {/* Input */}
-            <div className="px-4 pb-4">
-              <div className="flex items-center gap-2">
+            <div style={{ 
+              padding: '12px 16px 16px',
+              borderTop: '1px solid rgba(255,255,255,0.08)',
+              background: 'rgba(15, 23, 42, 0.5)'
+            }}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 10,
+                padding: '10px 12px',
+                backgroundColor: 'rgba(30, 41, 59, 0.6)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 12
+              }}>
+                <Newspaper color="#64748b" size={16} />
                 <input
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder="Ask something..."
-                  className="flex-1 bg-transparent text-sm text-white placeholder-white/25 focus:outline-none"
+                  placeholder="Paste news or ask a question..."
+                  style={{
+                    flex: 1,
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    fontSize: 13,
+                    color: 'white'
+                  }}
                 />
-                <button 
+                <motion.button 
                   onClick={handleSend}
                   disabled={!input.trim() || isLoading}
-                  className="w-8 h-8 flex items-center justify-center bg-violet-500 hover:bg-violet-400 disabled:opacity-30 disabled:cursor-not-allowed rounded-full text-white transition-all shrink-0"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 8,
+                    background: input.trim() && !isLoading 
+                      ? 'linear-gradient(135deg, #8b5cf6, #7c3aed)'
+                      : 'rgba(100, 116, 139, 0.3)',
+                    border: 'none',
+                    cursor: input.trim() && !isLoading ? 'pointer' : 'not-allowed',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: input.trim() && !isLoading 
+                      ? '0 4px 12px rgba(139, 92, 246, 0.4)'
+                      : 'none',
+                    transition: 'all 0.2s'
+                  }}
                 >
-                  <Send size={14} />
-                </button>
+                  <Send color="white" size={14} />
+                </motion.button>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </motion.div>
   );
 }
