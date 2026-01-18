@@ -1,12 +1,15 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import GraphViz from '@/components/GraphViz';
 import SearchBar from '@/components/SearchBar';
 import Chatbot from '@/components/Chatbot';
 import TradingCard from '@/components/TradingCard';
+import RelationshipCard from '@/components/RelationshipCard';
 import PathFinder from '@/components/PathFinder';
 import RelationshipFilter from '@/components/RelationshipFilter';
+import ToolsNavbar from '@/components/ToolsNavbar';
+
 import NewsImpactPopup from '@/components/NewsImpactPopup';
 import { GraphData, GraphNode, GraphEdge, EdgeType } from '@/types';
 import { NewsAnalysis } from '@/services/aiService';
@@ -14,6 +17,8 @@ import { NewsAnalysis } from '@/services/aiService';
 export default function Home() {
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
+  const [selectedEdge, setSelectedEdge] = useState<{ edge: GraphEdge; source: GraphNode; target: GraphNode } | null>(null);
+  const [allRelationships, setAllRelationships] = useState<Array<{ edge: GraphEdge; source: GraphNode; target: GraphNode }>>([]);
   const [highlightNodes, setHighlightNodes] = useState<Set<string>>(new Set());
   const [highlightEdges, setHighlightEdges] = useState<Set<string>>(new Set());
   const [pathMode, setPathMode] = useState(false);
@@ -33,6 +38,8 @@ export default function Home() {
 
   const clearSelection = useCallback(() => {
     setSelectedNode(null);
+    setSelectedEdge(null);
+    setAllRelationships([]);
     setHighlightNodes(new Set());
     setHighlightEdges(new Set());
     setPathMode(false);
@@ -103,6 +110,31 @@ export default function Home() {
     });
   }, []);
 
+  const handleLinkClick = useCallback((edge: GraphEdge, source: GraphNode, target: GraphNode) => {
+    // Find ALL relationships between these two companies (bidirectional check)
+    const allEdges: Array<{ edge: GraphEdge; source: GraphNode; target: GraphNode }> = [];
+    
+    graphData.links.forEach(link => {
+      const linkSourceId = typeof link.source === 'object' ? link.source.id : link.source;
+      const linkTargetId = typeof link.target === 'object' ? link.target.id : link.target;
+      
+      // Check both directions: source->target and target->source
+      if ((linkSourceId === source.id && linkTargetId === target.id) || 
+          (linkSourceId === target.id && linkTargetId === source.id)) {
+        const linkSource = linkSourceId === source.id ? source : target;
+        const linkTarget = linkTargetId === target.id ? target : source;
+        allEdges.push({ edge: link, source: linkSource, target: linkTarget });
+      }
+    });
+    
+    // Set the first relationship as selected, and store all relationships
+    if (allEdges.length > 0) {
+      setAllRelationships(allEdges);
+      setSelectedEdge(allEdges[0]);
+      setSelectedNode(null); // Close node card if open
+    }
+  }, [graphData.links]);
+
   const handleNewsAnalysis = useCallback((analysis: NewsAnalysis) => {
     setNewsAnalysis(analysis);
     setNewsMode(true);
@@ -137,6 +169,25 @@ export default function Home() {
     ? new Map(newsAnalysis.affectedCompanies.map(c => [c.companyId, c.impactType]))
     : undefined;
 
+  // Get connected nodes for the selected node
+  const connectedNodes = useMemo(() => {
+    if (!selectedNode) return [];
+    
+    const connectedIds = new Set<string>();
+    graphData.links.forEach(link => {
+      const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+      const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+      
+      if (sourceId === selectedNode.id) {
+        connectedIds.add(targetId);
+      } else if (targetId === selectedNode.id) {
+        connectedIds.add(sourceId);
+      }
+    });
+    
+    return graphData.nodes.filter(n => connectedIds.has(n.id));
+  }, [selectedNode, graphData]);
+
   return (
     <main className="relative w-screen h-screen bg-[#000011] overflow-hidden font-sans selection:bg-violet-500/30">
       {/* Background Gradient - Deep space nebula */}
@@ -146,7 +197,8 @@ export default function Home() {
       <div className="absolute inset-0 z-0">
         <GraphViz 
           data={graphData} 
-          onNodeClick={handleNodeClick} 
+          onNodeClick={handleNodeClick}
+          onLinkClick={handleLinkClick}
           onBackgroundClick={clearSelection}
           highlightNodes={highlightNodes}
           highlightEdges={highlightEdges}
@@ -160,22 +212,43 @@ export default function Home() {
       {/* UI Layer */}
       <SearchBar nodes={graphData.nodes} onSelect={handleSearchSelect} />
       
-      <RelationshipFilter 
+      <ToolsNavbar 
+        nodes={graphData.nodes}
         enabledTypes={enabledEdgeTypes}
         onToggle={handleToggleEdgeType}
         onToggleAll={handleToggleAllEdgeTypes}
+        onPathFound={handlePathFound}
       />
       
       <Chatbot onNewsAnalysis={handleNewsAnalysis} />
-
-      <PathFinder nodes={graphData.nodes} onPathFound={handlePathFound} />
 
       {newsAnalysis && (
         <NewsImpactPopup analysis={newsAnalysis} onClose={handleCloseNewsPopup} />
       )}
 
       {selectedNode && (
-        <TradingCard node={selectedNode} onClose={clearSelection} />
+        <TradingCard 
+          node={selectedNode} 
+          onClose={clearSelection}
+          connectedNodes={connectedNodes}
+          onNodeSelect={handleNodeClick}
+        />
+      )}
+
+      {selectedEdge && (
+        <RelationshipCard 
+          edge={selectedEdge.edge} 
+          sourceNode={selectedEdge.source}
+          targetNode={selectedEdge.target}
+          allRelationships={allRelationships}
+          onRelationshipChange={(edge, source, target) => {
+            setSelectedEdge({ edge, source, target });
+          }}
+          onClose={() => {
+            setSelectedEdge(null);
+            setAllRelationships([]);
+          }}
+        />
       )}
       
       {/* Overlay Title */}
