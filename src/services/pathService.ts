@@ -1,6 +1,187 @@
 import { loadGraph } from './graphService';
-import { PathResult, CycleResult, GraphEdge } from '../types';
+import { PathResult, CycleResult, GraphEdge, PathItem } from '../types';
+import { scorePath } from './pathScoringService';
 
+/**
+ * Finds ALL simple paths between two nodes up to maxDepth using DFS
+ * Returns up to maxPaths paths, ensuring shortest path is included
+ */
+export const findAllPaths = (
+  fromId: string, 
+  toId: string, 
+  maxDepth: number = 4,
+  maxPaths: number = 15
+): PathItem[] => {
+  try {
+    const graph = loadGraph();
+    const adj = new Map<string, GraphEdge[]>();
+    
+    // Build adjacency list with edge details (undirected)
+    graph.links.forEach(link => {
+      // Handle both string and object sources/targets
+      const sourceId = typeof link.source === 'string' ? link.source : (link.source?.id || String(link.source));
+      const targetId = typeof link.target === 'string' ? link.target : (link.target?.id || String(link.target));
+      
+      if (!sourceId || !targetId) {
+        console.warn('Skipping edge with invalid source or target:', link);
+        return;
+      }
+      
+      if (!adj.has(sourceId)) adj.set(sourceId, []);
+      adj.get(sourceId)!.push(link);
+      
+      // Add reverse edge for undirected traversal
+      if (!adj.has(targetId)) adj.set(targetId, []);
+      adj.get(targetId)!.push({ ...link, source: targetId, target: sourceId });
+    });
+
+    const results: PathResult[] = [];
+    let shortestPathLength: number | null = null;
+
+    // DFS to find all simple paths
+  const dfs = (
+    currentId: string,
+    pathNodes: string[],
+    pathEdges: GraphEdge[],
+    visitedInPath: Set<string>
+  ) => {
+    // Depth limit
+    if (pathNodes.length > maxDepth + 1) return;
+
+    // Found target
+    if (currentId === toId && pathNodes.length > 1) {
+      const length = pathNodes.length - 1;
+      results.push({ nodes: [...pathNodes], edges: [...pathEdges], length });
+      
+      // Track shortest path length
+      if (shortestPathLength === null || length < shortestPathLength) {
+        shortestPathLength = length;
+      }
+      
+      // Continue exploring - we'll limit results later after sorting
+      return;
+    }
+
+    // Explore neighbors
+    const neighbors = adj.get(currentId) || [];
+    for (const link of neighbors) {
+      const neighborId = typeof link.target === 'string' ? link.target : (link.target?.id || String(link.target));
+      
+      if (!neighborId) continue;
+      
+      // Simple path: don't revisit nodes in current path
+      if (!visitedInPath.has(neighborId)) {
+        visitedInPath.add(neighborId);
+        pathNodes.push(neighborId);
+        pathEdges.push(link);
+        
+        dfs(neighborId, pathNodes, pathEdges, visitedInPath);
+        
+        // Backtrack
+        pathNodes.pop();
+        pathEdges.pop();
+        visitedInPath.delete(neighborId);
+      }
+    }
+  };
+
+    // Start DFS
+    const initialVisited = new Set<string>([fromId]);
+    dfs(fromId, [fromId], [], initialVisited);
+
+    // Deduplicate paths by edge sequence
+    const uniquePaths = new Map<string, PathResult>();
+    for (const path of results) {
+      const edgeKey = path.edges.map(e => {
+        const src = typeof e.source === 'string' ? e.source : (e.source?.id || String(e.source));
+        const tgt = typeof e.target === 'string' ? e.target : (e.target?.id || String(e.target));
+        return `${src}-${tgt}-${e.type}`;
+      }).join('|');
+      
+      if (!uniquePaths.has(edgeKey)) {
+        uniquePaths.set(edgeKey, path);
+      }
+    }
+
+    const deduplicatedPaths = Array.from(uniquePaths.values());
+
+    // Calculate Exposure Index and convert to PathItem
+    const scoredPaths: PathItem[] = deduplicatedPaths.map((path, idx) => {
+      const { exposureIndex, breakdown, summary } = scorePath(path.edges, path.length);
+      return {
+        ...path,
+        pathId: `path-${idx}`,
+        exposureIndex,
+        exposureBreakdown: breakdown,
+        summary,
+      };
+    });
+
+    // Sort: first by length (ascending), then by Exposure Index (descending)
+    scoredPaths.sort((a, b) => {
+      if (a.length !== b.length) {
+        return a.length - b.length;
+      }
+      return b.exposureIndex - a.exposureIndex;
+    });
+
+    // Smart filtering: Group by length, keep top N per length to show variety
+    // This ensures we show paths of different lengths while not overwhelming with too many similar paths
+    const pathsByLength = new Map<number, PathItem[]>();
+    for (const path of scoredPaths) {
+      if (!pathsByLength.has(path.length)) {
+        pathsByLength.set(path.length, []);
+      }
+      pathsByLength.get(path.length)!.push(path);
+    }
+
+    const finalPaths: PathItem[] = [];
+    const maxPathsPerLength = 2; // Keep top 2 most meaningful paths per hop count
+    const maxTotalPaths = maxPaths;
+
+    // Always include shortest path first
+    if (shortestPathLength !== null) {
+      const shortestPaths = pathsByLength.get(shortestPathLength) || [];
+      if (shortestPaths.length > 0) {
+        finalPaths.push(shortestPaths[0]); // Always include the top shortest path
+      }
+    }
+
+    // Add paths from each length group, prioritizing variety
+    const sortedLengths = Array.from(pathsByLength.keys()).sort((a, b) => a - b);
+    
+    for (const length of sortedLengths) {
+      if (finalPaths.length >= maxTotalPaths) break;
+      
+      const pathsAtLength = pathsByLength.get(length) || [];
+      const pathsToAdd = pathsAtLength.slice(0, maxPathsPerLength);
+      
+      for (const path of pathsToAdd) {
+        if (finalPaths.length >= maxTotalPaths) break;
+        // Skip if already added (shortest path)
+        if (finalPaths.find(p => p.pathId === path.pathId)) continue;
+        finalPaths.push(path);
+      }
+    }
+
+    // Re-sort final paths: length first, then Exposure Index
+    finalPaths.sort((a, b) => {
+      if (a.length !== b.length) {
+        return a.length - b.length;
+      }
+      return b.exposureIndex - a.exposureIndex;
+    });
+
+    return finalPaths;
+  } catch (error) {
+    console.error('Error in findAllPaths:', error);
+    return [];
+  }
+};
+
+/**
+ * Legacy function for backward compatibility - finds paths using BFS (shorter paths first)
+ */
 export const findPaths = (fromId: string, toId: string, maxDepth: number = 5): PathResult[] => {
   const graph = loadGraph();
   const adj = new Map<string, GraphEdge[]>();

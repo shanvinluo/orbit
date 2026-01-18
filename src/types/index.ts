@@ -77,6 +77,26 @@ export interface PathResult {
   length: number;
 }
 
+export interface ExposureBreakdown {
+  lengthPenalty: number;
+  relationshipWeightScore: number;
+  amountScore: number;
+  ownershipScore: number;
+  confidencePenalty: number;
+}
+
+export interface PathItem extends PathResult {
+  pathId: string;
+  exposureIndex: number;
+  exposureBreakdown: ExposureBreakdown;
+  summary: string;
+}
+
+export interface PathsResponse {
+  shortestPath: PathItem | null;
+  paths: PathItem[];
+}
+
 export interface CycleResult {
   path: string[];
   length: number;
