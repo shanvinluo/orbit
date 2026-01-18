@@ -2,11 +2,10 @@
 
 import React, { useRef, useEffect, useMemo, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { GraphData, GraphNode, GraphEdge, EDGE_COLORS, EdgeType } from '@/types';
+import { GraphData, GraphNode, GraphEdge, EdgeType } from '@/types';
 import SpriteText from 'three-spritetext';
 import * as THREE from 'three';
 
-// Dynamically import ForceGraph3D to avoid SSR issues
 const ForceGraph3D = dynamic(() => import('react-force-graph-3d'), {
   ssr: false,
   loading: () => <div className="flex items-center justify-center h-full text-slate-500 animate-pulse">Loading Constellations...</div>
@@ -26,37 +25,40 @@ interface Props {
   watchlist?: Set<string>;
 }
 
-// Cosmic nebula color palette: distinct clusters of blue/cyan and amber/gold
-const NODE_COLORS = [
-  '#60a5fa', // Blue 400 - soft blue (primary cool color)
-  '#3b82f6', // Blue 500 - medium blue
-  '#38bdf8', // Cyan 400 - light cyan
-  '#06b6d4', // Cyan 500 - cyan
-  '#fbbf24', // Amber 400 - gold (primary warm color)
-  '#f59e0b', // Amber 500 - deeper gold/orange
-  '#fb923c', // Orange 400 - warm orange
-  '#818cf8', // Indigo 400 - soft purple (blend)
-  '#a78bfa', // Violet 400 - faint purple (blend)
-];
+// Nebula color palette - celestial blues, cyans, warm oranges/golds
+const STAR_COLORS = {
+  blue: { core: '#ffffff', inner: '#60a5fa', outer: '#1e40af', glow: '#3b82f6' },
+  cyan: { core: '#ffffff', inner: '#22d3ee', outer: '#0891b2', glow: '#06b6d4' },
+  gold: { core: '#ffffff', inner: '#fbbf24', outer: '#b45309', glow: '#f59e0b' },
+  orange: { core: '#ffffff', inner: '#fb923c', outer: '#c2410c', glow: '#f97316' },
+  purple: { core: '#ffffff', inner: '#a78bfa', outer: '#6d28d9', glow: '#8b5cf6' },
+  pink: { core: '#ffffff', inner: '#f472b6', outer: '#be185d', glow: '#ec4899' },
+  green: { core: '#ffffff', inner: '#4ade80', outer: '#15803d', glow: '#22c55e' },
+  red: { core: '#ffffff', inner: '#f87171', outer: '#b91c1c', glow: '#ef4444' },
+};
 
-const NODE_COLOR_HIGHLIGHT = '#fbbf24'; // Bright gold for highlighted
-const NODE_COLOR_SELECTED = '#fbbf24'; // Bright gold for selected
+const STAR_PALETTE = ['blue', 'cyan', 'gold', 'orange', 'purple', 'blue', 'cyan', 'gold'];
 
-// Get node color based on id (for consistency, creating distinct color clusters)
-const getNodeColor = (nodeId: string): string => {
+const NODE_COLOR_HIGHLIGHT = '#fbbf24';
+const NODE_COLOR_SELECTED = '#fbbf24';
+
+// Get star color palette based on node id
+const getStarPalette = (nodeId: string) => {
   let hash = 0;
   for (let i = 0; i < nodeId.length; i++) {
     hash = nodeId.charCodeAt(i) + ((hash << 5) - hash);
   }
-  // Use hash to create distinct clusters - favor blues and ambers
-  const colorIndex = Math.abs(hash) % NODE_COLORS.length;
-  return NODE_COLORS[colorIndex];
+  const paletteKey = STAR_PALETTE[Math.abs(hash) % STAR_PALETTE.length];
+  return STAR_COLORS[paletteKey as keyof typeof STAR_COLORS];
 };
 
+const getNodeColor = (nodeId: string): string => {
+  return getStarPalette(nodeId).glow;
+};
 
 export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundClick, highlightNodes, highlightEdges, focusedNodeId, enabledEdgeTypes, affectedCompanies, pathMode = false, watchlist }: Props) {
   const fgRef = useRef<any>(null);
-  const [cameraDistance, setCameraDistance] = useState(1000);
+  const [cameraPosition, setCameraPosition] = useState<THREE.Vector3>(new THREE.Vector3(0, 0, 1000));
 
   // Filter graph data based on enabled edge types, path mode, and watchlist
   const filteredData = useMemo(() => {
@@ -80,19 +82,13 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
       filteredLinks = filteredLinks.filter(link => enabledEdgeTypes.has(link.type));
     }
     
-    // If in path mode and we have highlights, only show highlighted nodes and edges
     if (pathMode && highlightNodes.size > 0) {
-      // Only include nodes that are highlighted
       filteredNodes = filteredNodes.filter(node => highlightNodes.has(node.id));
-      
-      // Only include edges that are explicitly highlighted (in the selected path)
       filteredLinks = filteredLinks.filter(link => {
         const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
         const targetId = typeof link.target === 'object' ? link.target.id : link.target;
         const edgeId = `${sourceId}-${targetId}`;
         const reverseEdgeId = `${targetId}-${sourceId}`;
-        
-        // Only include if edge is in highlightEdges (explicitly selected)
         return highlightEdges.has(edgeId) || highlightEdges.has(reverseEdgeId);
       });
     }
@@ -103,40 +99,20 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
     };
   }, [data, enabledEdgeTypes, pathMode, highlightNodes, highlightEdges, watchlist]);
 
-  // Track camera position for distance-based effects
+  // Track camera
   useEffect(() => {
     if (!fgRef.current) return;
-
-    const updateCameraDistance = () => {
-      const camera = fgRef.current.camera();
-      if (camera) {
-        const distance = Math.hypot(camera.position.x, camera.position.y, camera.position.z);
-        setCameraDistance(distance);
-      }
-    };
-
-    const interval = setInterval(updateCameraDistance, 100);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Store camera position for per-node distance calculation
-  const [cameraPosition, setCameraPosition] = useState<THREE.Vector3>(new THREE.Vector3(0, 0, 1000));
-
-  useEffect(() => {
-    if (!fgRef.current) return;
-
     const updateCameraPosition = () => {
       const camera = fgRef.current.camera();
       if (camera) {
         setCameraPosition(new THREE.Vector3(camera.position.x, camera.position.y, camera.position.z));
       }
     };
-
     const interval = setInterval(updateCameraPosition, 100);
     return () => clearInterval(interval);
   }, []);
 
-  // Setup scene with lighting, fog, and constellation atmosphere
+  // Setup nebula scene
   useEffect(() => {
     if (!fgRef.current) return;
 
@@ -144,65 +120,127 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
     const renderer = fgRef.current.renderer();
     
     if (scene) {
-      // Add atmospheric fog for depth (Milky Way dust clouds)
-      scene.fog = new THREE.FogExp2(0x000011, 0.0012); // Deep space blue-black fog
+      // Deep space fog
+      scene.fog = new THREE.FogExp2(0x000008, 0.0008);
       
-      // Ambient light for base illumination (starlight)
-      const ambientLight = new THREE.AmbientLight(0x2a2a4e, 0.25); // Subtle starlight
+      // Soft ambient light
+      const ambientLight = new THREE.AmbientLight(0x1a1a2e, 0.3);
       scene.add(ambientLight);
       
-      // Directional light from above (galactic center glow)
-      const directionalLight = new THREE.DirectionalLight(0xfbbf24, 0.4); // Warm gold galactic center
-      directionalLight.position.set(50, 100, 50);
-      directionalLight.castShadow = false;
-      scene.add(directionalLight);
+      // Warm directional light (galactic core)
+      const sunLight = new THREE.DirectionalLight(0xffd93d, 0.3);
+      sunLight.position.set(100, 200, 100);
+      scene.add(sunLight);
       
-      // Point light at origin (central cluster illumination)
-      const pointLight1 = new THREE.PointLight(0x60a5fa, 0.5, 1000); // Blue glow
-      pointLight1.position.set(0, 0, 0);
-      scene.add(pointLight1);
+      // Cool rim light
+      const rimLight = new THREE.DirectionalLight(0x4fc3f7, 0.2);
+      rimLight.position.set(-100, -50, -100);
+      scene.add(rimLight);
       
-      // Additional point lights for depth (distant stars)
-      const pointLight2 = new THREE.PointLight(0xfbbf24, 0.3, 800); // Gold glow
-      pointLight2.position.set(-200, 150, -200);
-      scene.add(pointLight2);
+      // Nebula point lights
+      const nebulaLight1 = new THREE.PointLight(0x60a5fa, 0.6, 800);
+      nebulaLight1.position.set(0, 100, 0);
+      scene.add(nebulaLight1);
       
-      const pointLight3 = new THREE.PointLight(0xa78bfa, 0.2, 600); // Purple glow
-      pointLight3.position.set(200, -100, 200);
-      scene.add(pointLight3);
+      const nebulaLight2 = new THREE.PointLight(0xfbbf24, 0.4, 600);
+      nebulaLight2.position.set(-200, -100, 100);
+      scene.add(nebulaLight2);
       
-      // Enable renderer features for better visuals
+      const nebulaLight3 = new THREE.PointLight(0xa78bfa, 0.3, 500);
+      nebulaLight3.position.set(150, 50, -150);
+      scene.add(nebulaLight3);
+      
       if (renderer) {
-        renderer.setClearColor(0x000011, 1);
-        renderer.shadowMap.enabled = false; // Shadows disabled for performance
+        renderer.setClearColor(0x000008, 1);
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.2;
       }
       
-      // Add star field background (distant stars)
+      // Background star field
       const starGeometry = new THREE.BufferGeometry();
-      const starCount = 5000;
+      const starCount = 8000;
       const positions = new Float32Array(starCount * 3);
+      const colors = new Float32Array(starCount * 3);
+      const sizes = new Float32Array(starCount);
       
-      for (let i = 0; i < starCount * 3; i++) {
-        positions[i] = (Math.random() - 0.5) * 4000; // Spread stars far out
+      for (let i = 0; i < starCount; i++) {
+        positions[i * 3] = (Math.random() - 0.5) * 5000;
+        positions[i * 3 + 1] = (Math.random() - 0.5) * 5000;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 5000;
+        
+        // Random star colors (blue, white, gold)
+        const colorChoice = Math.random();
+        if (colorChoice < 0.5) {
+          colors[i * 3] = 0.8; colors[i * 3 + 1] = 0.9; colors[i * 3 + 2] = 1.0; // Blue-white
+        } else if (colorChoice < 0.8) {
+          colors[i * 3] = 1.0; colors[i * 3 + 1] = 1.0; colors[i * 3 + 2] = 1.0; // White
+        } else {
+          colors[i * 3] = 1.0; colors[i * 3 + 1] = 0.9; colors[i * 3 + 2] = 0.6; // Gold
+        }
+        
+        sizes[i] = Math.random() * 1.5 + 0.3;
       }
       
       starGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      starGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      starGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
       
       const starMaterial = new THREE.PointsMaterial({
-        color: 0xffffff,
-        size: 0.5,
+        size: 1,
+        vertexColors: true,
         transparent: true,
-        opacity: 0.6,
+        opacity: 0.7,
         blending: THREE.AdditiveBlending,
+        sizeAttenuation: true,
       });
       
       const stars = new THREE.Points(starGeometry, starMaterial);
       scene.add(stars);
+      
+      // Nebula dust clouds
+      const dustGeometry = new THREE.BufferGeometry();
+      const dustCount = 3000;
+      const dustPositions = new Float32Array(dustCount * 3);
+      const dustColors = new Float32Array(dustCount * 3);
+      
+      for (let i = 0; i < dustCount; i++) {
+        const radius = Math.random() * 1500 + 200;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.random() * Math.PI;
+        
+        dustPositions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+        dustPositions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta) * 0.3;
+        dustPositions[i * 3 + 2] = radius * Math.cos(phi);
+        
+        // Nebula colors - mix of blue and orange
+        const colorMix = Math.random();
+        if (colorMix < 0.4) {
+          dustColors[i * 3] = 0.2; dustColors[i * 3 + 1] = 0.4; dustColors[i * 3 + 2] = 0.8; // Blue
+        } else if (colorMix < 0.7) {
+          dustColors[i * 3] = 0.9; dustColors[i * 3 + 1] = 0.5; dustColors[i * 3 + 2] = 0.2; // Orange
+        } else {
+          dustColors[i * 3] = 0.6; dustColors[i * 3 + 1] = 0.3; dustColors[i * 3 + 2] = 0.7; // Purple
+        }
+      }
+      
+      dustGeometry.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
+      dustGeometry.setAttribute('color', new THREE.BufferAttribute(dustColors, 3));
+      
+      const dustMaterial = new THREE.PointsMaterial({
+        size: 4,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.15,
+        blending: THREE.AdditiveBlending,
+        sizeAttenuation: true,
+      });
+      
+      const dust = new THREE.Points(dustGeometry, dustMaterial);
+      scene.add(dust);
     }
 
-    // Initial force settings
     if (fgRef.current) {
-       fgRef.current.d3Force('charge').strength(-120);
+      fgRef.current.d3Force('charge').strength(-80);
     }
   }, []);
 
@@ -302,227 +340,211 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
     }
   }, [focusedNodeId, data.nodes, filteredData]);
 
-  // Calculate node size - tiny like real constellation stars
-  const getNodeSize = (node: any) => {
-    return 0.5; // Uniform tiny size for all stars
-  };
-
-  // Get edge color based on connected nodes
-  const getEdgeColor = useCallback((link: any, defaultColor: string): string => {
-    const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
-    const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+  // Create glowing star mesh
+  const createStarMesh = useCallback((node: any, isSelected: boolean, isHighlighted: boolean) => {
+    const group = new THREE.Group();
     
-    // Get node colors
-    const sourceColor = getNodeColor(sourceId);
-    const targetColor = getNodeColor(targetId);
+    // Get color palette for this star
+    let palette = getStarPalette(node.id);
     
-    // If same color family, use that color for the edge
-    const sourceIsWarm = sourceColor.includes('fb') || sourceColor.includes('f59');
-    const targetIsWarm = targetColor.includes('fb') || targetColor.includes('f59');
-    
-    if (sourceIsWarm && targetIsWarm) {
-      return 'rgba(251, 191, 36, 0.2)'; // Amber/gold
-    } else if (!sourceIsWarm && !targetIsWarm) {
-      return 'rgba(96, 165, 250, 0.2)'; // Blue/cyan
-    } else {
-      // Mixed - use a blended color or default
-      return 'rgba(251, 191, 36, 0.15)'; // Slight amber tint
+    // Override for affected companies
+    if (affectedCompanies?.has(node.id)) {
+      const impact = affectedCompanies.get(node.id);
+      if (impact === 'positive') palette = STAR_COLORS.green;
+      else if (impact === 'negative') palette = STAR_COLORS.red;
+      else if (impact === 'mixed') palette = STAR_COLORS.gold;
     }
-  }, []);
-
-  // Calculate edge opacity based on distance (fade with distance)
-  const getEdgeOpacity = (link: any, baseOpacity: number) => {
-    const source = typeof link.source === 'object' ? link.source : filteredData.nodes.find(n => n.id === link.source);
-    const target = typeof link.target === 'object' ? link.target : filteredData.nodes.find(n => n.id === link.target);
     
-    if (source && target && source.x !== undefined && target.x !== undefined) {
-      const sourcePos = new THREE.Vector3(source.x, source.y || 0, source.z || 0);
-      const targetPos = new THREE.Vector3(target.x, target.y || 0, target.z || 0);
-      const midPoint = new THREE.Vector3().addVectors(sourcePos, targetPos).multiplyScalar(0.5);
-      const distanceToMid = midPoint.distanceTo(cameraPosition);
+    // Sizes based on state
+    const baseSize = isSelected ? 3 : isHighlighted ? 2.5 : 1.2;
+    
+    // Layer 1: Outer glow (largest, most transparent)
+    const outerGlowGeometry = new THREE.SphereGeometry(baseSize * 8, 16, 16);
+    const outerGlowMaterial = new THREE.MeshBasicMaterial({
+      color: palette.outer,
+      transparent: true,
+      opacity: isSelected ? 0.15 : isHighlighted ? 0.12 : 0.06,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const outerGlow = new THREE.Mesh(outerGlowGeometry, outerGlowMaterial);
+    group.add(outerGlow);
+    
+    // Layer 2: Middle glow
+    const midGlowGeometry = new THREE.SphereGeometry(baseSize * 4, 16, 16);
+    const midGlowMaterial = new THREE.MeshBasicMaterial({
+      color: palette.glow,
+      transparent: true,
+      opacity: isSelected ? 0.3 : isHighlighted ? 0.25 : 0.12,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const midGlow = new THREE.Mesh(midGlowGeometry, midGlowMaterial);
+    group.add(midGlow);
+    
+    // Layer 3: Inner glow
+    const innerGlowGeometry = new THREE.SphereGeometry(baseSize * 2, 16, 16);
+    const innerGlowMaterial = new THREE.MeshBasicMaterial({
+      color: palette.inner,
+      transparent: true,
+      opacity: isSelected ? 0.6 : isHighlighted ? 0.5 : 0.3,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const innerGlow = new THREE.Mesh(innerGlowGeometry, innerGlowMaterial);
+    group.add(innerGlow);
+    
+    // Layer 4: Bright core
+    const coreGeometry = new THREE.SphereGeometry(baseSize, 12, 12);
+    const coreMaterial = new THREE.MeshBasicMaterial({
+      color: palette.core,
+      transparent: true,
+      opacity: 1,
+    });
+    const core = new THREE.Mesh(coreGeometry, coreMaterial);
+    group.add(core);
+    
+    // Layer 5: Star flare/spikes (for highlighted/selected)
+    if (isSelected || isHighlighted) {
+      // Horizontal spike
+      const spikeGeometry = new THREE.PlaneGeometry(baseSize * 20, baseSize * 0.8);
+      const spikeMaterial = new THREE.MeshBasicMaterial({
+        color: palette.core,
+        transparent: true,
+        opacity: 0.4,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      });
+      const spike1 = new THREE.Mesh(spikeGeometry, spikeMaterial);
+      group.add(spike1);
       
-      // Fade edges with distance
-      const distanceFactor = Math.max(0.1, Math.min(1, 400 / Math.max(distanceToMid, 200)));
-      return baseOpacity * distanceFactor;
+      // Vertical spike
+      const spike2 = new THREE.Mesh(spikeGeometry, spikeMaterial);
+      spike2.rotation.z = Math.PI / 2;
+      group.add(spike2);
+      
+      // Diagonal spikes
+      const spike3 = new THREE.Mesh(spikeGeometry, spikeMaterial.clone());
+      spike3.material.opacity = 0.2;
+      spike3.rotation.z = Math.PI / 4;
+      group.add(spike3);
+      
+      const spike4 = new THREE.Mesh(spikeGeometry, spikeMaterial.clone());
+      spike4.material.opacity = 0.2;
+      spike4.rotation.z = -Math.PI / 4;
+      group.add(spike4);
     }
     
-    return baseOpacity;
-  };
+    // Label for selected/highlighted
+    if (isSelected || isHighlighted) {
+      const sprite = new SpriteText(node.label);
+      sprite.color = '#ffffff';
+      sprite.textHeight = 5;
+      sprite.padding = 1.5;
+      sprite.backgroundColor = 'rgba(0, 0, 20, 0.85)';
+      sprite.borderRadius = 3;
+      sprite.fontFace = 'Arial';
+      sprite.fontWeight = '600';
+      sprite.position.set(0, baseSize * 12, 0);
+      group.add(sprite);
+    }
+    
+    return group;
+  }, [affectedCompanies]);
 
   return (
     <div className="w-full h-full">
-      {/* @ts-ignore - ForceGraph3D type definitions are incorrect for function accessors */}
+      {/* @ts-ignore */}
       <ForceGraph3D
         ref={fgRef}
         graphData={filteredData}
-        nodeLabel="label"
-        nodeColor={(node: any) => {
-          // Color by impact type if in news mode
-          if (affectedCompanies && affectedCompanies.has(node.id)) {
-            const impactType = affectedCompanies.get(node.id);
-            switch (impactType) {
-              case 'positive': return '#10b981'; // Green
-              case 'negative': return '#ef4444'; // Red
-              case 'neutral': return '#6b7280'; // Gray
-              case 'uncertain': return '#f59e0b'; // Yellow/Amber
-              default: return NODE_COLOR_HIGHLIGHT;
-            }
-          }
-          // Default colors
-          if (focusedNodeId === node.id) return NODE_COLOR_SELECTED;
-          if (highlightNodes.has(node.id)) return NODE_COLOR_HIGHLIGHT;
-          return getNodeColor(node.id);
-        }}
-        nodeVal={getNodeSize}
-        nodeResolution={12} // Lower resolution for more particle-like feel
-        nodeOpacity={1} // Full opacity, controlled by material
+        nodeLabel=""
+        nodeColor={(node: any) => getNodeColor(node.id)}
+        nodeVal={() => 0.5}
+        nodeResolution={8}
+        nodeOpacity={0}
         linkColor={(link: any) => {
-            const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
-            const targetId = typeof link.target === 'object' ? link.target.id : link.target;
-            const id = `${sourceId}-${targetId}`;
-            const reverseId = `${targetId}-${sourceId}`;
-            
-            // Bright gold when explicitly highlighted (check both directions)
-            const isHighlighted = highlightEdges.has(id) || highlightEdges.has(reverseId);
-            if (isHighlighted) {
-                return 'rgba(251, 191, 36, 0.9)';
-            }
-            
-            // Dim edges connected to highlighted nodes (but not the edge itself)
-            if (highlightNodes.size > 0) {
-                const sourceHighlighted = highlightNodes.has(sourceId);
-                const targetHighlighted = highlightNodes.has(targetId);
-                if ((sourceHighlighted || targetHighlighted) && !isHighlighted) {
-                    return 'rgba(251, 191, 36, 0.03)';
-                }
-            }
-            
-            // Default: subtle edge color
-            return getEdgeColor(link, 'rgba(251, 191, 36, 0.15)');
+          const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+          const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+          const id = `${sourceId}-${targetId}`;
+          const reverseId = `${targetId}-${sourceId}`;
+          
+          const isHighlighted = highlightEdges.has(id) || highlightEdges.has(reverseId);
+          if (isHighlighted) return 'rgba(255, 220, 100, 0.9)';
+          
+          if (highlightNodes.size > 0) {
+            const sourceHighlighted = highlightNodes.has(sourceId);
+            const targetHighlighted = highlightNodes.has(targetId);
+            if (sourceHighlighted || targetHighlighted) return 'rgba(100, 150, 200, 0.05)';
+          }
+          
+          // Subtle constellation lines
+          const sourceColor = getStarPalette(sourceId);
+          const targetColor = getStarPalette(targetId);
+          
+          // Blend colors - use the warmer tone
+          if (sourceColor === STAR_COLORS.gold || targetColor === STAR_COLORS.gold) {
+            return 'rgba(251, 191, 36, 0.12)';
+          } else if (sourceColor === STAR_COLORS.orange || targetColor === STAR_COLORS.orange) {
+            return 'rgba(249, 115, 22, 0.12)';
+          }
+          return 'rgba(96, 165, 250, 0.1)';
         }}
         linkWidth={(link: any) => {
-            const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
-            const targetId = typeof link.target === 'object' ? link.target.id : link.target;
-            const id = `${sourceId}-${targetId}`;
-            const reverseId = `${targetId}-${sourceId}`;
-            
-            // Thicker when highlighted (check both directions)
-            const isHighlighted = highlightEdges.has(id) || highlightEdges.has(reverseId);
-            return isHighlighted ? 3 : 0.5;
+          const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+          const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+          const id = `${sourceId}-${targetId}`;
+          const reverseId = `${targetId}-${sourceId}`;
+          const isHighlighted = highlightEdges.has(id) || highlightEdges.has(reverseId);
+          return isHighlighted ? 2.5 : 0.3;
         }}
-        // @ts-expect-error - ForceGraph3D type definitions don't properly support function accessors
         linkOpacity={(link: any) => {
+          const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+          const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+          const id = `${sourceId}-${targetId}`;
+          const reverseId = `${targetId}-${sourceId}`;
+          const isHighlighted = highlightEdges.has(id) || highlightEdges.has(reverseId);
+          
+          if (isHighlighted) return 1;
+          if (highlightNodes.size > 0) {
+            const sourceHighlighted = highlightNodes.has(sourceId);
+            const targetHighlighted = highlightNodes.has(targetId);
+            if (sourceHighlighted || targetHighlighted) return 0.03;
+          }
+          return 0.15;
+        }}
+        onNodeClick={(node) => onNodeClick(node as GraphNode)}
+        onLinkClick={(link) => {
+          if (onLinkClick) {
             const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
             const targetId = typeof link.target === 'object' ? link.target.id : link.target;
-            const id = `${sourceId}-${targetId}`;
-            const reverseId = `${targetId}-${sourceId}`;
-            
-            // Check both directions for highlight
-            const isHighlighted = highlightEdges.has(id) || highlightEdges.has(reverseId);
-            
-            let baseOpacity = 0.15; // Default subtle opacity
-            
-            // Highlighted edges are bright
-            if (isHighlighted) {
-                baseOpacity = 1.0;
+            let sourceNode = filteredData.nodes.find(n => n.id === sourceId) || data.nodes.find(n => n.id === sourceId);
+            let targetNode = filteredData.nodes.find(n => n.id === targetId) || data.nodes.find(n => n.id === targetId);
+            if (sourceNode && targetNode) {
+              const edge: GraphEdge = {
+                source: sourceId,
+                target: targetId,
+                type: link.type || EdgeType.Partnership,
+                description: link.description,
+                data: link.data
+              };
+              onLinkClick(edge, sourceNode, targetNode);
             }
-            // Dim edges connected to highlighted nodes (but not the edge itself)
-            else if (highlightNodes.size > 0) {
-                const sourceHighlighted = highlightNodes.has(sourceId);
-                const targetHighlighted = highlightNodes.has(targetId);
-                if (sourceHighlighted || targetHighlighted) {
-                    baseOpacity = 0.05;
-                }
-            }
-            
-            return getEdgeOpacity(link, baseOpacity);
-        }}
-        onNodeClick={(node) => {
-            onNodeClick(node as GraphNode);
-        }}
-        onLinkClick={(link) => {
-            if (onLinkClick) {
-                const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
-                const targetId = typeof link.target === 'object' ? link.target.id : link.target;
-                
-                // Try filteredData first, then fallback to data.nodes
-                let sourceNode = filteredData.nodes.find(n => n.id === sourceId);
-                let targetNode = filteredData.nodes.find(n => n.id === targetId);
-                
-                if (!sourceNode) sourceNode = data.nodes.find(n => n.id === sourceId);
-                if (!targetNode) targetNode = data.nodes.find(n => n.id === targetId);
-                
-                if (sourceNode && targetNode) {
-                    // Ensure type is valid, default to Partnership if missing
-                    const edgeType = link.type || EdgeType.Partnership;
-                    const edge: GraphEdge = {
-                        source: sourceId,
-                        target: targetId,
-                        type: edgeType,
-                        description: link.description,
-                        data: link.data
-                    };
-                    onLinkClick(edge, sourceNode, targetNode);
-                } else {
-                    console.warn('Link click: Could not find source or target node', { sourceId, targetId, link });
-                }
-            }
+          }
         }}
         onBackgroundClick={onBackgroundClick}
-        nodeThreeObjectExtend={true}
+        nodeThreeObjectExtend={false}
         nodeThreeObject={(node: any) => {
-            const isSelected = focusedNodeId === node.id;
-            const isHighlighted = highlightNodes.has(node.id);
-            
-            const nodeColor = isSelected ? NODE_COLOR_SELECTED : (isHighlighted ? NODE_COLOR_HIGHLIGHT : getNodeColor(node.id));
-            const size = getNodeSize(node);
-            
-            // Tiny constellation star
-            const starSize = isSelected || isHighlighted ? 1.2 : 0.4;
-            
-            // Soft glow halo
-            const glowMaterial = new THREE.MeshBasicMaterial({
-                color: nodeColor,
-                transparent: true,
-                opacity: isSelected || isHighlighted ? 0.25 : 0.1,
-                blending: THREE.AdditiveBlending,
-                depthWrite: false,
-            });
-            const glowGeometry = new THREE.SphereGeometry(starSize * 6, 8, 8);
-            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
-            
-            // Tiny bright core
-            const coreMaterial = new THREE.MeshBasicMaterial({
-                color: 0xffffff,
-                transparent: true,
-                opacity: isSelected || isHighlighted ? 1 : 0.8,
-            });
-            const coreGeometry = new THREE.SphereGeometry(starSize, 6, 6);
-            const core = new THREE.Mesh(coreGeometry, coreMaterial);
-            
-            const group = new THREE.Group();
-            group.add(glow);
-            group.add(core);
-            
-            // Show text for highlighted/selected nodes
-            if (isSelected || isHighlighted) {
-                const sprite = new SpriteText(node.label);
-                sprite.color = '#fbbf24'; // Gold text
-                sprite.textHeight = 6;
-                sprite.padding = 2;
-                sprite.backgroundColor = 'rgba(0, 0, 17, 0.8)'; // Dark space background
-                sprite.borderRadius = 4;
-                group.add(sprite);
-                sprite.position.set(0, size * 2.5 + 8, 0);
-            }
-            
-            return group;
+          const isSelected = focusedNodeId === node.id;
+          const isHighlighted = highlightNodes.has(node.id);
+          return createStarMesh(node, isSelected, isHighlighted);
         }}
-        backgroundColor="#000011" // Deep space blue-black
+        backgroundColor="#000008"
         showNavInfo={false}
         d3AlphaDecay={0.02}
         d3VelocityDecay={0.3}
-        maxZoom={1000}
+        maxZoom={800}
         minZoom={0.1}
       />
     </div>
