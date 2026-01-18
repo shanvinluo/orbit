@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Building2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GraphNode } from '@/types';
 
@@ -54,14 +54,48 @@ export default function SearchBar({ nodes, onSelect }: SearchBarProps) {
   };
 
   return (
-    <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-40 w-[600px] max-w-[90vw]">
+    <div style={{
+      position: 'absolute',
+      top: 24,
+      left: '50%',
+      transform: 'translateX(-50%)',
+      zIndex: 40,
+      width: 500,
+      maxWidth: '90vw'
+    }}>
       <motion.div
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className={`relative bg-slate-900/80 backdrop-blur-xl border rounded-full transition-all duration-300 ${isFocused ? 'border-white shadow-[0_0_25px_rgba(255,255,255,0.2)]' : 'border-white/10 hover:border-white/20'}`}
+        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        style={{
+          position: 'relative',
+          backgroundColor: '#0f172a',
+          borderRadius: 16,
+          border: isFocused ? '2px solid #8b5cf6' : '2px solid rgba(255,255,255,0.1)',
+          boxShadow: isFocused 
+            ? '0 8px 32px rgba(139, 92, 246, 0.3), 0 0 0 1px rgba(139, 92, 246, 0.1)' 
+            : '0 8px 32px rgba(0,0,0,0.4)',
+          transition: 'all 0.2s ease'
+        }}
       >
-        <div className="flex items-center px-8 py-4">
-          <Search className={`mr-4 transition-colors ${isFocused ? 'text-violet-400' : 'text-slate-400'}`} size={20} />
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          padding: '14px 20px',
+          gap: 12
+        }}>
+          <div style={{
+            padding: 8,
+            backgroundColor: isFocused ? 'rgba(139, 92, 246, 0.2)' : 'rgba(100, 116, 139, 0.2)',
+            borderRadius: 8,
+            transition: 'all 0.2s ease'
+          }}>
+            <Search 
+              size={18} 
+              color={isFocused ? '#a78bfa' : '#64748b'}
+              style={{ transition: 'color 0.2s ease' }}
+            />
+          </div>
           <input
             type="text"
             value={query}
@@ -70,37 +104,141 @@ export default function SearchBar({ nodes, onSelect }: SearchBarProps) {
             onBlur={() => setTimeout(() => setIsFocused(false), 200)}
             onKeyDown={handleKeyDown}
             placeholder="Search companies..."
-            className="bg-transparent border-none focus:outline-none text-white text-lg w-full placeholder-slate-500 font-light placeholder:text-slate-500 caret-white"
-            style={{ color: 'white' }}
+            style={{
+              flex: 1,
+              background: 'transparent',
+              border: 'none',
+              outline: 'none',
+              fontSize: 15,
+              color: 'white',
+              fontWeight: 400
+            }}
           />
+          {query && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              style={{
+                padding: '4px 10px',
+                backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                border: '1px solid rgba(139, 92, 246, 0.3)',
+                borderRadius: 6,
+                fontSize: 11,
+                color: '#c4b5fd'
+              }}
+            >
+              {results.length} found
+            </motion.div>
+          )}
         </div>
       </motion.div>
 
       <AnimatePresence>
         {isFocused && query.length > 1 && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="absolute top-full left-0 right-0 mt-2 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden"
+            initial={{ opacity: 0, y: -10, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.98 }}
+            transition={{ duration: 0.2 }}
+            style={{
+              position: 'absolute',
+              top: '100%',
+              left: 0,
+              right: 0,
+              marginTop: 8,
+              backgroundColor: '#0f172a',
+              border: '2px solid rgba(139, 92, 246, 0.3)',
+              borderRadius: 16,
+              boxShadow: '0 20px 40px rgba(0,0,0,0.5), 0 0 20px rgba(139, 92, 246, 0.1)',
+              overflow: 'hidden'
+            }}
           >
             {results.length > 0 ? (
-              results.map((node, idx) => (
-                <button
-                  key={node.id}
-                  onClick={() => handleSelectNode(node)}
-                  className={`w-full text-left px-6 py-3 border-b border-white/5 last:border-none flex justify-between items-center transition-colors ${
-                    idx === selectedIndex ? 'bg-white/10' : 'hover:bg-white/5'
-                  }`}
-                >
-                  <span className="text-slate-200">{node.label}</span>
-                  <span className="text-xs text-slate-500 uppercase border border-white/10 px-2 py-0.5 rounded">
-                    {node.type}
-                  </span>
-                </button>
-              ))
+              <div style={{ padding: 8 }}>
+                {results.map((node, idx) => (
+                  <motion.button
+                    key={node.id}
+                    onClick={() => handleSelectNode(node)}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.03 }}
+                    style={{
+                      width: '100%',
+                      textAlign: 'left',
+                      padding: '12px 14px',
+                      borderRadius: 10,
+                      border: 'none',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      background: idx === selectedIndex 
+                        ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(168, 85, 247, 0.1))'
+                        : 'transparent',
+                      transition: 'all 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (idx !== selectedIndex) {
+                        e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (idx !== selectedIndex) {
+                        e.currentTarget.style.background = 'transparent';
+                      }
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: 6,
+                        background: idx === selectedIndex 
+                          ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.4), rgba(168, 85, 247, 0.3))'
+                          : 'rgba(30, 41, 59, 0.8)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <Building2 
+                          size={14} 
+                          color={idx === selectedIndex ? '#c4b5fd' : '#64748b'}
+                        />
+                      </div>
+                      <span style={{ 
+                        color: idx === selectedIndex ? 'white' : '#e2e8f0',
+                        fontSize: 14,
+                        fontWeight: idx === selectedIndex ? 500 : 400
+                      }}>
+                        {node.label}
+                      </span>
+                    </div>
+                    <span style={{
+                      padding: '3px 8px',
+                      backgroundColor: idx === selectedIndex 
+                        ? 'rgba(139, 92, 246, 0.3)'
+                        : 'rgba(30, 41, 59, 0.8)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: 4,
+                      fontSize: 10,
+                      color: idx === selectedIndex ? '#c4b5fd' : '#94a3b8',
+                      textTransform: 'uppercase',
+                      letterSpacing: 0.5
+                    }}>
+                      {node.type}
+                    </span>
+                  </motion.button>
+                ))}
+              </div>
             ) : (
-              <div className="px-6 py-4 text-slate-400 text-center italic">
+              <div style={{
+                padding: '20px 24px',
+                textAlign: 'center',
+                color: '#64748b',
+                fontSize: 13
+              }}>
+                <Search size={20} color="#475569" style={{ margin: '0 auto 8px' }} />
                 No companies found matching "{query}"
               </div>
             )}

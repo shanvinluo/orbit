@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Filter, Eye, EyeOff, ChevronDown, ChevronUp } from 'lucide-react';
+import { Filter, Eye, EyeOff, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EdgeType, EDGE_COLORS, EDGE_LABELS } from '@/types';
 
@@ -12,132 +12,184 @@ interface RelationshipFilterProps {
 }
 
 export default function RelationshipFilter({ enabledTypes, onToggle, onToggleAll }: RelationshipFilterProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const allTypes = Object.values(EdgeType);
   const allEnabled = allTypes.every(type => enabledTypes.has(type));
-  const noneEnabled = allTypes.every(type => !enabledTypes.has(type));
 
   return (
-    <div className="absolute top-24 left-8 z-40">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative"
-      >
-        {/* Toggle Button */}
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="bg-slate-900/90 backdrop-blur-2xl border border-white/10 rounded-2xl px-5 py-3.5 shadow-xl hover:border-violet-500/30 hover:shadow-violet-900/20 transition-all flex items-center gap-3 group"
-        >
-          <div className="p-1.5 bg-violet-600/20 rounded-lg border border-violet-500/30">
-            <Filter className="text-violet-400" size={16} />
-          </div>
-          <span className="text-white font-medium text-sm">Relationships</span>
-          <div className="flex items-center gap-2 ml-1">
-            <span className="text-xs text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded-full border border-violet-500/20">
-              {enabledTypes.size}/{allTypes.length}
-            </span>
-            {isOpen ? (
-              <ChevronUp className="text-slate-400 group-hover:text-violet-400 transition-colors" size={16} />
-            ) : (
-              <ChevronDown className="text-slate-400 group-hover:text-violet-400 transition-colors" size={16} />
-            )}
-          </div>
-        </button>
+    <motion.div
+      initial={{ y: '100%', opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ type: 'spring', damping: 25, stiffness: 300, delay: 0.3 }}
+      style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 388,
+        width: 280,
+        maxHeight: isCollapsed ? 'auto' : '50vh',
+        backgroundColor: '#0f172a',
+        borderTop: '3px solid #8b5cf6',
+        borderRight: '1px solid rgba(255,255,255,0.1)',
+        borderRadius: '24px 24px 0 0',
+        zIndex: 9996,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        boxShadow: '0 -10px 40px rgba(0,0,0,0.5), 0 0 20px rgba(139, 92, 246, 0.1)'
+      }}
+    >
+      {/* Drag Handle */}
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 6px' }}>
+        <div style={{ width: 40, height: 5, backgroundColor: '#475569', borderRadius: 3 }} />
+      </div>
 
-        {/* Filter Panel */}
-        <AnimatePresence>
-          {isOpen && (
+      {/* Header */}
+      <div style={{ 
+        padding: '12px 20px 16px', 
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        background: 'linear-gradient(to right, rgba(139, 92, 246, 0.15), transparent)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ 
+              padding: 8, 
+              background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+              borderRadius: 10,
+              boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)'
+            }}>
+              <Filter color="white" size={16} />
+            </div>
+            <div>
+              <h2 style={{ color: 'white', fontSize: 15, fontWeight: 600, margin: 0 }}>
+                Filters
+              </h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                <span style={{ fontSize: 11, color: '#94a3b8' }}>{enabledTypes.size}/{allTypes.length} active</span>
+              </div>
+            </div>
+          </div>
+          <motion.button 
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            style={{ 
+              padding: 6, 
+              backgroundColor: 'rgba(0,0,0,0.3)', 
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 6,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
             <motion.div
-              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="absolute top-full left-0 mt-3 w-[340px] bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden"
+              animate={{ rotate: isCollapsed ? 0 : 180 }}
+              transition={{ duration: 0.3 }}
             >
-              {/* Header */}
-              <div className="px-5 py-4 border-b border-white/5 bg-gradient-to-r from-violet-900/20 to-transparent">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-white font-semibold text-sm">Filter Relationships</h3>
-                  <button
-                    onClick={onToggleAll}
-                    className="text-xs text-violet-400 hover:text-violet-300 transition-colors font-medium"
-                  >
-                    {allEnabled ? 'Hide All' : 'Show All'}
-                  </button>
-                </div>
-                <div className="text-xs text-slate-400">
-                  {enabledTypes.size} of {allTypes.length} relationship types visible
-                </div>
-              </div>
-
-              {/* Relationship Types List */}
-              <div className="max-h-96 overflow-y-auto">
-                {allTypes.map((type) => {
-                  const isEnabled = enabledTypes.has(type);
-                  const color = EDGE_COLORS[type];
-                  const label = EDGE_LABELS[type];
-
-                  return (
-                    <button
-                      key={type}
-                      onClick={() => onToggle(type)}
-                      className="w-full px-5 py-3.5 border-b border-white/5 last:border-none flex items-center gap-3 hover:bg-white/5 transition-colors group"
-                    >
-                      {/* Color Indicator */}
-                      <div className="relative">
-                        <div
-                          className="w-4 h-4 rounded-full border-2 border-white/20"
-                          style={{ backgroundColor: isEnabled ? color : 'transparent' }}
-                        >
-                          {isEnabled && (
-                            <motion.div
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              className="absolute inset-0 rounded-full"
-                              style={{ backgroundColor: color, opacity: 0.8 }}
-                            />
-                          )}
-                        </div>
-                        {!isEnabled && (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-3 h-0.5 bg-slate-600 rotate-45" />
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Label */}
-                      <div className="flex-1 text-left">
-                        <div className="text-sm font-medium text-white group-hover:text-violet-300 transition-colors">
-                          {label}
-                        </div>
-                        <div className="text-xs text-slate-500 mt-0.5">{type}</div>
-                      </div>
-
-                      {/* Toggle Icon */}
-                      {isEnabled ? (
-                        <Eye className="text-violet-400" size={16} />
-                      ) : (
-                        <EyeOff className="text-slate-600" size={16} />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Footer */}
-              <div className="px-5 py-3 bg-slate-800/50 border-t border-white/5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400">Click to toggle visibility</span>
-                  <span className="text-violet-400 font-medium">
-                    {enabledTypes.size} active
-                  </span>
-                </div>
-              </div>
+              <ChevronUp color="#94a3b8" size={16} />
             </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-    </div>
+          </motion.button>
+        </div>
+      </div>
+
+      {/* Content - Animated collapse */}
+      <AnimatePresence>
+        {!isCollapsed && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}
+          >
+            {/* Toggle All Button */}
+            <div style={{ padding: '12px 16px 8px' }}>
+              <button
+                onClick={onToggleAll}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  borderRadius: 8,
+                  border: '1px solid rgba(139, 92, 246, 0.3)',
+                  background: 'rgba(139, 92, 246, 0.1)',
+                  color: '#a78bfa',
+                  fontSize: 11,
+                  fontWeight: 500,
+                  cursor: 'pointer'
+                }}
+              >
+                {allEnabled ? 'Hide All' : 'Show All'}
+              </button>
+            </div>
+
+            {/* List */}
+            <div style={{ 
+              flex: 1, 
+              overflowY: 'auto', 
+              padding: '8px 12px 16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 4,
+              maxHeight: '35vh'
+            }}>
+              {allTypes.map((type, idx) => {
+                const isEnabled = enabledTypes.has(type);
+                const color = EDGE_COLORS[type];
+                const label = EDGE_LABELS[type];
+
+                return (
+                  <motion.button
+                    key={type}
+                    onClick={() => onToggle(type)}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.02 }}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: '8px 10px',
+                      borderRadius: 8,
+                      border: 'none',
+                      cursor: 'pointer',
+                      background: isEnabled ? 'rgba(139, 92, 246, 0.1)' : 'transparent'
+                    }}
+                  >
+                    {/* Color Indicator */}
+                    <div style={{
+                      width: 14,
+                      height: 14,
+                      borderRadius: '50%',
+                      border: `2px solid ${isEnabled ? color : '#475569'}`,
+                      backgroundColor: isEnabled ? color : 'transparent'
+                    }} />
+
+                    {/* Label */}
+                    <span style={{ 
+                      flex: 1, 
+                      textAlign: 'left',
+                      fontSize: 12, 
+                      fontWeight: 500, 
+                      color: isEnabled ? 'white' : '#94a3b8'
+                    }}>
+                      {label}
+                    </span>
+
+                    {/* Toggle Icon */}
+                    {isEnabled ? (
+                      <Eye color="#a78bfa" size={14} />
+                    ) : (
+                      <EyeOff color="#475569" size={14} />
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
