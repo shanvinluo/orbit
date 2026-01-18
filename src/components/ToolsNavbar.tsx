@@ -859,9 +859,14 @@ function PathFinderPanel({
                 </div>
               </div>
               
-              <div style={{ maxHeight: 300, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ maxHeight: 340, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {paths.map((path, idx) => {
                   const isSelected = selectedPathIds.has(path.pathId);
+                  const nodeLabels = path.nodes.map(nodeId => {
+                    const node = nodes.find(n => n.id === nodeId);
+                    return node ? node.label : nodeId;
+                  });
+                  const exposureColor = path.exposureIndex >= 70 ? '#ef4444' : path.exposureIndex >= 40 ? '#f59e0b' : '#10b981';
                   return (
                     <motion.button
                       key={path.pathId}
@@ -871,40 +876,79 @@ function PathFinderPanel({
                       style={{
                         width: '100%',
                         textAlign: 'left',
-                        padding: 12,
+                        padding: '10px 12px',
                         backgroundColor: isSelected ? 'rgba(6, 182, 212, 0.15)' : 'rgba(255,255,255,0.03)',
                         border: isSelected ? '1px solid rgba(6, 182, 212, 0.4)' : '1px solid rgba(255,255,255,0.06)',
                         borderRadius: 10,
                         cursor: 'pointer'
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                        <div style={{ marginTop: 2 }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                        <div style={{ marginTop: 2, flexShrink: 0 }}>
                           {isSelected ? (
-                            <CheckSquare size={16} color="#67e8f9" />
+                            <CheckSquare size={14} color="#67e8f9" />
                           ) : (
-                            <Square size={16} color="rgba(255,255,255,0.3)" />
+                            <Square size={14} color="rgba(255,255,255,0.3)" />
                           )}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                            <span style={{ fontSize: 12, fontWeight: 600, color: isSelected ? '#67e8f9' : 'white' }}>
-                              Path #{idx + 1}
+                          {/* Header row with path number, hops, and exposure index */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: 11, fontWeight: 600, color: isSelected ? '#67e8f9' : 'white' }}>
+                              #{idx + 1}
                             </span>
                             <span style={{
-                              padding: '2px 8px',
+                              padding: '1px 6px',
                               backgroundColor: 'rgba(6, 182, 212, 0.2)',
-                              borderRadius: 4,
-                              fontSize: 10,
+                              borderRadius: 3,
+                              fontSize: 9,
                               color: '#67e8f9'
                             }}>
-                              {path.length} {path.length === 1 ? 'hop' : 'hops'}
+                              {path.length} hop{path.length !== 1 ? 's' : ''}
+                            </span>
+                            <span style={{
+                              padding: '1px 6px',
+                              backgroundColor: `${exposureColor}22`,
+                              borderRadius: 3,
+                              fontSize: 9,
+                              fontWeight: 600,
+                              color: exposureColor
+                            }}>
+                              EXP {path.exposureIndex.toFixed(0)}
                             </span>
                           </div>
-                          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {formatPathSequence(path)}
+                          {/* Company chain as compact flow */}
+                          <div style={{ 
+                            display: 'flex', 
+                            flexWrap: 'wrap', 
+                            alignItems: 'center', 
+                            gap: 3,
+                            marginBottom: 4
+                          }}>
+                            {nodeLabels.map((label, i) => (
+                              <React.Fragment key={i}>
+                                <span style={{
+                                  fontSize: 10,
+                                  color: i === 0 || i === nodeLabels.length - 1 ? '#67e8f9' : 'rgba(255,255,255,0.7)',
+                                  fontWeight: i === 0 || i === nodeLabels.length - 1 ? 600 : 400,
+                                  backgroundColor: i === 0 || i === nodeLabels.length - 1 ? 'rgba(6, 182, 212, 0.12)' : 'rgba(255,255,255,0.05)',
+                                  padding: '2px 5px',
+                                  borderRadius: 3,
+                                  maxWidth: 100,
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap'
+                                }}>
+                                  {label}
+                                </span>
+                                {i < nodeLabels.length - 1 && (
+                                  <ArrowRight size={10} color="rgba(255,255,255,0.3)" style={{ flexShrink: 0 }} />
+                                )}
+                              </React.Fragment>
+                            ))}
                           </div>
-                          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' }}>
+                          {/* Summary */}
+                          <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic', lineHeight: 1.3 }}>
                             {path.summary}
                           </div>
                         </div>
