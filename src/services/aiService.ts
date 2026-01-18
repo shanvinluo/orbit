@@ -167,7 +167,7 @@ export const analyzeText = async (text: string) => {
 export interface AffectedCompany {
   companyId: string;
   companyName: string;
-  impactType: 'positive' | 'negative' | 'neutral' | 'uncertain';
+  impactType: 'positive' | 'negative' | 'neutral' | 'mixed';
   impactDescription: string;
   confidence: number; // 0-1
 }
@@ -207,7 +207,7 @@ export const analyzeNews = async (newsText: string): Promise<NewsAnalysis | { er
       "affectedCompanies": [
         {
           "companyName": "Exact Company Name From List",
-          "impactType": "positive|negative|neutral|uncertain",
+          "impactType": "positive|negative|neutral|mixed",
           "impactDescription": "Brief description of impact",
           "confidence": 0.85
         }

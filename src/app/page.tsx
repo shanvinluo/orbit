@@ -159,8 +159,8 @@ export default function Home() {
   }, [graphData.links]);
 
   const handleCloseNewsPopup = useCallback(() => {
-    setNewsAnalysis(null);
-    // Keep highlighting but allow node clicks
+    // Keep the bottom sheet persistent - don't clear newsAnalysis
+    // Only exit news mode to allow other interactions
     setNewsMode(false);
   }, []);
   

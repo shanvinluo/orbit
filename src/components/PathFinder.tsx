@@ -252,7 +252,7 @@ export default function PathFinder({ nodes, onPathFound }: PathFinderProps) {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 20, scale: 0.95 }}
       transition={{ type: "spring", damping: 25, stiffness: 300 }}
-      className="absolute bottom-8 right-8 z-40 w-[520px] max-w-[90vw] bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden"
+      className="absolute top-[140px] left-8 z-40 w-[520px] max-w-[90vw] bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden"
     >
       {/* Header with gradient */}
       <div className="relative bg-gradient-to-r from-violet-900/30 via-purple-900/20 to-transparent border-b border-white/5 px-6 py-5 flex-shrink-0">
