@@ -211,6 +211,7 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
   }, []);
 
   // Filter graph data based on enabled edge types, path mode, and watchlist
+  // Also calculate curvature for multi-edges between same node pairs
   const filteredData = useMemo(() => {
     let filteredLinks = data.links;
     let filteredNodes = data.nodes;
@@ -243,9 +244,47 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
       });
     }
     
+    // Calculate curvature for multi-edges between same node pairs
+    // Group links by their node pair (regardless of direction)
+    const pairCounts = new Map<string, number>();
+    const pairIndices = new Map<string, number>();
+    
+    filteredLinks.forEach(link => {
+      const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+      const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+      // Use sorted pair to treat A->B and B->A as same pair
+      const pairKey = [sourceId, targetId].sort().join('|');
+      pairCounts.set(pairKey, (pairCounts.get(pairKey) || 0) + 1);
+    });
+    
+    // Assign curvature to each link
+    const linksWithCurvature = filteredLinks.map(link => {
+      const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+      const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+      const pairKey = [sourceId, targetId].sort().join('|');
+      const totalLinks = pairCounts.get(pairKey) || 1;
+      
+      if (totalLinks === 1) {
+        // Single link - no curvature needed
+        return { ...link, curvature: 0 };
+      }
+      
+      // Multiple links - assign increasing curvature
+      const currentIndex = pairIndices.get(pairKey) || 0;
+      pairIndices.set(pairKey, currentIndex + 1);
+      
+      // Spread curvatures symmetrically around 0
+      // e.g., for 3 links: -0.3, 0, 0.3
+      // for 2 links: -0.2, 0.2
+      const step = 0.25;
+      const offset = (currentIndex - (totalLinks - 1) / 2) * step;
+      
+      return { ...link, curvature: offset };
+    });
+    
     return {
       nodes: filteredNodes,
-      links: filteredLinks
+      links: linksWithCurvature
     };
   }, [data, enabledEdgeTypes, pathMode, highlightNodes, highlightEdges, watchlist]);
 
@@ -868,10 +907,10 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
           if (highlightNodes.size > 0) {
             const sourceHighlighted = highlightNodes.has(sourceId);
             const targetHighlighted = highlightNodes.has(targetId);
-            if (sourceHighlighted || targetHighlighted) return hexToRgba(baseColor, 0.1);
+            if (sourceHighlighted || targetHighlighted) return hexToRgba(baseColor, 0.15);
           }
           
-          return hexToRgba(baseColor, 0.4);
+          return hexToRgba(baseColor, 0.6);
         }}
         linkWidth={(link: any) => {
           const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
@@ -879,22 +918,14 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
           const id = `${sourceId}-${targetId}`;
           const reverseId = `${targetId}-${sourceId}`;
           const isHighlighted = highlightEdges.has(id) || highlightEdges.has(reverseId);
-          return isHighlighted ? 2.5 : 0.3;
+          return isHighlighted ? 3 : 0.8;
         }}
-        linkOpacity={(link: any) => {
+        linkOpacity={1}
+        linkCurvature={(link: any) => link.curvature || 0}
+        linkCurveRotation={(link: any) => {
+          // Rotate curve perpendicular to the link direction for 3D spread
           const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
-          const targetId = typeof link.target === 'object' ? link.target.id : link.target;
-          const id = `${sourceId}-${targetId}`;
-          const reverseId = `${targetId}-${sourceId}`;
-          const isHighlighted = highlightEdges.has(id) || highlightEdges.has(reverseId);
-          
-          if (isHighlighted) return 1;
-          if (highlightNodes.size > 0) {
-            const sourceHighlighted = highlightNodes.has(sourceId);
-            const targetHighlighted = highlightNodes.has(targetId);
-            if (sourceHighlighted || targetHighlighted) return 0.03;
-          }
-          return 0.15;
+          return sourceId.charCodeAt(0) % 2 === 0 ? 0 : Math.PI / 2;
         }}
         onNodeClick={(node) => onNodeClick(node as GraphNode)}
         onLinkClick={(link) => {

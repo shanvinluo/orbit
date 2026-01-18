@@ -19,16 +19,16 @@ export enum EdgeType {
 }
 
 export const EDGE_COLORS: Record<EdgeType, string> = {
-  [EdgeType.Ownership]: '#8b5cf6', // Violet 500
-  [EdgeType.Partnership]: '#3b82f6', // Blue 500
-  [EdgeType.Client]: '#10b981', // Emerald 500
-  [EdgeType.Supplier]: '#f59e0b', // Amber 500
-  [EdgeType.Creditor]: '#ef4444', // Red 500
-  [EdgeType.Debtor]: '#ec4899', // Pink 500
-  [EdgeType.JointVenture]: '#06b6d4', // Cyan 500
-  [EdgeType.Licensing]: '#6366f1', // Indigo 500
-  [EdgeType.Swaps]: '#14b8a6', // Teal 500
-  [EdgeType.BoardInterlock]: '#a855f7' // Purple 500
+  [EdgeType.Ownership]: '#ffffff', // White - stands out for ownership stakes
+  [EdgeType.Partnership]: '#64748b', // Slate 500 - subtle for common relationships
+  [EdgeType.Client]: '#22c55e', // Green 500 - revenue/client relationships
+  [EdgeType.Supplier]: '#f97316', // Orange 500 - supply chain
+  [EdgeType.Creditor]: '#ef4444', // Red 500 - debt/credit risk
+  [EdgeType.Debtor]: '#f43f5e', // Rose 500 - debt obligations
+  [EdgeType.JointVenture]: '#06b6d4', // Cyan 500 - joint ventures
+  [EdgeType.Licensing]: '#a78bfa', // Violet 400 - licensing/IP
+  [EdgeType.Swaps]: '#2dd4bf', // Teal 400 - financial swaps
+  [EdgeType.BoardInterlock]: '#c084fc' // Purple 400 - board connections
 };
 
 // Human-readable labels for relationship types

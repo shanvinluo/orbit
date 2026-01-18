@@ -2,20 +2,40 @@ import fs from 'fs';
 import { GraphData, GraphNode, NodeType, EdgeType } from '../types';
 import path from 'path';
 
-// In-memory cache
+// In-memory cache - disabled in development for fresh data on each request
 let graphCache: GraphData | null = null;
+const isDev = process.env.NODE_ENV === 'development';
+
+export const clearGraphCache = () => {
+  graphCache = null;
+};
 
 const GRAPH_FILE_PATH = path.join(process.cwd(), 'src', 'data', 'companies.json');
 
 export const loadGraph = (): GraphData => {
-  if (graphCache) return graphCache;
+  // In development, skip cache to always get fresh data
+  if (graphCache && !isDev) return graphCache;
   
   try {
     const raw = fs.readFileSync(GRAPH_FILE_PATH, 'utf-8');
     const rawData = JSON.parse(raw);
     
+    // Handle both formats: { nodes, links } or flat array with mixed nodes/links
+    let rawNodes: any[] = [];
+    let rawLinks: any[] = [];
+    
+    if (Array.isArray(rawData)) {
+      // Flat array format: separate nodes (have 'name') from links (have 'source'/'target')
+      rawNodes = rawData.filter((item: any) => item.name !== undefined);
+      rawLinks = rawData.filter((item: any) => item.source !== undefined && item.target !== undefined);
+    } else {
+      // Object format with nodes and links arrays
+      rawNodes = rawData.nodes || [];
+      rawLinks = rawData.links || [];
+    }
+    
     // Map raw data to application types
-    const nodes: GraphNode[] = rawData.nodes.map((n: any) => ({
+    const nodes: GraphNode[] = rawNodes.map((n: any) => ({
       id: n.id,
       label: n.name || n.label || n.id,
       type: (n.type?.toUpperCase() as NodeType) || NodeType.Company,
@@ -30,15 +50,16 @@ export const loadGraph = (): GraphData => {
       }
     }));
 
-    const links = rawData.links.map((l: any) => ({
+    const links = rawLinks.map((l: any) => ({
       source: l.source,
       target: l.target,
-      type: (l.type?.toUpperCase() as EdgeType) || EdgeType.Partnership, // Default to Partnership if unknown
+      type: (l.type?.toUpperCase() as EdgeType) || EdgeType.Partnership,
       description: l.description,
       data: l.data
     }));
 
     graphCache = { nodes, links };
+    console.log(`Loaded graph: ${nodes.length} nodes, ${links.length} links`);
     return graphCache!;
   } catch (e) {
     console.error("Failed to load companies.json", e);

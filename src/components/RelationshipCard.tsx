@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GraphEdge, EdgeType, EDGE_LABELS, GraphNode } from '@/types';
+import { GraphEdge, EdgeType, EDGE_LABELS, EDGE_COLORS, GraphNode } from '@/types';
 import { X, FileText, PieChart as PieChartIcon, Calendar, DollarSign, Percent, TrendingUp, Newspaper, AlertTriangle, Package, Handshake, ArrowRight, ChevronUp, Link2 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
@@ -403,17 +403,26 @@ export default function RelationshipCard({ edge, sourceNode, targetNode, allRela
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
                   <span style={{ 
                     padding: '4px 10px', 
-                    backgroundColor: 'rgba(139, 92, 246, 0.3)',
+                    backgroundColor: `${EDGE_COLORS[edge.type]}30`,
                     borderRadius: 20,
                     fontSize: 12,
                     color: 'rgba(255,255,255,0.9)',
-                    border: '1px solid rgba(255,255,255,0.1)'
+                    border: `1px solid ${EDGE_COLORS[edge.type]}50`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6
                   }}>
+                    <span style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      backgroundColor: EDGE_COLORS[edge.type]
+                    }} />
                     {EDGE_LABELS[edge.type]}
                   </span>
                   {allRelationships && allRelationships.length > 1 && (
                     <span style={{ fontSize: 12, color: '#94a3b8' }}>
-                      {allRelationships.length} relationships
+                      +{allRelationships.length - 1} more
                     </span>
                   )}
                 </div>
@@ -485,32 +494,64 @@ export default function RelationshipCard({ edge, sourceNode, targetNode, allRela
                 gap: 20,
                 maxHeight: '50vh'
               }}>
-                {/* Relationship Type Selector */}
+                {/* Relationship Type Tabs */}
                 {allRelationships && allRelationships.length > 1 && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {allRelationships.map((rel, idx) => (
-                      <motion.button
-                        key={idx}
-                        onClick={() => onRelationshipChange && onRelationshipChange(rel.edge, rel.source, rel.target)}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        style={{
-                          padding: '8px 16px',
-                          borderRadius: 20,
-                          fontSize: 12,
-                          fontWeight: 500,
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          backgroundColor: rel.edge.type === edge.type ? '#8b5cf6' : 'rgba(255,255,255,0.04)',
-                          color: rel.edge.type === edge.type ? 'white' : 'rgba(255,255,255,0.5)',
-                          border: rel.edge.type === edge.type ? '1px solid #8b5cf6' : '1px solid rgba(255,255,255,0.1)'
-                        }}
-                      >
-                        {EDGE_LABELS[rel.edge.type]}
-                      </motion.button>
-                    ))}
+                  <div style={{ 
+                    display: 'flex', 
+                    flexWrap: 'wrap', 
+                    gap: 8,
+                    padding: '12px 16px',
+                    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                    borderRadius: 12,
+                    border: '1px solid rgba(255,255,255,0.08)'
+                  }}>
+                    <span style={{ 
+                      fontSize: 11, 
+                      color: '#64748b', 
+                      textTransform: 'uppercase',
+                      letterSpacing: 1,
+                      marginRight: 8,
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}>
+                      {allRelationships.length} Relationships
+                    </span>
+                    {allRelationships.map((rel, idx) => {
+                      const edgeColor = EDGE_COLORS[rel.edge.type];
+                      const isActive = rel.edge.type === edge.type;
+                      return (
+                        <motion.button
+                          key={idx}
+                          onClick={() => onRelationshipChange && onRelationshipChange(rel.edge, rel.source, rel.target)}
+                          whileHover={{ scale: 1.03 }}
+                          whileTap={{ scale: 0.97 }}
+                          style={{
+                            padding: '8px 16px',
+                            borderRadius: 8,
+                            fontSize: 12,
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            backgroundColor: isActive ? edgeColor : 'rgba(255,255,255,0.05)',
+                            color: isActive ? 'white' : 'rgba(255,255,255,0.7)',
+                            border: `2px solid ${isActive ? edgeColor : 'transparent'}`,
+                            boxShadow: isActive ? `0 4px 12px ${edgeColor}40` : 'none',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8
+                          }}
+                        >
+                          <span style={{
+                            width: 10,
+                            height: 10,
+                            borderRadius: '50%',
+                            backgroundColor: edgeColor,
+                            border: isActive ? '2px solid white' : 'none'
+                          }} />
+                          {EDGE_LABELS[rel.edge.type]}
+                        </motion.button>
+                      );
+                    })}
                   </div>
                 )}
 
