@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GraphEdge, EdgeType, EDGE_LABELS, GraphNode } from '@/types';
-import { X, FileText, PieChart as PieChartIcon, Calendar, DollarSign, Percent, TrendingUp, Newspaper, AlertTriangle, Package, Handshake, ArrowRight } from 'lucide-react';
+import { X, FileText, PieChart as PieChartIcon, Calendar, DollarSign, Percent, TrendingUp, Newspaper, AlertTriangle, Package, Handshake, ArrowRight, ChevronUp, Link2 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
 interface RelationshipCardProps {
@@ -331,6 +331,8 @@ function getRelationshipData(type: EdgeType, sourceNode: GraphNode, targetNode: 
 }
 
 export default function RelationshipCard({ edge, sourceNode, targetNode, allRelationships, onRelationshipChange, onClose }: RelationshipCardProps) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  
   const relationshipData = useMemo(() => 
     getRelationshipData(edge.type, sourceNode, targetNode, edge.data),
     [edge.type, sourceNode, targetNode, edge.data]
@@ -341,252 +343,516 @@ export default function RelationshipCard({ edge, sourceNode, targetNode, allRela
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ x: 400, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        exit={{ x: 400, opacity: 0 }}
-        transition={{ type: "spring", damping: 30, stiffness: 300 }}
-        className="fixed right-6 top-6 bottom-6 w-[400px] bg-black/40 backdrop-blur-3xl border border-white/[0.06] rounded-[2rem] shadow-[0_8px_40px_rgba(0,0,0,0.5)] z-40 flex flex-col overflow-hidden"
+        initial={{ y: '100%', opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: '100%', opacity: 0 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          marginLeft: 'auto',
+          marginRight: 'auto',
+          width: '100%',
+          maxWidth: '900px',
+          maxHeight: isCollapsed ? 'auto' : '70vh',
+          backgroundColor: '#0f172a',
+          borderTop: '3px solid #8b5cf6',
+          borderRadius: '24px 24px 0 0',
+          zIndex: 9999,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          boxShadow: '0 -10px 40px rgba(0,0,0,0.5)'
+        }}
       >
-        {/* Close button - positioned relative to this fixed container */}
-        <button 
-          onClick={onClose}
-          style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 100 }}
-          className="w-8 h-8 flex items-center justify-center bg-white/[0.06] hover:bg-white/[0.12] rounded-full text-white/50 hover:text-white transition-all"
-        >
-          <X size={16} />
-        </button>
-
-        {/* Subtle top accent */}
-        <div className="h-1 bg-gradient-to-r from-violet-500 via-purple-500 to-violet-500 opacity-60 shrink-0" />
+        {/* Drag Handle */}
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 8px' }}>
+          <motion.div 
+            style={{ width: 48, height: 6, backgroundColor: '#475569', borderRadius: 3 }}
+          />
+        </div>
 
         {/* Header */}
-        <div className="px-6 pt-5 pb-4 shrink-0 pr-14">
-          {/* Relationship Type Selector */}
-          {allRelationships && allRelationships.length > 1 && (
-            <div className="mb-4 flex flex-wrap gap-1.5">
-              {allRelationships.map((rel, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => onRelationshipChange && onRelationshipChange(rel.edge, rel.source, rel.target)}
-                  className={`px-3 py-1.5 rounded-full text-[11px] uppercase tracking-wider transition-all ${
-                    rel.edge.type === edge.type
-                      ? 'bg-violet-500 text-white'
-                      : 'bg-white/[0.04] text-white/40 hover:bg-white/[0.08] hover:text-white/60'
-                  }`}
-                >
-                  {EDGE_LABELS[rel.edge.type]}
-                </button>
-              ))}
+        <div style={{ 
+          padding: '16px 24px', 
+          borderBottom: '1px solid rgba(255,255,255,0.1)',
+          background: 'linear-gradient(to right, rgba(139, 92, 246, 0.2), transparent)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <motion.div 
+                style={{ 
+                  padding: 10, 
+                  backgroundColor: 'rgba(139, 92, 246, 0.3)', 
+                  borderRadius: 12,
+                  border: '1px solid rgba(255,255,255,0.1)'
+                }}
+              >
+                <Link2 color="white" size={20} />
+              </motion.div>
+              <div>
+                <h2 style={{ color: 'white', fontSize: 18, fontWeight: 'bold', margin: 0 }}>
+                  {edge.type === EdgeType.Ownership ? (
+                    <span>{sourceNode.label} <span style={{ color: '#a78bfa' }}>→</span> {targetNode.label}</span>
+                  ) : (
+                    <span>{sourceNode.label} <span style={{ color: 'rgba(255,255,255,0.3)' }}>↔</span> {targetNode.label}</span>
+                  )}
+                </h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                  <span style={{ 
+                    padding: '4px 10px', 
+                    backgroundColor: 'rgba(139, 92, 246, 0.3)',
+                    borderRadius: 20,
+                    fontSize: 12,
+                    color: 'rgba(255,255,255,0.9)',
+                    border: '1px solid rgba(255,255,255,0.1)'
+                  }}>
+                    {EDGE_LABELS[edge.type]}
+                  </span>
+                  {allRelationships && allRelationships.length > 1 && (
+                    <span style={{ fontSize: 12, color: '#94a3b8' }}>
+                      {allRelationships.length} relationships
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
-          )}
-          
-          <div className="flex items-center gap-2 mb-3">
-            <ArrowRight size={14} className="text-violet-400" />
-            <span className="text-[11px] text-white/40 uppercase tracking-wider">{EDGE_LABELS[edge.type]}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <motion.button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsCollapsed(!isCollapsed);
+                }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                style={{ 
+                  padding: 8, 
+                  backgroundColor: 'rgba(0,0,0,0.3)', 
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <motion.div
+                  animate={{ rotate: isCollapsed ? 0 : 180 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <ChevronUp color="#94a3b8" size={18} />
+                </motion.div>
+              </motion.button>
+              <motion.button 
+                onClick={onClose}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                style={{ 
+                  padding: 8, 
+                  backgroundColor: 'rgba(0,0,0,0.3)', 
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <X color="#94a3b8" size={18} />
+              </motion.button>
+            </div>
           </div>
-          
-          <h2 className="text-lg font-medium text-white">
-            {edge.type === EdgeType.Ownership ? (
-              <span>{sourceNode.label} <span className="text-violet-400">→</span> {targetNode.label}</span>
-            ) : (
-              <span>{sourceNode.label} <span className="text-white/30">↔</span> {targetNode.label}</span>
-            )}
-          </h2>
         </div>
 
-        {/* Content - Scrollable */}
-        <div 
-          className="px-6 pb-6 space-y-4"
-          style={{ 
-            flex: 1, 
-            overflowY: 'auto', 
-            minHeight: 0,
-            scrollbarWidth: 'thin', 
-            scrollbarColor: 'rgba(139, 92, 246, 0.5) rgba(255,255,255,0.1)' 
-          }}
-        >
-          {/* Description */}
-          <p className="text-white/50 text-[13px] leading-relaxed">
-            {relationshipData.description}
-          </p>
-
-          {/* Financial Data */}
-          {relationshipData.financialData && (
-            <div className="space-y-2">
-              {relationshipData.financialData.map((item, idx) => (
-                <div key={idx} className="flex items-center justify-between bg-white/[0.03] rounded-2xl p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-white/[0.04] flex items-center justify-center text-white/40">
-                      {item.icon}
-                    </div>
-                    <span className="text-[13px] text-white/50">{item.label}</span>
-                  </div>
-                  <span className="text-[15px] font-medium text-white">{item.value}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Pie Chart */}
-          {relationshipData.pieChartData && (
-            <div className="bg-white/[0.02] rounded-2xl p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <PieChartIcon size={14} className="text-white/30" />
-                <h3 className="text-[12px] text-white/40 uppercase tracking-wider">Distribution</h3>
-              </div>
-              <ResponsiveContainer width="100%" height={180}>
-                <PieChart>
-                  <Pie
-                    data={relationshipData.pieChartData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={60}
-                    innerRadius={35}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {relationshipData.pieChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
+        {/* Content - Animated collapse */}
+        <AnimatePresence>
+          {!isCollapsed && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              style={{ overflow: 'hidden' }}
+            >
+              <div style={{ 
+                flex: 1, 
+                overflowY: 'auto', 
+                padding: 24,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 20,
+                maxHeight: '50vh'
+              }}>
+                {/* Relationship Type Selector */}
+                {allRelationships && allRelationships.length > 1 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {allRelationships.map((rel, idx) => (
+                      <motion.button
+                        key={idx}
+                        onClick={() => onRelationshipChange && onRelationshipChange(rel.edge, rel.source, rel.target)}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: 20,
+                          fontSize: 12,
+                          fontWeight: 500,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          backgroundColor: rel.edge.type === edge.type ? '#8b5cf6' : 'rgba(255,255,255,0.04)',
+                          color: rel.edge.type === edge.type ? 'white' : 'rgba(255,255,255,0.5)',
+                          border: rel.edge.type === edge.type ? '1px solid #8b5cf6' : '1px solid rgba(255,255,255,0.1)'
+                        }}
+                      >
+                        {EDGE_LABELS[rel.edge.type]}
+                      </motion.button>
                     ))}
-                  </Pie>
-                  <Tooltip 
-                    formatter={(value: number) => `${value}%`}
-                    contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.8)', border: 'none', borderRadius: '8px', fontSize: '12px' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="flex flex-wrap gap-2 justify-center mt-2">
-                {relationshipData.pieChartData.map((entry, idx) => (
-                  <div key={idx} className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-                    <span className="text-[11px] text-white/40">{entry.name}</span>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
+                )}
 
-          {/* SEC Filings */}
-          {relationshipData.secFilings && relationshipData.secFilings.length > 0 && (
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <FileText size={14} className="text-white/30" />
-                <h3 className="text-[12px] text-white/40 uppercase tracking-wider">SEC Filings</h3>
-              </div>
-              <div className="space-y-2">
-                {relationshipData.secFilings.slice(0, 4).map((filing, idx) => (
-                  <div 
-                    key={idx} 
-                    className="bg-white/[0.02] p-3 rounded-xl hover:bg-white/[0.04] transition-colors"
+                {/* Description */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  style={{ 
+                    padding: 20, 
+                    backgroundColor: 'rgba(30, 41, 59, 0.6)',
+                    borderRadius: 12,
+                    border: '1px solid rgba(255,255,255,0.1)'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                    <FileText color="#a78bfa" size={16} />
+                    <span style={{ fontSize: 12, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 }}>
+                      Summary
+                    </span>
+                  </div>
+                  <p style={{ color: '#e2e8f0', fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+                    {relationshipData.description}
+                  </p>
+                </motion.div>
+
+                {/* Main Content Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+                  {/* Financial Data */}
+                  {relationshipData.financialData && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.15 }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                        <DollarSign color="#a78bfa" size={16} />
+                        <span style={{ fontSize: 12, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 }}>
+                          Financial Details
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {relationshipData.financialData.map((item, idx) => (
+                          <div 
+                            key={idx} 
+                            style={{ 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'space-between',
+                              padding: 14,
+                              backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                              border: '1px solid rgba(139, 92, 246, 0.2)',
+                              borderRadius: 10
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                              <div style={{ 
+                                width: 32, 
+                                height: 32, 
+                                borderRadius: 8, 
+                                backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#c4b5fd'
+                              }}>
+                                {item.icon}
+                              </div>
+                              <span style={{ fontSize: 13, color: '#94a3b8' }}>{item.label}</span>
+                            </div>
+                            <span style={{ fontSize: 15, fontWeight: 600, color: 'white' }}>{item.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* Pie Chart */}
+                  {relationshipData.pieChartData && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                      style={{ 
+                        padding: 16,
+                        backgroundColor: 'rgba(30, 41, 59, 0.6)',
+                        borderRadius: 12,
+                        border: '1px solid rgba(255,255,255,0.1)'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                        <PieChartIcon color="#a78bfa" size={16} />
+                        <span style={{ fontSize: 12, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 }}>
+                          Distribution
+                        </span>
+                      </div>
+                      <ResponsiveContainer width="100%" height={160}>
+                        <PieChart>
+                          <Pie
+                            data={relationshipData.pieChartData}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            outerRadius={55}
+                            innerRadius={30}
+                            fill="#8884d8"
+                            dataKey="value"
+                          >
+                            {relationshipData.pieChartData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip 
+                            formatter={(value) => `${value}%`}
+                            contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.8)', border: 'none', borderRadius: '8px', fontSize: '12px' }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
+                        {relationshipData.pieChartData.map((entry, idx) => (
+                          <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: entry.color }} />
+                            <span style={{ fontSize: 11, color: '#94a3b8' }}>{entry.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* SEC Filings */}
+                {relationshipData.secFilings && relationshipData.secFilings.length > 0 && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.25 }}
                   >
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <span className="bg-violet-500/20 text-violet-400 text-[10px] px-2 py-0.5 rounded-md font-mono">
-                        {filing.type}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                      <FileText color="#a78bfa" size={18} />
+                      <span style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}>
+                        SEC Filings
                       </span>
-                      <span className="text-white/30 text-[11px]">{filing.date}</span>
+                      <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, rgba(255,255,255,0.1), transparent)' }} />
+                      <span style={{ 
+                        padding: '4px 12px',
+                        backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                        border: '1px solid rgba(139, 92, 246, 0.3)',
+                        borderRadius: 20,
+                        fontSize: 12,
+                        color: '#c4b5fd'
+                      }}>
+                        {relationshipData.secFilings.length}
+                      </span>
                     </div>
-                    <p className="text-white/70 text-[12px]">{filing.title}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 10 }}>
+                      {relationshipData.secFilings.slice(0, 4).map((filing, idx) => (
+                        <motion.div 
+                          key={idx}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.3 + idx * 0.05 }}
+                          style={{ 
+                            padding: 14,
+                            backgroundColor: 'rgba(30, 41, 59, 0.6)',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            borderRadius: 10
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                            <span style={{ 
+                              padding: '4px 8px',
+                              backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                              borderRadius: 6,
+                              fontSize: 11,
+                              fontFamily: 'monospace',
+                              color: '#c4b5fd'
+                            }}>
+                              {filing.type}
+                            </span>
+                            <span style={{ fontSize: 11, color: '#64748b' }}>{filing.date}</span>
+                          </div>
+                          <p style={{ color: '#e2e8f0', fontSize: 13, margin: 0 }}>{filing.title}</p>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
 
-          {/* Supply Chain Info */}
-          {relationshipData.supplyChainInfo && (
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <Package size={14} className="text-white/30" />
-                <h3 className="text-[12px] text-white/40 uppercase tracking-wider">Supply Chain</h3>
-                {relationshipData.supplyChainInfo.riskLevel && (
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full ml-auto ${
-                    relationshipData.supplyChainInfo.riskLevel === 'Low' ? 'bg-emerald-500/20 text-emerald-400' :
-                    relationshipData.supplyChainInfo.riskLevel === 'Medium' ? 'bg-yellow-500/20 text-yellow-400' :
-                    'bg-red-500/20 text-red-400'
-                  }`}>
-                    {relationshipData.supplyChainInfo.riskLevel}
-                  </span>
+                {/* News Articles */}
+                {relationshipData.news && relationshipData.news.length > 0 && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                      <Newspaper color="#a78bfa" size={18} />
+                      <span style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}>
+                        Related News
+                      </span>
+                      <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, rgba(255,255,255,0.1), transparent)' }} />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {relationshipData.news.slice(0, 3).map((article, idx) => (
+                        <motion.div 
+                          key={idx}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.35 + idx * 0.05 }}
+                          style={{ 
+                            padding: 14,
+                            backgroundColor: 'rgba(30, 41, 59, 0.6)',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            borderRadius: 10
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                            <span style={{ fontSize: 11, color: '#64748b' }}>{article.date}</span>
+                            <span style={{ fontSize: 11, color: '#a78bfa' }}>{article.source}</span>
+                          </div>
+                          <h4 style={{ color: 'white', fontSize: 14, fontWeight: 500, margin: 0, lineHeight: 1.4 }}>
+                            {article.title}
+                          </h4>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Supply Chain Info */}
+                {relationshipData.supplyChainInfo && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.35 }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                      <Package color="#a78bfa" size={18} />
+                      <span style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}>
+                        Supply Chain
+                      </span>
+                      {relationshipData.supplyChainInfo.riskLevel && (
+                        <span style={{ 
+                          padding: '4px 12px',
+                          backgroundColor: relationshipData.supplyChainInfo.riskLevel === 'Low' ? 'rgba(34, 197, 94, 0.2)' :
+                            relationshipData.supplyChainInfo.riskLevel === 'Medium' ? 'rgba(250, 204, 21, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                          border: `1px solid ${relationshipData.supplyChainInfo.riskLevel === 'Low' ? 'rgba(34, 197, 94, 0.4)' :
+                            relationshipData.supplyChainInfo.riskLevel === 'Medium' ? 'rgba(250, 204, 21, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`,
+                          borderRadius: 20,
+                          fontSize: 11,
+                          color: relationshipData.supplyChainInfo.riskLevel === 'Low' ? '#86efac' :
+                            relationshipData.supplyChainInfo.riskLevel === 'Medium' ? '#fef08a' : '#fca5a5'
+                        }}>
+                          {relationshipData.supplyChainInfo.riskLevel} Risk
+                        </span>
+                      )}
+                    </div>
+                    {relationshipData.supplyChainInfo.locations && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                        {relationshipData.supplyChainInfo.locations.map((loc, idx) => (
+                          <span key={idx} style={{ 
+                            padding: '6px 12px',
+                            backgroundColor: 'rgba(30, 41, 59, 0.6)',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            borderRadius: 8,
+                            fontSize: 12,
+                            color: '#94a3b8'
+                          }}>
+                            {loc}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+
+                {/* Partnership Info */}
+                {relationshipData.partnershipInfo && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.35 }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                      <Handshake color="#a78bfa" size={18} />
+                      <span style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}>
+                        Partnership Details
+                      </span>
+                    </div>
+                    
+                    {relationshipData.partnershipInfo.projects && (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10, marginBottom: 12 }}>
+                        {relationshipData.partnershipInfo.projects.slice(0, 4).map((project, idx) => (
+                          <div 
+                            key={idx} 
+                            style={{ 
+                              padding: 12,
+                              backgroundColor: 'rgba(30, 41, 59, 0.6)',
+                              border: '1px solid rgba(255,255,255,0.1)',
+                              borderRadius: 10
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                              <span style={{ 
+                                padding: '2px 8px',
+                                backgroundColor: project.status === 'Active' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(250, 204, 21, 0.2)',
+                                borderRadius: 4,
+                                fontSize: 10,
+                                color: project.status === 'Active' ? '#86efac' : '#fef08a'
+                              }}>
+                                {project.status}
+                              </span>
+                              <span style={{ fontSize: 12, fontWeight: 600, color: '#c4b5fd' }}>{project.value}</span>
+                            </div>
+                            <p style={{ color: '#e2e8f0', fontSize: 13, margin: 0 }}>{project.name}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {relationshipData.partnershipInfo.collaboration && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                        {relationshipData.partnershipInfo.collaboration.slice(0, 5).map((area, idx) => (
+                          <span key={idx} style={{ 
+                            padding: '6px 12px',
+                            backgroundColor: 'rgba(139, 92, 246, 0.15)',
+                            border: '1px solid rgba(139, 92, 246, 0.3)',
+                            borderRadius: 8,
+                            fontSize: 12,
+                            color: '#c4b5fd'
+                          }}>
+                            {area}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </motion.div>
                 )}
               </div>
-              
-              {relationshipData.supplyChainInfo.locations && (
-                <div className="flex flex-wrap gap-1.5 mb-3">
-                  {relationshipData.supplyChainInfo.locations.map((loc, idx) => (
-                    <span key={idx} className="bg-white/[0.04] text-white/50 text-[11px] px-2 py-1 rounded-lg">
-                      {loc}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
+            </motion.div>
           )}
-
-          {/* Partnership Info */}
-          {relationshipData.partnershipInfo && (
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <Handshake size={14} className="text-white/30" />
-                <h3 className="text-[12px] text-white/40 uppercase tracking-wider">Partnership</h3>
-              </div>
-
-              {relationshipData.partnershipInfo.projects && (
-                <div className="space-y-2 mb-3">
-                  {relationshipData.partnershipInfo.projects.slice(0, 3).map((project, idx) => (
-                    <div key={idx} className="bg-white/[0.02] p-3 rounded-xl flex items-center justify-between">
-                      <div>
-                        <div className="text-white/70 text-[12px]">{project.name}</div>
-                        <div className="text-white/30 text-[11px]">{project.value}</div>
-                      </div>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full ${
-                        project.status === 'Active' ? 'bg-emerald-500/20 text-emerald-400' :
-                        'bg-yellow-500/20 text-yellow-400'
-                      }`}>
-                        {project.status}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {relationshipData.partnershipInfo.collaboration && (
-                <div className="flex flex-wrap gap-1.5">
-                  {relationshipData.partnershipInfo.collaboration.slice(0, 4).map((area, idx) => (
-                    <span key={idx} className="bg-violet-500/10 text-violet-400 text-[11px] px-2 py-1 rounded-lg">
-                      {area}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* News Articles */}
-          {relationshipData.news && relationshipData.news.length > 0 && (
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <Newspaper size={14} className="text-white/30" />
-                <h3 className="text-[12px] text-white/40 uppercase tracking-wider">News</h3>
-              </div>
-              <div className="space-y-2">
-                {relationshipData.news.slice(0, 4).map((article, idx) => (
-                  <div 
-                    key={idx} 
-                    className="bg-white/[0.02] p-3 rounded-xl hover:bg-white/[0.04] transition-colors"
-                  >
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <span className="text-white/30 text-[11px]">{article.date}</span>
-                      <span className="text-violet-400/60 text-[10px]">{article.source}</span>
-                    </div>
-                    <h4 className="text-white/70 text-[12px] leading-relaxed">
-                      {article.title}
-                    </h4>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+        </AnimatePresence>
       </motion.div>
     </AnimatePresence>
   );

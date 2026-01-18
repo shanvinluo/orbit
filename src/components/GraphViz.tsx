@@ -22,6 +22,7 @@ interface Props {
   enabledEdgeTypes?: Set<EdgeType>;
   affectedCompanies?: Map<string, 'positive' | 'negative' | 'neutral' | 'mixed' | 'uncertain'>;
   pathMode?: boolean;
+  watchlist?: Set<string>;
 }
 
 // Nebula color palette - celestial blues, cyans, warm oranges/golds
@@ -55,15 +56,28 @@ const getNodeColor = (nodeId: string): string => {
   return getStarPalette(nodeId).glow;
 };
 
-export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundClick, highlightNodes, highlightEdges, focusedNodeId, enabledEdgeTypes, affectedCompanies, pathMode = false }: Props) {
+export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundClick, highlightNodes, highlightEdges, focusedNodeId, enabledEdgeTypes, affectedCompanies, pathMode = false, watchlist }: Props) {
   const fgRef = useRef<any>(null);
   const [cameraPosition, setCameraPosition] = useState<THREE.Vector3>(new THREE.Vector3(0, 0, 1000));
 
-  // Filter graph data
+  // Filter graph data based on enabled edge types, path mode, and watchlist
   const filteredData = useMemo(() => {
     let filteredLinks = data.links;
     let filteredNodes = data.nodes;
     
+    // First filter by watchlist if active
+    if (watchlist && watchlist.size > 0) {
+      filteredNodes = filteredNodes.filter(node => watchlist.has(node.id));
+      
+      // Only include edges between watchlist nodes
+      filteredLinks = filteredLinks.filter(link => {
+        const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+        const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+        return watchlist.has(sourceId) && watchlist.has(targetId);
+      });
+    }
+    
+    // Then filter by enabled edge types
     if (enabledEdgeTypes) {
       filteredLinks = filteredLinks.filter(link => enabledEdgeTypes.has(link.type));
     }
@@ -79,8 +93,11 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
       });
     }
     
-    return { nodes: filteredNodes, links: filteredLinks };
-  }, [data, enabledEdgeTypes, pathMode, highlightNodes, highlightEdges]);
+    return {
+      nodes: filteredNodes,
+      links: filteredLinks
+    };
+  }, [data, enabledEdgeTypes, pathMode, highlightNodes, highlightEdges, watchlist]);
 
   // Track camera
   useEffect(() => {
@@ -227,23 +244,99 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
     }
   }, []);
 
-  // Zoom to focused node
+  // Store original positions for restoring when deselecting
+  const originalPositions = useRef<Map<string, {x: number, y: number, z: number}>>(new Map());
+
+  // Zoom to focused node and push other nodes to the sides
   useEffect(() => {
-    if (focusedNodeId && fgRef.current) {
-      const node = filteredData.nodes.find(n => n.id === focusedNodeId) || data.nodes.find(n => n.id === focusedNodeId);
-      if (node && typeof node.x === 'number') {
-        const nodePos = new THREE.Vector3(node.x, node.y || 0, node.z || 0);
-        const distance = 150;
-        const direction = new THREE.Vector3(0.3, 0.5, 0.8).normalize();
-        const cameraOffset = direction.multiplyScalar(distance);
-        const cameraPos = nodePos.clone().add(cameraOffset);
+    if (!fgRef.current) return;
+    
+    if (focusedNodeId) {
+        const node = filteredData.nodes.find(n => n.id === focusedNodeId) || data.nodes.find(n => n.id === focusedNodeId);
+        if (node && typeof node.x === 'number') {
+            const centerX = node.x || 0;
+            const centerY = node.y || 0;
+            const centerZ = node.z || 0;
+            
+            // Save original positions and move nodes directly (no simulation)
+            filteredData.nodes.forEach((n: any) => {
+              // Store original position if not already stored
+              if (!originalPositions.current.has(n.id)) {
+                originalPositions.current.set(n.id, {
+                  x: n.x || 0,
+                  y: n.y || 0,
+                  z: n.z || 0
+                });
+              }
+              
+              if (n.id === focusedNodeId) {
+                // Fix focused node in place
+                n.fx = centerX;
+                n.fy = centerY;
+                n.fz = centerZ;
+                return;
+              }
+              
+              // Calculate direction from focused node to this node
+              const dx = (n.x || 0) - centerX;
+              const dy = (n.y || 0) - centerY;
+              const dz = (n.z || 0) - centerZ;
+              const dist = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+              
+              // Push nodes outward to minimum distance
+              const minDistance = 250;
+              if (dist < minDistance) {
+                const pushAmount = minDistance - dist;
+                const newX = (n.x || 0) + (dx / dist) * pushAmount;
+                const newY = (n.y || 0) + (dy / dist) * pushAmount;
+                const newZ = (n.z || 0) + (dz / dist) * pushAmount;
+                
+                // Fix nodes at their new pushed positions (stops wiggling)
+                n.fx = newX;
+                n.fy = newY;
+                n.fz = newZ;
+              } else {
+                // Fix nodes that don't need pushing at their current positions
+                n.fx = n.x;
+                n.fy = n.y;
+                n.fz = n.z;
+              }
+            });
+            
+            // Zoom camera to the focused node
+            const nodePos = new THREE.Vector3(centerX, centerY, centerZ);
+            const distance = 300;
+            const direction = new THREE.Vector3(0.3, 0.5, 0.8).normalize();
+            const cameraOffset = direction.multiplyScalar(distance);
+            const cameraPos = nodePos.clone().add(cameraOffset);
+            
+            fgRef.current.cameraPosition(
+                { x: cameraPos.x, y: cameraPos.y, z: cameraPos.z },
+                node as any,
+                1500
+            );
+        }
+    } else {
+        // When no node is focused, restore original positions and unfix all nodes
+        filteredData.nodes.forEach((n: any) => {
+          const original = originalPositions.current.get(n.id);
+          if (original) {
+            n.x = original.x;
+            n.y = original.y;
+            n.z = original.z;
+          }
+          n.fx = undefined;
+          n.fy = undefined;
+          n.fz = undefined;
+        });
         
-        fgRef.current.cameraPosition(
-          { x: cameraPos.x, y: cameraPos.y, z: cameraPos.z },
-          node as any,
-          1500
-        );
-      }
+        // Clear stored positions
+        originalPositions.current.clear();
+        
+        // Gentle reheat to let nodes settle naturally
+        if (fgRef.current.d3ReheatSimulation) {
+          fgRef.current.d3ReheatSimulation();
+        }
     }
   }, [focusedNodeId, data.nodes, filteredData]);
 
