@@ -5,8 +5,7 @@ import GraphViz from '@/components/GraphViz';
 import SearchBar from '@/components/SearchBar';
 import Chatbot from '@/components/Chatbot';
 import TradingCard from '@/components/TradingCard';
-import PathFinder from '@/components/PathFinder';
-import RelationshipFilter from '@/components/RelationshipFilter';
+import ToolsNavbar from '@/components/ToolsNavbar';
 import NewsImpactPopup from '@/components/NewsImpactPopup';
 import { GraphData, GraphNode, GraphEdge, EdgeType } from '@/types';
 import { NewsAnalysis } from '@/services/aiService';
@@ -159,15 +158,15 @@ export default function Home() {
       {/* UI Layer */}
       <SearchBar nodes={graphData.nodes} onSelect={handleSearchSelect} />
       
-      <RelationshipFilter 
+      <ToolsNavbar 
+        nodes={graphData.nodes}
         enabledTypes={enabledEdgeTypes}
         onToggle={handleToggleEdgeType}
         onToggleAll={handleToggleAllEdgeTypes}
+        onPathFound={handlePathFound}
       />
       
       <Chatbot onNewsAnalysis={handleNewsAnalysis} />
-
-      <PathFinder nodes={graphData.nodes} onPathFound={handlePathFound} />
 
       {newsAnalysis && (
         <NewsImpactPopup analysis={newsAnalysis} onClose={handleCloseNewsPopup} />

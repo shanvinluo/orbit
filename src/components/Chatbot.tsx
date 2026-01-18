@@ -27,7 +27,7 @@ const isLikelyNews = (text: string): boolean => {
 };
 
 export default function Chatbot({ onNewsAnalysis }: ChatbotProps = {}) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -140,54 +140,56 @@ export default function Chatbot({ onNewsAnalysis }: ChatbotProps = {}) {
 
   return (
     <>
-      <motion.button
-        onClick={() => setIsOpen(true)}
-        style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 50, backgroundColor: 'white' }}
-        className={`p-4 rounded-full transition-all hover:scale-110 shadow-[0_0_15px_rgba(255,255,255,0.5)] ${isOpen ? 'hidden' : 'flex'}`}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-      >
-        <Sparkles size={24} className="text-black fill-black" />
-      </motion.button>
-
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 50 }}
-            className="w-[380px] h-[600px] max-h-[80vh] bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl flex flex-col overflow-hidden"
+            style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 50 }}
+            className="w-[400px] h-[550px] max-h-[80vh] bg-slate-900/90 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl flex flex-col overflow-hidden"
           >
-            {/* Header */}
-            <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-violet-500/20 rounded-lg">
-                  <Sparkles size={18} className="text-violet-400" />
+            {/* Header with gradient */}
+            <div className="relative border-b border-white/5 px-6 py-5 bg-gradient-to-r from-violet-900/30 via-purple-900/20 to-transparent">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(139,92,246,0.15),transparent_70%)]" />
+              <div className="relative flex items-center">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-violet-600/20 rounded-xl border border-violet-500/30">
+                    <Sparkles size={20} className="text-violet-400" />
+                  </div>
+                  <div>
+                    <span className="font-semibold text-white text-lg tracking-tight">Orbit AI</span>
+                    <p className="text-xs text-slate-400 mt-0.5">Analyze relationships & news</p>
+                  </div>
                 </div>
-                <span className="font-bold text-white">Orbit AI</span>
               </div>
-              <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-white transition-colors">
-                <X size={20} />
-              </button>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
               {messages.map((msg) => (
-                <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] p-3 rounded-2xl text-sm ${msg.role === 'user' ? 'bg-violet-600 text-white rounded-tr-sm' : 'bg-white/10 text-slate-200 rounded-tl-sm'}`}>
+                <motion.div 
+                  key={msg.id} 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div className={`max-w-[85%] px-4 py-3 text-sm leading-relaxed ${
+                    msg.role === 'user' 
+                      ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-2xl rounded-br-md shadow-lg shadow-violet-900/20' 
+                      : 'bg-white/5 border border-white/10 text-slate-200 rounded-2xl rounded-bl-md'
+                  }`}>
                     {msg.content}
                   </div>
-                </div>
+                </motion.div>
               ))}
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-white/10 px-4 py-2 rounded-2xl rounded-tl-sm">
-                    <span className="flex gap-1">
-                      <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}/>
-                      <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}/>
-                      <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}/>
+                  <div className="bg-white/5 border border-white/10 px-5 py-3 rounded-2xl rounded-bl-md">
+                    <span className="flex gap-1.5">
+                      <span className="w-2 h-2 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}/>
+                      <span className="w-2 h-2 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}/>
+                      <span className="w-2 h-2 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}/>
                     </span>
                   </div>
                 </div>
@@ -196,19 +198,20 @@ export default function Chatbot({ onNewsAnalysis }: ChatbotProps = {}) {
             </div>
 
             {/* Input */}
-            <div className="p-4 border-t border-white/10 bg-white/5">
-              <div className="flex gap-2">
+            <div className="p-5 border-t border-white/5 bg-slate-800/30">
+              <div className="flex gap-3">
                 <input
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                   placeholder="Ask anything..."
-                  className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-violet-500/50"
+                  className="flex-1 bg-slate-800/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition-all"
                 />
                 <button 
                   onClick={handleSend}
-                  className="p-2 bg-violet-600 hover:bg-violet-500 rounded-xl text-white transition-colors"
+                  disabled={!input.trim() || isLoading}
+                  className="p-3 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 disabled:from-slate-700 disabled:to-slate-700 disabled:cursor-not-allowed rounded-xl text-white transition-all shadow-lg shadow-violet-900/30 hover:shadow-violet-500/40"
                 >
                   <Send size={18} />
                 </button>

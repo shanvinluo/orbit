@@ -21,11 +21,11 @@ export default function TradingCard({ node, onClose }: TradingCardProps) {
         animate={{ x: 0, opacity: 1 }}
         exit={{ x: 400, opacity: 0 }}
         transition={{ type: "spring", damping: 30, stiffness: 300 }}
-        className="fixed right-6 top-6 bottom-6 w-[400px] bg-slate-900/90 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl z-40 overflow-hidden flex flex-col relative"
+        className="fixed right-6 top-6 bottom-6 w-[400px] bg-slate-900/90 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-2xl z-40 overflow-hidden flex flex-col relative"
       >
             <button 
                 onClick={onClose}
-                style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 50 }}
+                style={{ position: 'absolute', top: '24px', right: '24px', zIndex: 50 }}
                 className="p-2 bg-black/20 hover:bg-black/40 rounded-full text-white/70 hover:text-white transition-colors backdrop-blur-md"
             >
                 <X size={18} />
@@ -37,8 +37,8 @@ export default function TradingCard({ node, onClose }: TradingCardProps) {
         </div>
 
         {/* Content */}
-        <div className="mt-10 px-8 pb-8 flex-1 overflow-y-auto">
-            <div className="mb-6">
+        <div className="mt-10 px-8 pb-8 flex-1 overflow-y-auto pt-4">
+            <div className="mb-6 pr-8">
                 <h2 className="text-2xl font-bold text-white mb-1">{node.label}</h2>
                 <div className="flex items-center gap-2 text-slate-400 text-sm">
                     <span className="bg-white/5 border border-white/10 px-2 py-0.5 rounded text-xs uppercase tracking-wide">{node.type}</span>
