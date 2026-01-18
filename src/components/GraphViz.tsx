@@ -493,30 +493,7 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
       // Get cloud texture
       const cloudTexture = getCloudTexture();
       
-      // Calculate bounds of all nodes
-      let sumX = 0, sumY = 0, sumZ = 0;
-      let minX = Infinity, maxX = -Infinity;
-      let minY = Infinity, maxY = -Infinity;
-      let minZ = Infinity, maxZ = -Infinity;
-      
-      for (const node of validNodes) {
-        const x = node.x || 0;
-        const y = node.y || 0;
-        const z = node.z || 0;
-        sumX += x; sumY += y; sumZ += z;
-        minX = Math.min(minX, x); maxX = Math.max(maxX, x);
-        minY = Math.min(minY, y); maxY = Math.max(maxY, y);
-        minZ = Math.min(minZ, z); maxZ = Math.max(maxZ, z);
-      }
-      
-      const centerX = sumX / validNodes.length;
-      const centerY = sumY / validNodes.length;
-      const centerZ = sumZ / validNodes.length;
-      const spreadX = (maxX - minX) || 200;
-      const spreadY = (maxY - minY) || 200;
-      const spreadZ = (maxZ - minZ) || 200;
-      
-      // Gaussian random for natural distribution
+      // Gaussian random for natural distribution around each node
       const gaussianRandom = () => {
         let u = 0, v = 0;
         while (u === 0) u = Math.random();
@@ -524,54 +501,49 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
         return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
       };
 
-      // Create evenly distributed cloud throughout space
-      const createDistributedCloud = (
-        count: number,
+      // Create cloud particles ONLY around actual nodes
+      const createNodeCenteredCloud = (
+        particlesPerNode: number,
         particleSize: number,
         opacity: number,
-        spreadScale: number
+        radius: number // How far particles spread from each node
       ) => {
-        const positions = new Float32Array(count * 3);
-        const colors = new Float32Array(count * 3);
+        const totalParticles = validNodes.length * particlesPerNode;
+        const positions = new Float32Array(totalParticles * 3);
+        const colors = new Float32Array(totalParticles * 3);
         
-        for (let i = 0; i < count; i++) {
-          // Use gaussian distribution for natural spread from center
-          const gx = gaussianRandom() * 0.4; // Spread factor
-          const gy = gaussianRandom() * 0.4;
-          const gz = gaussianRandom() * 0.4;
+        let particleIndex = 0;
+        
+        for (const node of validNodes) {
+          const nodeX = node.x || 0;
+          const nodeY = node.y || 0;
+          const nodeZ = node.z || 0;
           
-          const px = centerX + gx * spreadX * spreadScale;
-          const py = centerY + gy * spreadY * spreadScale;
-          const pz = centerZ + gz * spreadZ * spreadScale;
+          // Get this node's color
+          const palette = getStarPalette(node.id);
+          const nodeColor = new THREE.Color(palette.glow);
           
-          positions[i * 3] = px;
-          positions[i * 3 + 1] = py;
-          positions[i * 3 + 2] = pz;
-          
-          // Blend colors from multiple nearby nodes for smoother transitions
-          let totalWeight = 0;
-          let r = 0, g = 0, b = 0;
-          
-          for (const node of validNodes) {
-            const dx = px - (node.x || 0);
-            const dy = py - (node.y || 0);
-            const dz = pz - (node.z || 0);
-            const distSq = dx * dx + dy * dy + dz * dz;
-            const weight = 1 / (1 + distSq * 0.0001); // Inverse distance weight
+          // Create particles around this node
+          for (let i = 0; i < particlesPerNode; i++) {
+            // Gaussian distribution around the node position
+            const offsetX = gaussianRandom() * radius;
+            const offsetY = gaussianRandom() * radius;
+            const offsetZ = gaussianRandom() * radius;
             
-            const palette = getStarPalette(node.id);
-            const nodeColor = new THREE.Color(palette.glow);
-            r += nodeColor.r * weight;
-            g += nodeColor.g * weight;
-            b += nodeColor.b * weight;
-            totalWeight += weight;
-          }
-          
-          // Normalize and mix with white for milky effect
-          if (totalWeight > 0) {
-            colors[i * 3] = Math.min(1, (r / totalWeight) * 0.7 + 0.3);
-            colors[i * 3 + 1] = Math.min(1, (g / totalWeight) * 0.7 + 0.3);
-            colors[i * 3 + 2] = Math.min(1, (b / totalWeight) * 0.7 + 0.3);
+            const px = nodeX + offsetX;
+            const py = nodeY + offsetY;
+            const pz = nodeZ + offsetZ;
+            
+            positions[particleIndex * 3] = px;
+            positions[particleIndex * 3 + 1] = py;
+            positions[particleIndex * 3 + 2] = pz;
+            
+            // Color based on the node, mixed with white for milky effect
+            colors[particleIndex * 3] = Math.min(1, nodeColor.r * 0.7 + 0.3);
+            colors[particleIndex * 3 + 1] = Math.min(1, nodeColor.g * 0.7 + 0.3);
+            colors[particleIndex * 3 + 2] = Math.min(1, nodeColor.b * 0.7 + 0.3);
+            
+            particleIndex++;
           }
         }
         
@@ -587,7 +559,7 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
           opacity: opacity,
           blending: THREE.AdditiveBlending,
           depthWrite: false,
-          sizeAttenuation: false,
+          sizeAttenuation: true,
         });
         
         const cloud = new THREE.Points(geometry, material);
@@ -596,25 +568,17 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
         milkyLayersRef.current.push(cloud);
       };
 
-      // === CREATE SMOOTH, DISTRIBUTED CLOUD LAYERS ===
-      // Multiple layers with gaussian distribution for natural look
+      // === CREATE CLOUDS ONLY AROUND NODES ===
+      // Each layer creates particles around every node
       
-      // Core dense layer (closer to center)
-      createDistributedCloud(5000, 10, 0.05, 0.7);
+      // Inner dense layer (close to nodes)
+      createNodeCenteredCloud(30, 8, 0.06, 15);
       
-      // Mid dense layer
-      createDistributedCloud(4000, 16, 0.045, 1.0);
+      // Mid layer
+      createNodeCenteredCloud(25, 12, 0.05, 25);
       
-      // Mid density layer
-      createDistributedCloud(3500, 22, 0.04, 1.3);
-      
-      // Outer diffuse layer
-      createDistributedCloud(3000, 30, 0.035, 1.7);
-      
-      // Very outer haze
-      createDistributedCloud(2500, 40, 0.025, 2.2);
-      
-      console.log('Natural clouds created:', milkyLayersRef.current.length, 'layers');
+      // Outer layer
+      createNodeCenteredCloud(20, 18, 0.04, 40);
       
       // Mark clouds as ready
       cloudsReadyRef.current = true;
