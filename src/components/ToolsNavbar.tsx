@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Filter, Route, Search, X, ArrowRight, CheckCircle2, Loader2, AlertCircle, CheckSquare, Square, Info } from 'lucide-react';
+import { Sliders, GitBranch, Search, X, ArrowRight, CheckCircle2, Loader2, AlertCircle, CheckSquare, Square, Info, Star, Sparkles, Route } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GraphNode, EdgeType, PathItem, PathsResponse } from '@/types';
 
@@ -11,6 +11,8 @@ interface ToolsNavbarProps {
   onToggle: (type: EdgeType) => void;
   onToggleAll: () => void;
   onPathFound: (path: { nodes: string[]; edges: string[] } | null) => void;
+  onWatchlistClick: () => void;
+  watchlistCount: number;
 }
 
 type ActiveTool = 'filter' | 'path' | null;
@@ -20,7 +22,9 @@ export default function ToolsNavbar({
   enabledTypes, 
   onToggle, 
   onToggleAll, 
-  onPathFound 
+  onPathFound,
+  onWatchlistClick,
+  watchlistCount
 }: ToolsNavbarProps) {
   const [activeTool, setActiveTool] = useState<ActiveTool>(null);
 
@@ -35,46 +39,196 @@ export default function ToolsNavbar({
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col gap-3"
       >
-        {/* Pill-style toolbar */}
-        <div className="flex gap-1.5 bg-black/30 backdrop-blur-2xl border border-white/[0.06] rounded-full p-1.5 shadow-[0_4px_24px_rgba(0,0,0,0.3)]">
-          <button
+        {/* Modern toolbar */}
+        <div 
+          style={{
+            display: 'flex',
+            gap: 8,
+            padding: 8,
+            backgroundColor: 'rgba(15, 23, 42, 0.8)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: 16,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05) inset'
+          }}
+        >
+          {/* Filter Button */}
+          <motion.button
             onClick={() => handleToolClick('filter')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 ${
-              activeTool === 'filter'
-                ? 'bg-white/10 text-white'
-                : 'text-white/50 hover:text-white/80'
-            }`}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '10px 16px',
+              backgroundColor: activeTool === 'filter' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(255,255,255,0.03)',
+              border: activeTool === 'filter' ? '1px solid rgba(139, 92, 246, 0.4)' : '1px solid rgba(255,255,255,0.06)',
+              borderRadius: 12,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
           >
-            <Filter size={16} />
-            <span className="text-[13px] font-medium">Filters</span>
-          </button>
-          <button
+            <div style={{
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              backgroundColor: activeTool === 'filter' ? 'rgba(139, 92, 246, 0.3)' : 'rgba(255,255,255,0.06)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <Sliders size={16} color={activeTool === 'filter' ? '#c4b5fd' : '#94a3b8'} />
+            </div>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ 
+                fontSize: 13, 
+                fontWeight: 600, 
+                color: activeTool === 'filter' ? 'white' : 'rgba(255,255,255,0.8)'
+              }}>
+                Filters
+              </div>
+              <div style={{ fontSize: 10, color: '#64748b' }}>
+                {enabledTypes.size} active
+              </div>
+            </div>
+          </motion.button>
+
+          {/* Path Button */}
+          <motion.button
             onClick={() => handleToolClick('path')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 ${
-              activeTool === 'path'
-                ? 'bg-white/10 text-white'
-                : 'text-white/50 hover:text-white/80'
-            }`}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '10px 16px',
+              backgroundColor: activeTool === 'path' ? 'rgba(6, 182, 212, 0.2)' : 'rgba(255,255,255,0.03)',
+              border: activeTool === 'path' ? '1px solid rgba(6, 182, 212, 0.4)' : '1px solid rgba(255,255,255,0.06)',
+              borderRadius: 12,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
           >
-            <Route size={16} />
-            <span className="text-[13px] font-medium">Path</span>
-          </button>
+            <div style={{
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              backgroundColor: activeTool === 'path' ? 'rgba(6, 182, 212, 0.3)' : 'rgba(255,255,255,0.06)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <GitBranch size={16} color={activeTool === 'path' ? '#67e8f9' : '#94a3b8'} />
+            </div>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ 
+                fontSize: 13, 
+                fontWeight: 600, 
+                color: activeTool === 'path' ? 'white' : 'rgba(255,255,255,0.8)'
+              }}>
+                Path Finder
+              </div>
+              <div style={{ fontSize: 10, color: '#64748b' }}>
+                Find connections
+              </div>
+            </div>
+          </motion.button>
+
+          {/* Watchlist Button */}
+          <motion.button
+            onClick={onWatchlistClick}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '10px 16px',
+              backgroundColor: watchlistCount > 0 ? 'rgba(251, 191, 36, 0.15)' : 'rgba(255,255,255,0.03)',
+              border: watchlistCount > 0 ? '1px solid rgba(251, 191, 36, 0.3)' : '1px solid rgba(255,255,255,0.06)',
+              borderRadius: 12,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <div style={{
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              backgroundColor: watchlistCount > 0 ? 'rgba(251, 191, 36, 0.25)' : 'rgba(255,255,255,0.06)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative'
+            }}>
+              <Star size={16} color={watchlistCount > 0 ? '#fbbf24' : '#94a3b8'} fill={watchlistCount > 0 ? '#fbbf24' : 'none'} />
+              {watchlistCount > 0 && (
+                <div style={{
+                  position: 'absolute',
+                  top: -4,
+                  right: -4,
+                  width: 16,
+                  height: 16,
+                  borderRadius: '50%',
+                  backgroundColor: '#fbbf24',
+                  color: '#000',
+                  fontSize: 9,
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  {watchlistCount > 9 ? '9+' : watchlistCount}
+                </div>
+              )}
+            </div>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ 
+                fontSize: 13, 
+                fontWeight: 600, 
+                color: watchlistCount > 0 ? '#fef08a' : 'rgba(255,255,255,0.8)'
+              }}>
+                Watchlist
+              </div>
+              <div style={{ fontSize: 10, color: '#64748b' }}>
+                {watchlistCount > 0 ? `${watchlistCount} stocks` : 'Track stocks'}
+              </div>
+            </div>
+          </motion.button>
         </div>
 
         {/* Active tool panel */}
-        {activeTool === 'filter' && (
-          <RelationshipFilterPanel
-            enabledTypes={enabledTypes}
-            onToggle={onToggle}
-            onToggleAll={onToggleAll}
-          />
-        )}
-        {activeTool === 'path' && (
-          <PathFinderPanel
-            nodes={nodes}
-            onPathFound={onPathFound}
-          />
-        )}
+        <AnimatePresence>
+          {activeTool === 'filter' && (
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+            >
+              <RelationshipFilterPanel
+                enabledTypes={enabledTypes}
+                onToggle={onToggle}
+                onToggleAll={onToggleAll}
+              />
+            </motion.div>
+          )}
+          {activeTool === 'path' && (
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+            >
+              <PathFinderPanel
+                nodes={nodes}
+                onPathFound={onPathFound}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </div>
   );
@@ -95,51 +249,125 @@ function RelationshipFilterPanel({
   const { EDGE_COLORS, EDGE_LABELS } = require('@/types');
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -10, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -10, scale: 0.98 }}
-      className="w-[300px] bg-black/40 backdrop-blur-2xl border border-white/[0.06] rounded-[1.5rem] shadow-[0_8px_32px_rgba(0,0,0,0.4)] overflow-hidden"
+    <div
+      style={{
+        width: 340,
+        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(139, 92, 246, 0.2)',
+        borderRadius: 20,
+        boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05) inset',
+        overflow: 'hidden'
+      }}
     >
-      <div className="px-5 py-4 flex items-center justify-between">
-        <div>
-          <h3 className="text-white font-medium text-[14px]">Relationships</h3>
-          <p className="text-[11px] text-white/40 mt-0.5">{enabledTypes.size} of {allTypes.length} active</p>
+      {/* Header */}
+      <div style={{
+        padding: '16px 20px',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        background: 'linear-gradient(to right, rgba(139, 92, 246, 0.15), transparent)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{
+            width: 36,
+            height: 36,
+            borderRadius: 10,
+            backgroundColor: 'rgba(139, 92, 246, 0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <Sliders size={18} color="#c4b5fd" />
+          </div>
+          <div>
+            <h3 style={{ color: 'white', fontSize: 15, fontWeight: 600, margin: 0 }}>
+              Relationship Filters
+            </h3>
+            <p style={{ color: '#94a3b8', fontSize: 11, margin: 0 }}>
+              {enabledTypes.size} of {allTypes.length} active
+            </p>
+          </div>
         </div>
-        <button
+        <motion.button
           onClick={onToggleAll}
-          className="text-[11px] text-white/50 hover:text-white/80 transition-colors px-2.5 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.08]"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          style={{
+            padding: '6px 14px',
+            backgroundColor: allEnabled ? 'rgba(239, 68, 68, 0.15)' : 'rgba(34, 197, 94, 0.15)',
+            border: allEnabled ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(34, 197, 94, 0.3)',
+            borderRadius: 8,
+            color: allEnabled ? '#fca5a5' : '#86efac',
+            fontSize: 11,
+            fontWeight: 600,
+            cursor: 'pointer'
+          }}
         >
-          {allEnabled ? 'None' : 'All'}
-        </button>
+          {allEnabled ? 'Disable All' : 'Enable All'}
+        </motion.button>
       </div>
-      <div className="max-h-64 overflow-y-auto px-3 pb-3">
-        <div className="grid grid-cols-2 gap-1.5">
+
+      {/* Filter Grid */}
+      <div style={{ padding: 12, maxHeight: 280, overflowY: 'auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
           {allTypes.map((type) => {
             const isEnabled = enabledTypes.has(type);
             const color = EDGE_COLORS[type];
             const label = EDGE_LABELS[type];
             return (
-              <button
+              <motion.button
                 key={type}
                 onClick={() => onToggle(type)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-150 ${
-                  isEnabled ? 'bg-white/[0.08]' : 'bg-transparent hover:bg-white/[0.04]'
-                }`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '10px 12px',
+                  backgroundColor: isEnabled ? `${color}20` : 'rgba(255,255,255,0.03)',
+                  border: isEnabled ? `1px solid ${color}50` : '1px solid rgba(255,255,255,0.06)',
+                  borderRadius: 10,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
               >
-                <div
-                  className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: isEnabled ? color : 'rgba(255,255,255,0.15)' }}
-                />
-                <span className={`text-[12px] truncate ${isEnabled ? 'text-white/90' : 'text-white/40'}`}>
+                <div style={{
+                  width: 24,
+                  height: 24,
+                  borderRadius: 6,
+                  backgroundColor: isEnabled ? `${color}30` : 'rgba(255,255,255,0.06)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <div style={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: '50%',
+                    backgroundColor: isEnabled ? color : 'rgba(255,255,255,0.2)'
+                  }} />
+                </div>
+                <span style={{
+                  fontSize: 12,
+                  fontWeight: 500,
+                  color: isEnabled ? 'white' : 'rgba(255,255,255,0.4)',
+                  textAlign: 'left',
+                  flex: 1
+                }}>
                   {label}
                 </span>
-              </button>
+                {isEnabled && (
+                  <CheckCircle2 size={14} color={color} />
+                )}
+              </motion.button>
             );
           })}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -318,197 +546,365 @@ function PathFinderPanel({
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -10, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      className="w-[340px] bg-white rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden"
+    <div
+      style={{
+        width: 360,
+        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(6, 182, 212, 0.2)',
+        borderRadius: 20,
+        boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05) inset',
+        overflow: 'hidden'
+      }}
     >
-      <div className="bg-gradient-to-r from-violet-500 via-purple-500 to-blue-500 px-5 py-3">
-        <h3 className="text-white font-semibold text-sm">Find Path</h3>
-        <p className="text-white/70 text-xs">Discover connections</p>
+      {/* Header */}
+      <div style={{
+        padding: '16px 20px',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        background: 'linear-gradient(to right, rgba(6, 182, 212, 0.15), transparent)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12
+      }}>
+        <div style={{
+          width: 36,
+          height: 36,
+          borderRadius: 10,
+          backgroundColor: 'rgba(6, 182, 212, 0.25)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <GitBranch size={18} color="#67e8f9" />
+        </div>
+        <div>
+          <h3 style={{ color: 'white', fontSize: 15, fontWeight: 600, margin: 0 }}>
+            Path Finder
+          </h3>
+          <p style={{ color: '#94a3b8', fontSize: 11, margin: 0 }}>
+            Discover connections between companies
+          </p>
+        </div>
       </div>
 
-      <div className="px-4 py-4 space-y-3 bg-gray-50">
+      <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
         {/* From Node */}
-        <div className="relative">
-          {fromSelected ? (
-            <div className="flex items-center justify-between bg-white rounded-xl px-4 py-3 shadow-sm">
-              <span className="text-gray-800 text-sm font-medium">{fromSelected.label}</span>
-              <button onClick={() => { setFromSelected(null); setFromQuery(''); }} className="text-gray-400 hover:text-gray-600">
-                <X size={16} />
-              </button>
-            </div>
-          ) : (
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-              <input
-                value={fromQuery}
-                onChange={(e) => handleFromSearch(e.target.value)}
-                onFocus={() => setIsFromFocused(true)}
-                onBlur={() => setTimeout(() => setIsFromFocused(false), 200)}
-                placeholder="From..."
-                className="w-full bg-white rounded-xl pl-10 pr-4 py-3 text-gray-800 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 shadow-sm"
-              />
-              {isFromFocused && fromResults.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-lg overflow-hidden z-50 border border-gray-100">
-                  {fromResults.map(node => (
-                    <button
-                      key={node.id}
-                      onClick={() => { setFromSelected(node); setFromQuery(node.label); setFromResults([]); }}
-                      className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors"
-                    >
-                      {node.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+        <div>
+          <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#67e8f9', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            Start Company
+          </label>
+          <div style={{ position: 'relative' }}>
+            {fromSelected ? (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '10px 14px',
+                backgroundColor: 'rgba(6, 182, 212, 0.15)',
+                border: '1px solid rgba(6, 182, 212, 0.3)',
+                borderRadius: 10
+              }}>
+                <span style={{ color: 'white', fontSize: 13, fontWeight: 500 }}>{fromSelected.label}</span>
+                <motion.button 
+                  onClick={() => { setFromSelected(null); setFromQuery(''); }} 
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+                >
+                  <X size={14} color="#67e8f9" />
+                </motion.button>
+              </div>
+            ) : (
+              <div style={{ position: 'relative' }}>
+                <Search style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} size={15} color="#64748b" />
+                <input
+                  value={fromQuery}
+                  onChange={(e) => handleFromSearch(e.target.value)}
+                  onFocus={() => setIsFromFocused(true)}
+                  onBlur={() => setTimeout(() => setIsFromFocused(false), 200)}
+                  placeholder="Search company..."
+                  style={{
+                    width: '100%',
+                    backgroundColor: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: 10,
+                    padding: '10px 14px 10px 38px',
+                    color: 'white',
+                    fontSize: 13,
+                    outline: 'none'
+                  }}
+                />
+                {isFromFocused && fromResults.length > 0 && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    marginTop: 6,
+                    backgroundColor: 'rgba(15, 23, 42, 0.98)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: 10,
+                    overflow: 'hidden',
+                    zIndex: 50
+                  }}>
+                    {fromResults.map(node => (
+                      <button
+                        key={node.id}
+                        onClick={() => { setFromSelected(node); setFromQuery(node.label); setFromResults([]); }}
+                        style={{
+                          width: '100%',
+                          padding: '10px 14px',
+                          textAlign: 'left',
+                          fontSize: 13,
+                          color: 'rgba(255,255,255,0.8)',
+                          background: 'none',
+                          border: 'none',
+                          borderBottom: '1px solid rgba(255,255,255,0.05)',
+                          cursor: 'pointer'
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(6, 182, 212, 0.1)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                      >
+                        {node.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="flex justify-center">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-violet-500 to-purple-500 flex items-center justify-center shadow-md">
-            <ArrowRight size={14} className="text-white" />
+        {/* Arrow */}
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <div style={{
+            width: 32,
+            height: 32,
+            borderRadius: 8,
+            backgroundColor: 'rgba(6, 182, 212, 0.15)',
+            border: '1px solid rgba(6, 182, 212, 0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <ArrowRight size={14} color="#67e8f9" style={{ transform: 'rotate(90deg)' }} />
           </div>
         </div>
 
         {/* To Node */}
-        <div className="relative">
-          {toSelected ? (
-            <div className="flex items-center justify-between bg-white rounded-xl px-4 py-3 shadow-sm">
-              <span className="text-gray-800 text-sm font-medium">{toSelected.label}</span>
-              <button onClick={() => { setToSelected(null); setToQuery(''); }} className="text-gray-400 hover:text-gray-600">
-                <X size={16} />
-              </button>
-            </div>
-          ) : (
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-              <input
-                value={toQuery}
-                onChange={(e) => handleToSearch(e.target.value)}
-                onFocus={() => setIsToFocused(true)}
-                onBlur={() => setTimeout(() => setIsToFocused(false), 200)}
-                placeholder="To..."
-                className="w-full bg-white rounded-xl pl-10 pr-4 py-3 text-gray-800 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 shadow-sm"
-              />
-              {isToFocused && toResults.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-lg overflow-hidden z-50 border border-gray-100">
-                  {toResults.map(node => (
-                    <button
-                      key={node.id}
-                      onClick={() => { setToSelected(node); setToQuery(node.label); setToResults([]); }}
-                      className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors"
-                    >
-                      {node.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+        <div>
+          <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#67e8f9', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            End Company
+          </label>
+          <div style={{ position: 'relative' }}>
+            {toSelected ? (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '10px 14px',
+                backgroundColor: 'rgba(6, 182, 212, 0.15)',
+                border: '1px solid rgba(6, 182, 212, 0.3)',
+                borderRadius: 10
+              }}>
+                <span style={{ color: 'white', fontSize: 13, fontWeight: 500 }}>{toSelected.label}</span>
+                <motion.button 
+                  onClick={() => { setToSelected(null); setToQuery(''); }}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+                >
+                  <X size={14} color="#67e8f9" />
+                </motion.button>
+              </div>
+            ) : (
+              <div style={{ position: 'relative' }}>
+                <Search style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} size={15} color="#64748b" />
+                <input
+                  value={toQuery}
+                  onChange={(e) => handleToSearch(e.target.value)}
+                  onFocus={() => setIsToFocused(true)}
+                  onBlur={() => setTimeout(() => setIsToFocused(false), 200)}
+                  placeholder="Search company..."
+                  style={{
+                    width: '100%',
+                    backgroundColor: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: 10,
+                    padding: '10px 14px 10px 38px',
+                    color: 'white',
+                    fontSize: 13,
+                    outline: 'none'
+                  }}
+                />
+                {isToFocused && toResults.length > 0 && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    marginTop: 6,
+                    backgroundColor: 'rgba(15, 23, 42, 0.98)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: 10,
+                    overflow: 'hidden',
+                    zIndex: 50
+                  }}>
+                    {toResults.map(node => (
+                      <button
+                        key={node.id}
+                        onClick={() => { setToSelected(node); setToQuery(node.label); setToResults([]); }}
+                        style={{
+                          width: '100%',
+                          padding: '10px 14px',
+                          textAlign: 'left',
+                          fontSize: 13,
+                          color: 'rgba(255,255,255,0.8)',
+                          background: 'none',
+                          border: 'none',
+                          borderBottom: '1px solid rgba(255,255,255,0.05)',
+                          cursor: 'pointer'
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(6, 182, 212, 0.1)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                      >
+                        {node.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Depth Selector */}
-        <div className="relative">
-          <label className="block text-xs font-medium text-gray-500 mb-2 uppercase tracking-wider">
+        <div>
+          <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#94a3b8', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             Max Depth (Hops)
           </label>
-          <select
-            value={maxDepth}
-            onChange={(e) => setMaxDepth(parseInt(e.target.value))}
-            className="w-full bg-white rounded-xl px-4 py-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/30 shadow-sm"
-          >
-            <option value={2}>2 hops</option>
-            <option value={3}>3 hops</option>
-            <option value={4}>4 hops</option>
-            <option value={5}>5 hops</option>
-            <option value={6}>6 hops</option>
-            <option value={7}>7 hops</option>
-          </select>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {[2, 3, 4, 5, 6, 7].map(depth => (
+              <motion.button
+                key={depth}
+                onClick={() => setMaxDepth(depth)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                style={{
+                  flex: 1,
+                  padding: '8px 0',
+                  backgroundColor: maxDepth === depth ? 'rgba(6, 182, 212, 0.25)' : 'rgba(255,255,255,0.04)',
+                  border: maxDepth === depth ? '1px solid rgba(6, 182, 212, 0.4)' : '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 8,
+                  color: maxDepth === depth ? '#67e8f9' : 'rgba(255,255,255,0.5)',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                {depth}
+              </motion.button>
+            ))}
+          </div>
         </div>
 
         {/* Path Results */}
         <AnimatePresence>
           {paths.length > 0 && (
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="space-y-2 max-h-[400px] overflow-y-auto"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
             >
-              <div className="flex items-center justify-between">
-                <div className="text-[11px] font-medium text-white/40 uppercase tracking-wider">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: '#67e8f9', textTransform: 'uppercase' }}>
                   Found {paths.length} path{paths.length !== 1 ? 's' : ''}
-                </div>
-                <div className="flex gap-1.5">
-                  <button
+                </span>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <motion.button
                     onClick={handleSelectAll}
-                    className="text-[10px] text-violet-400 hover:text-violet-300 px-2 py-1 rounded border border-violet-500/30 hover:border-violet-400/50 transition-colors"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    style={{
+                      padding: '4px 10px',
+                      backgroundColor: 'rgba(6, 182, 212, 0.15)',
+                      border: '1px solid rgba(6, 182, 212, 0.3)',
+                      borderRadius: 6,
+                      color: '#67e8f9',
+                      fontSize: 10,
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
                   >
                     All
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
                     onClick={handleClearSelection}
-                    className="text-[10px] text-white/40 hover:text-white/60 px-2 py-1 rounded border border-white/10 hover:border-white/20 transition-colors"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    style={{
+                      padding: '4px 10px',
+                      backgroundColor: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: 6,
+                      color: 'rgba(255,255,255,0.6)',
+                      fontSize: 10,
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
                   >
                     Clear
-                  </button>
+                  </motion.button>
                 </div>
               </div>
-              {selectedPathIds.size > 0 && (
-                <div className="text-[10px] text-violet-400 bg-violet-500/10 border border-violet-500/30 rounded-lg px-2 py-1.5">
-                  Selected: {selectedPathIds.size} path{selectedPathIds.size !== 1 ? 's' : ''}
-                </div>
-              )}
-              <div className="space-y-1.5">
+              
+              <div style={{ maxHeight: 300, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {paths.map((path, idx) => {
                   const isSelected = selectedPathIds.has(path.pathId);
                   return (
                     <motion.button
                       key={path.pathId}
                       onClick={() => handleTogglePath(path.pathId)}
-                      className={`w-full text-left p-2.5 rounded-xl border transition-all text-[11px] ${
-                        isSelected
-                          ? 'bg-violet-600/20 border-violet-500/50'
-                          : 'bg-white/[0.04] border-white/[0.06] hover:border-white/[0.12]'
-                      }`}
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
+                      style={{
+                        width: '100%',
+                        textAlign: 'left',
+                        padding: 12,
+                        backgroundColor: isSelected ? 'rgba(6, 182, 212, 0.15)' : 'rgba(255,255,255,0.03)',
+                        border: isSelected ? '1px solid rgba(6, 182, 212, 0.4)' : '1px solid rgba(255,255,255,0.06)',
+                        borderRadius: 10,
+                        cursor: 'pointer'
+                      }}
                     >
-                      <div className="flex items-start gap-2">
-                        <div className="mt-0.5">
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                        <div style={{ marginTop: 2 }}>
                           {isSelected ? (
-                            <CheckSquare className="text-violet-400" size={14} />
+                            <CheckSquare size={16} color="#67e8f9" />
                           ) : (
-                            <Square className="text-white/30" size={14} />
+                            <Square size={16} color="rgba(255,255,255,0.3)" />
                           )}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-                            <span className="text-white/90 font-medium text-[11px]">
-                              #{idx + 1} ({path.length} {path.length === 1 ? 'hop' : 'hops'})
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: isSelected ? '#67e8f9' : 'white' }}>
+                              Path #{idx + 1}
                             </span>
-                            <div className="flex items-center gap-1 group relative">
-                              <span className="text-white/40 text-[10px]">
-                                Exposure Index:
-                              </span>
-                              <span className="text-white/70 text-[10px]">
-                                {path.exposureIndex.toFixed(1)}
-                              </span>
-                              <div className="relative">
-                                <Info 
-                                  size={11} 
-                                  className="text-white/30 hover:text-white/50 cursor-help transition-colors" 
-                                />
-                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1.5 w-56 p-2 bg-black/95 border border-white/20 rounded-lg text-[10px] text-white/80 shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
-                                  Relative measure of financial or structural exposure along this path. Not a percentage or probability.
-                                </div>
-                              </div>
-                            </div>
+                            <span style={{
+                              padding: '2px 8px',
+                              backgroundColor: 'rgba(6, 182, 212, 0.2)',
+                              borderRadius: 4,
+                              fontSize: 10,
+                              color: '#67e8f9'
+                            }}>
+                              {path.length} {path.length === 1 ? 'hop' : 'hops'}
+                            </span>
                           </div>
-                          <div className="text-white/60 text-[10px] mb-1 truncate">
+                          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {formatPathSequence(path)}
                           </div>
-                          <div className="text-white/40 text-[10px] italic">
+                          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' }}>
                             {path.summary}
                           </div>
                         </div>
@@ -528,32 +924,72 @@ function PathFinderPanel({
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="flex items-center gap-2 text-red-400/90 text-[11px] bg-red-500/10 rounded-lg px-3 py-2"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 14px',
+                backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                borderRadius: 10,
+                color: '#fca5a5',
+                fontSize: 12
+              }}
             >
-              <AlertCircle size={12} />
+              <AlertCircle size={14} />
               <span>{pathError}</span>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Actions */}
-        <div className="flex gap-2 pt-1">
-          <button
+        <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+          <motion.button
             onClick={handleFindPaths}
             disabled={!fromSelected || !toSelected || isLoading}
-            className="flex-1 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-400 hover:to-purple-400 disabled:opacity-30 disabled:cursor-not-allowed text-white py-2.5 rounded-xl text-[13px] font-medium flex items-center justify-center gap-2 transition-all"
+            whileHover={{ scale: fromSelected && toSelected && !isLoading ? 1.02 : 1 }}
+            whileTap={{ scale: fromSelected && toSelected && !isLoading ? 0.98 : 1 }}
+            style={{
+              flex: 1,
+              padding: '12px 20px',
+              background: fromSelected && toSelected && !isLoading 
+                ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' 
+                : 'rgba(255,255,255,0.1)',
+              border: 'none',
+              borderRadius: 10,
+              color: 'white',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: fromSelected && toSelected && !isLoading ? 'pointer' : 'not-allowed',
+              opacity: fromSelected && toSelected && !isLoading ? 1 : 0.5,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8
+            }}
           >
-            {isLoading ? <Loader2 className="animate-spin" size={14} /> : <Route size={14} />}
+            {isLoading ? <Loader2 size={16} className="animate-spin" /> : <GitBranch size={16} />}
             {isLoading ? 'Finding...' : 'Find Paths'}
-          </button>
-          <button
+          </motion.button>
+          <motion.button
             onClick={handleClear}
-            className="px-4 py-2.5 bg-white/[0.04] hover:bg-white/[0.08] text-white/60 hover:text-white/80 rounded-xl text-[13px] transition-colors"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            style={{
+              padding: '12px 20px',
+              backgroundColor: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 10,
+              color: 'rgba(255,255,255,0.7)',
+              fontSize: 13,
+              fontWeight: 500,
+              cursor: 'pointer'
+            }}
           >
             Clear
-          </button>
+          </motion.button>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

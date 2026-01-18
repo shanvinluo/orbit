@@ -56,6 +56,13 @@ export interface GraphNode {
   x?: number;
   y?: number;
   z?: number;
+  data?: {
+    price?: number;
+    change?: number;
+    volume?: number;
+    tvl?: number;
+    [key: string]: any;
+  };
 }
 
 export interface GraphEdge {
