@@ -127,10 +127,9 @@ export default function Home() {
   }, [graphData.links]);
 
   const handleCloseNewsPopup = useCallback(() => {
-    setNewsAnalysis(null);
+    // Keep the bottom sheet persistent - don't clear newsAnalysis
+    // Only exit news mode to allow other interactions
     setNewsMode(false);
-    setHighlightNodes(new Set());
-    setHighlightEdges(new Set());
   }, []);
   
   // Create map of affected companies for GraphViz

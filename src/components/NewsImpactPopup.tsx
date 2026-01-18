@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { 
-  X, 
   TrendingUp, 
   TrendingDown, 
   Minus, 
@@ -44,19 +43,7 @@ export default function NewsImpactPopup({ analysis, onClose }: NewsImpactPopupPr
 
   return (
     <>
-      {/* Backdrop */}
-      <div 
-        onClick={onClose}
-        style={{
-          position: 'fixed',
-          inset: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.6)',
-          backdropFilter: 'blur(4px)',
-          zIndex: 9998
-        }}
-      />
-
-      {/* Bottom Sheet */}
+      {/* Bottom Sheet - Persistent, no backdrop */}
       <div 
         style={{
           position: 'fixed',
@@ -118,38 +105,21 @@ export default function NewsImpactPopup({ analysis, onClose }: NewsImpactPopupPr
                 </div>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button 
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                style={{ 
-                  padding: 8, 
-                  backgroundColor: 'rgba(0,0,0,0.3)', 
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                {isCollapsed ? <ChevronUp color="#94a3b8" size={18} /> : <ChevronDown color="#94a3b8" size={18} />}
-              </button>
-              <button 
-                onClick={onClose}
-                style={{ 
-                  padding: 8, 
-                  backgroundColor: 'rgba(0,0,0,0.3)', 
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                <X color="#94a3b8" size={18} />
-              </button>
-            </div>
+            <button 
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              style={{ 
+                padding: 8, 
+                backgroundColor: 'rgba(0,0,0,0.3)', 
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 8,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              {isCollapsed ? <ChevronUp color="#94a3b8" size={18} /> : <ChevronDown color="#94a3b8" size={18} />}
+            </button>
           </div>
         </div>
 
@@ -266,32 +236,6 @@ export default function NewsImpactPopup({ analysis, onClose }: NewsImpactPopupPr
           </div>
         )}
 
-        {/* Footer */}
-        {!isCollapsed && (
-          <div style={{ 
-            padding: '16px 24px', 
-            borderTop: '1px solid rgba(255,255,255,0.1)',
-            background: 'linear-gradient(to right, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.3))'
-          }}>
-            <button 
-              onClick={onClose}
-              style={{ 
-                width: '100%',
-                padding: '12px 24px',
-                background: 'linear-gradient(to right, #7c3aed, #9333ea, #7c3aed)',
-                border: 'none',
-                borderRadius: 12,
-                color: 'white',
-                fontSize: 14,
-                fontWeight: 600,
-                cursor: 'pointer',
-                boxShadow: '0 4px 20px rgba(139, 92, 246, 0.4)'
-              }}
-            >
-              Close Analysis
-            </button>
-          </div>
-        )}
       </div>
     </>
   );
