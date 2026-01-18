@@ -832,20 +832,34 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
 
   return (
     <div className="w-full h-full relative">
-      {/* Loading overlay */}
+      {/* Loading overlay - fully opaque, centered */}
       {isLoading && (
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#000008]">
-          <div className="text-white/80 text-lg mb-4 font-light tracking-wider">
-            Loading Galaxy...
-          </div>
-          <div className="w-64 h-1 bg-white/10 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-amber-500 rounded-full transition-all duration-500 ease-out"
-              style={{ width: `${loadingProgress}%` }}
-            />
-          </div>
-          <div className="text-white/40 text-sm mt-2">
-            {loadingProgress < 50 ? 'Positioning stars...' : 'Creating nebula...'}
+        <div 
+          className="fixed top-0 left-0 w-screen h-screen z-[9999]" 
+          style={{ backgroundColor: '#000008' }}
+        >
+          {/* Centered content container */}
+          <div 
+            className="absolute top-1/2 left-1/2 flex flex-col items-center"
+            style={{ transform: 'translate(-50%, -50%)' }}
+          >
+            {/* Title */}
+            <div className="text-white text-2xl mb-6 font-light tracking-[0.3em] uppercase">
+              ORBIT
+            </div>
+            
+            {/* Progress bar */}
+            <div className="w-72 h-1.5 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
+              <div 
+                className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-amber-500 rounded-full transition-all duration-700 ease-out shadow-[0_0_10px_rgba(139,92,246,0.5)]"
+                style={{ width: `${loadingProgress}%` }}
+              />
+            </div>
+            
+            {/* Status text */}
+            <div className="text-white/50 text-sm mt-4 font-light tracking-wide">
+              {loadingProgress < 50 ? 'Positioning stars...' : 'Creating nebula...'}
+            </div>
           </div>
         </div>
       )}
