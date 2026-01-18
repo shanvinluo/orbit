@@ -9,10 +9,13 @@ import RelationshipCard from '@/components/RelationshipCard';
 import PathFinder from '@/components/PathFinder';
 import RelationshipFilter from '@/components/RelationshipFilter';
 import ToolsNavbar from '@/components/ToolsNavbar';
+import WatchlistPopup from '@/components/WatchlistPopup';
 
 import NewsImpactPopup from '@/components/NewsImpactPopup';
 import { GraphData, GraphNode, GraphEdge, EdgeType } from '@/types';
 import { NewsAnalysis } from '@/services/aiService';
+
+const WATCHLIST_STORAGE_KEY = 'orbit-watchlist';
 
 export default function Home() {
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
@@ -27,6 +30,31 @@ export default function Home() {
   const [enabledEdgeTypes, setEnabledEdgeTypes] = useState<Set<EdgeType>>(
     new Set(Object.values(EdgeType)) // All types enabled by default
   );
+  const [watchlist, setWatchlist] = useState<Set<string>>(new Set());
+  const [showWatchlist, setShowWatchlist] = useState(false);
+  const [isWatchlistActive, setIsWatchlistActive] = useState(false);
+
+  // Load watchlist from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem(WATCHLIST_STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setWatchlist(new Set(parsed));
+      } catch (e) {
+        console.error('Failed to load watchlist:', e);
+      }
+    }
+  }, []);
+
+  // Save watchlist to localStorage
+  useEffect(() => {
+    if (watchlist.size > 0) {
+      localStorage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify([...watchlist]));
+    } else {
+      localStorage.removeItem(WATCHLIST_STORAGE_KEY);
+    }
+  }, [watchlist]);
 
   // Load data
   useEffect(() => {
@@ -163,6 +191,31 @@ export default function Home() {
     // Only exit news mode to allow other interactions
     setNewsMode(false);
   }, []);
+
+  const handleAddToWatchlist = useCallback((nodeId: string) => {
+    setWatchlist(prev => new Set([...prev, nodeId]));
+  }, []);
+
+  const handleRemoveFromWatchlist = useCallback((nodeId: string) => {
+    setWatchlist(prev => {
+      const next = new Set(prev);
+      next.delete(nodeId);
+      return next;
+    });
+  }, []);
+
+  const handleClearWatchlist = useCallback(() => {
+    setWatchlist(new Set());
+    setIsWatchlistActive(false);
+  }, []);
+
+  const handleToggleWatchlistActive = useCallback(() => {
+    setIsWatchlistActive(prev => !prev);
+  }, []);
+
+  const handleWatchlistClick = useCallback(() => {
+    setShowWatchlist(prev => !prev);
+  }, []);
   
   // Create map of affected companies for GraphViz
   const affectedCompaniesMap = newsAnalysis 
@@ -206,6 +259,7 @@ export default function Home() {
           enabledEdgeTypes={enabledEdgeTypes}
           pathMode={pathMode}
           affectedCompanies={affectedCompaniesMap}
+          watchlist={isWatchlistActive && watchlist.size > 0 ? watchlist : undefined}
         />
       </div>
 
@@ -218,12 +272,27 @@ export default function Home() {
         onToggle={handleToggleEdgeType}
         onToggleAll={handleToggleAllEdgeTypes}
         onPathFound={handlePathFound}
+        onWatchlistClick={handleWatchlistClick}
+        watchlistCount={watchlist.size}
       />
       
       <Chatbot onNewsAnalysis={handleNewsAnalysis} />
 
       {newsAnalysis && (
         <NewsImpactPopup analysis={newsAnalysis} onClose={handleCloseNewsPopup} />
+      )}
+
+      {showWatchlist && (
+        <WatchlistPopup
+          nodes={graphData.nodes}
+          watchlist={watchlist}
+          onAddToWatchlist={handleAddToWatchlist}
+          onRemoveFromWatchlist={handleRemoveFromWatchlist}
+          onClearWatchlist={handleClearWatchlist}
+          isWatchlistActive={isWatchlistActive}
+          onToggleWatchlistActive={handleToggleWatchlistActive}
+          onClose={() => setShowWatchlist(false)}
+        />
       )}
 
       {selectedNode && (

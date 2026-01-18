@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Filter, Route, Search, X, ArrowRight, CheckCircle2, Loader2, AlertCircle, CheckSquare, Square, Info } from 'lucide-react';
+import { Filter, Route, Search, X, ArrowRight, CheckCircle2, Loader2, AlertCircle, CheckSquare, Square, Info, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GraphNode, EdgeType, PathItem, PathsResponse } from '@/types';
 
@@ -11,6 +11,8 @@ interface ToolsNavbarProps {
   onToggle: (type: EdgeType) => void;
   onToggleAll: () => void;
   onPathFound: (path: { nodes: string[]; edges: string[] } | null) => void;
+  onWatchlistClick: () => void;
+  watchlistCount: number;
 }
 
 type ActiveTool = 'filter' | 'path' | null;
@@ -20,7 +22,9 @@ export default function ToolsNavbar({
   enabledTypes, 
   onToggle, 
   onToggleAll, 
-  onPathFound 
+  onPathFound,
+  onWatchlistClick,
+  watchlistCount
 }: ToolsNavbarProps) {
   const [activeTool, setActiveTool] = useState<ActiveTool>(null);
 
@@ -58,6 +62,18 @@ export default function ToolsNavbar({
           >
             <Route size={16} />
             <span className="text-[13px] font-medium">Path</span>
+          </button>
+          <button
+            onClick={onWatchlistClick}
+            className="flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 text-amber-400/80 hover:text-amber-400 hover:bg-amber-400/10"
+          >
+            <Star size={16} fill={watchlistCount > 0 ? 'currentColor' : 'none'} />
+            <span className="text-[13px] font-medium">Watchlist</span>
+            {watchlistCount > 0 && (
+              <span className="text-[11px] bg-amber-400/20 text-amber-300 px-1.5 py-0.5 rounded-full">
+                {watchlistCount}
+              </span>
+            )}
           </button>
         </div>
 
