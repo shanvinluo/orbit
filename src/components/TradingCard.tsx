@@ -25,10 +25,11 @@ export default function TradingCard({ node, onClose, connectedNodes = [], onNode
         transition={{ type: "spring", damping: 30, stiffness: 300 }}
         className="fixed right-6 top-6 bottom-6 w-[360px] bg-black/40 backdrop-blur-3xl border border-white/[0.06] rounded-[2rem] shadow-[0_8px_40px_rgba(0,0,0,0.5)] z-40 overflow-hidden flex flex-col"
       >
-        {/* Close button */}
+        {/* Close button - positioned relative to this fixed container */}
         <button 
           onClick={onClose}
-          className="absolute top-5 right-5 z-50 w-8 h-8 flex items-center justify-center bg-white/[0.06] hover:bg-white/[0.12] rounded-full text-white/50 hover:text-white transition-all"
+          style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 100 }}
+          className="w-8 h-8 flex items-center justify-center bg-white/[0.06] hover:bg-white/[0.12] rounded-full text-white/50 hover:text-white transition-all"
         >
           <X size={16} />
         </button>

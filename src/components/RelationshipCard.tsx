@@ -345,71 +345,83 @@ export default function RelationshipCard({ edge, sourceNode, targetNode, allRela
         animate={{ x: 0, opacity: 1 }}
         exit={{ x: 400, opacity: 0 }}
         transition={{ type: "spring", damping: 30, stiffness: 300 }}
-        className="fixed right-6 top-6 bottom-6 w-[450px] bg-slate-900/90 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl z-40 overflow-hidden flex flex-col relative"
+        className="fixed right-6 top-6 bottom-6 w-[400px] bg-black/40 backdrop-blur-3xl border border-white/[0.06] rounded-[2rem] shadow-[0_8px_40px_rgba(0,0,0,0.5)] z-40 flex flex-col overflow-hidden"
       >
+        {/* Close button - positioned relative to this fixed container */}
         <button 
           onClick={onClose}
-          style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 50 }}
-          className="p-2 bg-black/20 hover:bg-black/40 rounded-full text-white/70 hover:text-white transition-colors backdrop-blur-md"
+          style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 100 }}
+          className="w-8 h-8 flex items-center justify-center bg-white/[0.06] hover:bg-white/[0.12] rounded-full text-white/50 hover:text-white transition-all"
         >
-          <X size={18} />
+          <X size={16} />
         </button>
 
+        {/* Subtle top accent */}
+        <div className="h-1 bg-gradient-to-r from-violet-500 via-purple-500 to-violet-500 opacity-60 shrink-0" />
+
         {/* Header */}
-        <div className="h-32 bg-gradient-to-br from-violet-900/50 to-indigo-900/50 relative">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(139,92,246,0.2),transparent_70%)]" />
-          <div className="absolute bottom-4 left-8 right-8">
-            {/* Relationship Type Selector - show if multiple relationships exist */}
-            {allRelationships && allRelationships.length > 1 && (
-              <div className="mb-3 flex flex-wrap gap-2">
-                {allRelationships.map((rel, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => onRelationshipChange && onRelationshipChange(rel.edge, rel.source, rel.target)}
-                    className={`px-3 py-1 rounded-lg text-xs uppercase tracking-wide transition-colors ${
-                      rel.edge.type === edge.type
-                        ? 'bg-violet-600 text-white border border-violet-400'
-                        : 'bg-white/10 text-violet-300 border border-white/20 hover:bg-white/20'
-                    }`}
-                  >
-                    {EDGE_LABELS[rel.edge.type]}
-                  </button>
-                ))}
-              </div>
-            )}
-            <div className="bg-white/5 border border-white/10 px-3 py-1 rounded-lg text-xs uppercase tracking-wide text-violet-300 inline-block mb-2">
-              {EDGE_LABELS[edge.type]}
+        <div className="px-6 pt-5 pb-4 shrink-0 pr-14">
+          {/* Relationship Type Selector */}
+          {allRelationships && allRelationships.length > 1 && (
+            <div className="mb-4 flex flex-wrap gap-1.5">
+              {allRelationships.map((rel, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => onRelationshipChange && onRelationshipChange(rel.edge, rel.source, rel.target)}
+                  className={`px-3 py-1.5 rounded-full text-[11px] uppercase tracking-wider transition-all ${
+                    rel.edge.type === edge.type
+                      ? 'bg-violet-500 text-white'
+                      : 'bg-white/[0.04] text-white/40 hover:bg-white/[0.08] hover:text-white/60'
+                  }`}
+                >
+                  {EDGE_LABELS[rel.edge.type]}
+                </button>
+              ))}
             </div>
-            <h2 className="text-xl font-bold text-white">
-              {/* Show directional arrow for ownership, bidirectional arrow for others */}
-              {edge.type === EdgeType.Ownership ? (
-                <>{sourceNode.label} → {targetNode.label}</>
-              ) : (
-                <>{sourceNode.label} ↔ {targetNode.label}</>
-              )}
-            </h2>
+          )}
+          
+          <div className="flex items-center gap-2 mb-3">
+            <ArrowRight size={14} className="text-violet-400" />
+            <span className="text-[11px] text-white/40 uppercase tracking-wider">{EDGE_LABELS[edge.type]}</span>
           </div>
+          
+          <h2 className="text-lg font-medium text-white">
+            {edge.type === EdgeType.Ownership ? (
+              <span>{sourceNode.label} <span className="text-violet-400">→</span> {targetNode.label}</span>
+            ) : (
+              <span>{sourceNode.label} <span className="text-white/30">↔</span> {targetNode.label}</span>
+            )}
+          </h2>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 px-8 pb-8 pt-6 overflow-y-auto space-y-6 min-h-0" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(139, 92, 246, 0.5) transparent' }}>
+        {/* Content - Scrollable */}
+        <div 
+          className="px-6 pb-6 space-y-4"
+          style={{ 
+            flex: 1, 
+            overflowY: 'auto', 
+            minHeight: 0,
+            scrollbarWidth: 'thin', 
+            scrollbarColor: 'rgba(139, 92, 246, 0.5) rgba(255,255,255,0.1)' 
+          }}
+        >
           {/* Description */}
-          <p className="text-slate-300 text-sm leading-relaxed">
+          <p className="text-white/50 text-[13px] leading-relaxed">
             {relationshipData.description}
           </p>
 
           {/* Financial Data */}
           {relationshipData.financialData && (
-            <div className="grid grid-cols-1 gap-3">
+            <div className="space-y-2">
               {relationshipData.financialData.map((item, idx) => (
-                <div key={idx} className="bg-white/5 p-4 rounded-xl border border-white/5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-slate-400 text-xs">
+                <div key={idx} className="flex items-center justify-between bg-white/[0.03] rounded-2xl p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-white/[0.04] flex items-center justify-center text-white/40">
                       {item.icon}
-                      {item.label}
                     </div>
-                    <div className="text-lg font-semibold text-white">{item.value}</div>
+                    <span className="text-[13px] text-white/50">{item.label}</span>
                   </div>
+                  <span className="text-[15px] font-medium text-white">{item.value}</span>
                 </div>
               ))}
             </div>
@@ -417,20 +429,20 @@ export default function RelationshipCard({ edge, sourceNode, targetNode, allRela
 
           {/* Pie Chart */}
           {relationshipData.pieChartData && (
-            <div className="bg-white/5 p-6 rounded-xl border border-white/5">
-              <div className="flex items-center gap-2 mb-4">
-                <PieChartIcon size={18} className="text-violet-400" />
-                <h3 className="text-white font-semibold">Distribution Breakdown</h3>
+            <div className="bg-white/[0.02] rounded-2xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <PieChartIcon size={14} className="text-white/30" />
+                <h3 className="text-[12px] text-white/40 uppercase tracking-wider">Distribution</h3>
               </div>
-              <ResponsiveContainer width="100%" height={250}>
+              <ResponsiveContainer width="100%" height={180}>
                 <PieChart>
                   <Pie
                     data={relationshipData.pieChartData}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
-                    outerRadius={80}
+                    outerRadius={60}
+                    innerRadius={35}
                     fill="#8884d8"
                     dataKey="value"
                   >
@@ -440,50 +452,41 @@ export default function RelationshipCard({ edge, sourceNode, targetNode, allRela
                   </Pie>
                   <Tooltip 
                     formatter={(value: number) => `${value}%`}
-                    contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255, 255, 255, 0.1)' }}
-                  />
-                  <Legend 
-                    wrapperStyle={{ fontSize: '12px', color: '#cbd5e1' }}
-                    iconType="circle"
+                    contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.8)', border: 'none', borderRadius: '8px', fontSize: '12px' }}
                   />
                 </PieChart>
               </ResponsiveContainer>
+              <div className="flex flex-wrap gap-2 justify-center mt-2">
+                {relationshipData.pieChartData.map((entry, idx) => (
+                  <div key={idx} className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                    <span className="text-[11px] text-white/40">{entry.name}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
           {/* SEC Filings */}
           {relationshipData.secFilings && relationshipData.secFilings.length > 0 && (
-            <div className="bg-white/5 p-6 rounded-xl border border-white/5">
-              <div className="flex items-center gap-2 mb-4">
-                <FileText size={18} className="text-violet-400" />
-                <h3 className="text-white font-semibold">Recent SEC Filings</h3>
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <FileText size={14} className="text-white/30" />
+                <h3 className="text-[12px] text-white/40 uppercase tracking-wider">SEC Filings</h3>
               </div>
-              <div className="space-y-3">
-                {relationshipData.secFilings.map((filing, idx) => (
+              <div className="space-y-2">
+                {relationshipData.secFilings.slice(0, 4).map((filing, idx) => (
                   <div 
                     key={idx} 
-                    className="bg-black/20 p-3 rounded-lg border border-white/5 hover:border-violet-500/50 transition-colors"
+                    className="bg-white/[0.02] p-3 rounded-xl hover:bg-white/[0.04] transition-colors"
                   >
-                    <div className="flex items-start justify-between gap-2 mb-1">
-                      <span className="bg-violet-500/20 text-violet-300 text-xs px-2 py-0.5 rounded font-mono">
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <span className="bg-violet-500/20 text-violet-400 text-[10px] px-2 py-0.5 rounded-md font-mono">
                         {filing.type}
                       </span>
-                      <span className="text-slate-400 text-xs flex items-center gap-1">
-                        <Calendar size={12} />
-                        {filing.date}
-                      </span>
+                      <span className="text-white/30 text-[11px]">{filing.date}</span>
                     </div>
-                    <p className="text-white text-sm">{filing.title}</p>
-                    {filing.link && (
-                      <a 
-                        href={filing.link} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-violet-400 text-xs hover:text-violet-300 mt-1 inline-block"
-                      >
-                        View on SEC.gov →
-                      </a>
-                    )}
+                    <p className="text-white/70 text-[12px]">{filing.title}</p>
                   </div>
                 ))}
               </div>
@@ -492,59 +495,28 @@ export default function RelationshipCard({ edge, sourceNode, targetNode, allRela
 
           {/* Supply Chain Info */}
           {relationshipData.supplyChainInfo && (
-            <div className="bg-white/5 p-6 rounded-xl border border-white/5">
-              <div className="flex items-center gap-2 mb-4">
-                <Package size={18} className="text-violet-400" />
-                <h3 className="text-white font-semibold">Supply Chain Details</h3>
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Package size={14} className="text-white/30" />
+                <h3 className="text-[12px] text-white/40 uppercase tracking-wider">Supply Chain</h3>
+                {relationshipData.supplyChainInfo.riskLevel && (
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full ml-auto ${
+                    relationshipData.supplyChainInfo.riskLevel === 'Low' ? 'bg-emerald-500/20 text-emerald-400' :
+                    relationshipData.supplyChainInfo.riskLevel === 'Medium' ? 'bg-yellow-500/20 text-yellow-400' :
+                    'bg-red-500/20 text-red-400'
+                  }`}>
+                    {relationshipData.supplyChainInfo.riskLevel}
+                  </span>
+                )}
               </div>
               
-              {relationshipData.supplyChainInfo.tiers && (
-                <div className="mb-4">
-                  <h4 className="text-slate-300 text-sm font-medium mb-2">Supply Chain Tiers</h4>
-                  <div className="space-y-2">
-                    {relationshipData.supplyChainInfo.tiers.map((tier, idx) => (
-                      <div key={idx} className="bg-black/20 p-3 rounded-lg">
-                        <div className="text-violet-300 text-xs font-semibold mb-1">{tier.tier}</div>
-                        <div className="text-slate-400 text-xs">{tier.suppliers.join(', ')}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {relationshipData.supplyChainInfo.locations && (
-                <div className="mb-4">
-                  <h4 className="text-slate-300 text-sm font-medium mb-2">Geographic Locations</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {relationshipData.supplyChainInfo.locations.map((loc, idx) => (
-                      <span key={idx} className="bg-violet-500/20 text-violet-300 text-xs px-2 py-1 rounded">
-                        {loc}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {relationshipData.supplyChainInfo.riskLevel && (
-                <div className="mb-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <AlertTriangle size={16} className="text-yellow-400" />
-                    <h4 className="text-slate-300 text-sm font-medium">Risk Assessment</h4>
-                    <span className={`text-xs px-2 py-0.5 rounded ${
-                      relationshipData.supplyChainInfo.riskLevel === 'Low' ? 'bg-green-500/20 text-green-300' :
-                      relationshipData.supplyChainInfo.riskLevel === 'Medium' ? 'bg-yellow-500/20 text-yellow-300' :
-                      'bg-red-500/20 text-red-300'
-                    }`}>
-                      {relationshipData.supplyChainInfo.riskLevel} Risk
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {relationshipData.supplyChainInfo.locations.map((loc, idx) => (
+                    <span key={idx} className="bg-white/[0.04] text-white/50 text-[11px] px-2 py-1 rounded-lg">
+                      {loc}
                     </span>
-                  </div>
-                  {relationshipData.supplyChainInfo.riskFactors && (
-                    <ul className="list-disc list-inside text-slate-400 text-xs space-y-1 ml-4">
-                      {relationshipData.supplyChainInfo.riskFactors.map((factor, idx) => (
-                        <li key={idx}>{factor}</li>
-                      ))}
-                    </ul>
-                  )}
+                  ))}
                 </div>
               )}
             </div>
@@ -552,62 +524,38 @@ export default function RelationshipCard({ edge, sourceNode, targetNode, allRela
 
           {/* Partnership Info */}
           {relationshipData.partnershipInfo && (
-            <div className="bg-white/5 p-6 rounded-xl border border-white/5">
-              <div className="flex items-center gap-2 mb-4">
-                <Handshake size={18} className="text-violet-400" />
-                <h3 className="text-white font-semibold">Partnership Details</h3>
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Handshake size={14} className="text-white/30" />
+                <h3 className="text-[12px] text-white/40 uppercase tracking-wider">Partnership</h3>
               </div>
 
               {relationshipData.partnershipInfo.projects && (
-                <div className="mb-4">
-                  <h4 className="text-slate-300 text-sm font-medium mb-3">Active Projects</h4>
-                  <div className="space-y-2">
-                    {relationshipData.partnershipInfo.projects.map((project, idx) => (
-                      <div key={idx} className="bg-black/20 p-3 rounded-lg flex items-center justify-between">
-                        <div>
-                          <div className="text-white text-sm font-medium">{project.name}</div>
-                          <div className="text-slate-400 text-xs mt-1">{project.value}</div>
-                        </div>
-                        <span className={`text-xs px-2 py-1 rounded ${
-                          project.status === 'Active' ? 'bg-green-500/20 text-green-300' :
-                          project.status === 'Planning' ? 'bg-yellow-500/20 text-yellow-300' :
-                          'bg-slate-500/20 text-slate-300'
-                        }`}>
-                          {project.status}
-                        </span>
+                <div className="space-y-2 mb-3">
+                  {relationshipData.partnershipInfo.projects.slice(0, 3).map((project, idx) => (
+                    <div key={idx} className="bg-white/[0.02] p-3 rounded-xl flex items-center justify-between">
+                      <div>
+                        <div className="text-white/70 text-[12px]">{project.name}</div>
+                        <div className="text-white/30 text-[11px]">{project.value}</div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {relationshipData.partnershipInfo.milestones && (
-                <div className="mb-4">
-                  <h4 className="text-slate-300 text-sm font-medium mb-3">Key Milestones</h4>
-                  <div className="space-y-2">
-                    {relationshipData.partnershipInfo.milestones.map((milestone, idx) => (
-                      <div key={idx} className="bg-black/20 p-3 rounded-lg flex items-start gap-3">
-                        <div className="flex items-center gap-1 text-slate-400 text-xs whitespace-nowrap">
-                          <Calendar size={12} />
-                          {milestone.date}
-                        </div>
-                        <div className="text-slate-300 text-sm">{milestone.event}</div>
-                      </div>
-                    ))}
-                  </div>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+                        project.status === 'Active' ? 'bg-emerald-500/20 text-emerald-400' :
+                        'bg-yellow-500/20 text-yellow-400'
+                      }`}>
+                        {project.status}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               )}
 
               {relationshipData.partnershipInfo.collaboration && (
-                <div>
-                  <h4 className="text-slate-300 text-sm font-medium mb-2">Collaboration Areas</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {relationshipData.partnershipInfo.collaboration.map((area, idx) => (
-                      <span key={idx} className="bg-violet-500/20 text-violet-300 text-xs px-2 py-1 rounded">
-                        {area}
-                      </span>
-                    ))}
-                  </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {relationshipData.partnershipInfo.collaboration.slice(0, 4).map((area, idx) => (
+                    <span key={idx} className="bg-violet-500/10 text-violet-400 text-[11px] px-2 py-1 rounded-lg">
+                      {area}
+                    </span>
+                  ))}
                 </div>
               )}
             </div>
@@ -615,44 +563,24 @@ export default function RelationshipCard({ edge, sourceNode, targetNode, allRela
 
           {/* News Articles */}
           {relationshipData.news && relationshipData.news.length > 0 && (
-            <div className="bg-white/5 p-6 rounded-xl border border-white/5">
-              <div className="flex items-center gap-2 mb-4">
-                <Newspaper size={18} className="text-violet-400" />
-                <h3 className="text-white font-semibold">Recent News & Articles</h3>
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Newspaper size={14} className="text-white/30" />
+                <h3 className="text-[12px] text-white/40 uppercase tracking-wider">News</h3>
               </div>
-              <div className="space-y-3 max-h-[400px] overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(139, 92, 246, 0.5) transparent' }}>
-                {relationshipData.news.map((article, idx) => (
+              <div className="space-y-2">
+                {relationshipData.news.slice(0, 4).map((article, idx) => (
                   <div 
                     key={idx} 
-                    className="bg-black/20 p-4 rounded-lg border border-white/5 hover:border-violet-500/50 transition-colors"
+                    className="bg-white/[0.02] p-3 rounded-xl hover:bg-white/[0.04] transition-colors"
                   >
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <span className="text-slate-400 text-xs flex items-center gap-1">
-                        <Calendar size={12} />
-                        {article.date}
-                      </span>
-                      <span className="text-violet-400 text-xs">{article.source}</span>
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <span className="text-white/30 text-[11px]">{article.date}</span>
+                      <span className="text-violet-400/60 text-[10px]">{article.source}</span>
                     </div>
-                    <h4 className="text-white text-sm font-medium mb-2 hover:text-violet-300 transition-colors">
-                      {article.link ? (
-                        <a href={article.link} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                          {article.title}
-                        </a>
-                      ) : (
-                        article.title
-                      )}
+                    <h4 className="text-white/70 text-[12px] leading-relaxed">
+                      {article.title}
                     </h4>
-                    <p className="text-slate-400 text-xs leading-relaxed">{article.summary}</p>
-                    {article.link && (
-                      <a 
-                        href={article.link} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-violet-400 text-xs hover:text-violet-300 mt-2 inline-block"
-                      >
-                        Read more →
-                      </a>
-                    )}
                   </div>
                 ))}
               </div>
