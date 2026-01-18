@@ -8,6 +8,7 @@ export interface Node {
   id: string;
   name: string;
   type: NodeType;
+  sector?: string;
   val: number; // size
   description: string;
   price?: number;
