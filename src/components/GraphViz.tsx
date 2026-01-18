@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect, useMemo, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { GraphData, GraphNode, GraphEdge, EdgeType } from '@/types';
+import { GraphData, GraphNode, GraphEdge, EdgeType, EDGE_COLORS } from '@/types';
 import SpriteText from 'three-spritetext';
 import * as THREE from 'three';
 
@@ -266,131 +266,132 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
   useEffect(() => {
     if (!fgRef.current) return;
 
-    const scene = fgRef.current.scene();
-    const renderer = fgRef.current.renderer();
+    const scene = fgRef.current.scene?.();
+    const renderer = fgRef.current.renderer?.();
     
-    if (scene) {
-      // Deep space fog
-      scene.fog = new THREE.FogExp2(0x000008, 0.0008);
-      
-      // Soft ambient light
-      const ambientLight = new THREE.AmbientLight(0x1a1a2e, 0.3);
-      scene.add(ambientLight);
-      
-      // Warm directional light (galactic core)
-      const sunLight = new THREE.DirectionalLight(0xffd93d, 0.3);
-      sunLight.position.set(100, 200, 100);
-      scene.add(sunLight);
-      
-      // Cool rim light
-      const rimLight = new THREE.DirectionalLight(0x4fc3f7, 0.2);
-      rimLight.position.set(-100, -50, -100);
-      scene.add(rimLight);
-      
-      // Nebula point lights
-      const nebulaLight1 = new THREE.PointLight(0x60a5fa, 0.6, 800);
-      nebulaLight1.position.set(0, 100, 0);
-      scene.add(nebulaLight1);
-      
-      const nebulaLight2 = new THREE.PointLight(0xfbbf24, 0.4, 600);
-      nebulaLight2.position.set(-200, -100, 100);
-      scene.add(nebulaLight2);
-      
-      const nebulaLight3 = new THREE.PointLight(0xa78bfa, 0.3, 500);
-      nebulaLight3.position.set(150, 50, -150);
-      scene.add(nebulaLight3);
-      
-      if (renderer) {
-        renderer.setClearColor(0x000008, 1);
-        renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.2;
-      }
-      
-      // Background star field (reduced count to prevent WebGL context loss)
-      const starGeometry = new THREE.BufferGeometry();
-      const starCount = 1500;
-      const positions = new Float32Array(starCount * 3);
-      const colors = new Float32Array(starCount * 3);
-      const sizes = new Float32Array(starCount);
-      
-      for (let i = 0; i < starCount; i++) {
-        positions[i * 3] = (Math.random() - 0.5) * 5000;
-        positions[i * 3 + 1] = (Math.random() - 0.5) * 5000;
-        positions[i * 3 + 2] = (Math.random() - 0.5) * 5000;
-        
-        // Random star colors (blue, white, gold)
-        const colorChoice = Math.random();
-        if (colorChoice < 0.5) {
-          colors[i * 3] = 0.8; colors[i * 3 + 1] = 0.9; colors[i * 3 + 2] = 1.0; // Blue-white
-        } else if (colorChoice < 0.8) {
-          colors[i * 3] = 1.0; colors[i * 3 + 1] = 1.0; colors[i * 3 + 2] = 1.0; // White
-        } else {
-          colors[i * 3] = 1.0; colors[i * 3 + 1] = 0.9; colors[i * 3 + 2] = 0.6; // Gold
-        }
-        
-        sizes[i] = Math.random() * 1.5 + 0.3;
-      }
-      
-      starGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      starGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-      starGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-      
-      const starMaterial = new THREE.PointsMaterial({
-        size: 1,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.7,
-        blending: THREE.AdditiveBlending,
-        sizeAttenuation: true,
-      });
-      
-      const stars = new THREE.Points(starGeometry, starMaterial);
-      scene.add(stars);
-      
-      // Nebula dust clouds (reduced count to prevent WebGL context loss)
-      const dustGeometry = new THREE.BufferGeometry();
-      const dustCount = 500;
-      const dustPositions = new Float32Array(dustCount * 3);
-      const dustColors = new Float32Array(dustCount * 3);
-      
-      for (let i = 0; i < dustCount; i++) {
-        const radius = Math.random() * 1500 + 200;
-        const theta = Math.random() * Math.PI * 2;
-        const phi = Math.random() * Math.PI;
-        
-        dustPositions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
-        dustPositions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta) * 0.3;
-        dustPositions[i * 3 + 2] = radius * Math.cos(phi);
-        
-        // Nebula colors - mix of blue and orange
-        const colorMix = Math.random();
-        if (colorMix < 0.4) {
-          dustColors[i * 3] = 0.2; dustColors[i * 3 + 1] = 0.4; dustColors[i * 3 + 2] = 0.8; // Blue
-        } else if (colorMix < 0.7) {
-          dustColors[i * 3] = 0.9; dustColors[i * 3 + 1] = 0.5; dustColors[i * 3 + 2] = 0.2; // Orange
-        } else {
-          dustColors[i * 3] = 0.6; dustColors[i * 3 + 1] = 0.3; dustColors[i * 3 + 2] = 0.7; // Purple
-        }
-      }
-      
-      dustGeometry.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
-      dustGeometry.setAttribute('color', new THREE.BufferAttribute(dustColors, 3));
-      
-      const dustMaterial = new THREE.PointsMaterial({
-        size: 4,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.15,
-        blending: THREE.AdditiveBlending,
-        sizeAttenuation: true,
-      });
-      
-      const dust = new THREE.Points(dustGeometry, dustMaterial);
-      scene.add(dust);
+    if (!scene) return;
+    
+    // Deep space fog
+    scene.fog = new THREE.FogExp2(0x000008, 0.0008);
+    
+    // Soft ambient light
+    const ambientLight = new THREE.AmbientLight(0x1a1a2e, 0.3);
+    scene.add(ambientLight);
+    
+    // Warm directional light (galactic core)
+    const sunLight = new THREE.DirectionalLight(0xffd93d, 0.3);
+    sunLight.position.set(100, 200, 100);
+    scene.add(sunLight);
+    
+    // Cool rim light
+    const rimLight = new THREE.DirectionalLight(0x4fc3f7, 0.2);
+    rimLight.position.set(-100, -50, -100);
+    scene.add(rimLight);
+    
+    // Nebula point lights
+    const nebulaLight1 = new THREE.PointLight(0x60a5fa, 0.6, 800);
+    nebulaLight1.position.set(0, 100, 0);
+    scene.add(nebulaLight1);
+    
+    const nebulaLight2 = new THREE.PointLight(0xfbbf24, 0.4, 600);
+    nebulaLight2.position.set(-200, -100, 100);
+    scene.add(nebulaLight2);
+    
+    const nebulaLight3 = new THREE.PointLight(0xa78bfa, 0.3, 500);
+    nebulaLight3.position.set(150, 50, -150);
+    scene.add(nebulaLight3);
+    
+    if (renderer) {
+      renderer.setClearColor(0x000008, 1);
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.2;
     }
+    
+    // Background star field (reduced count to prevent WebGL context loss)
+    const starGeometry = new THREE.BufferGeometry();
+    const starCount = 1500;
+    const positions = new Float32Array(starCount * 3);
+    const colors = new Float32Array(starCount * 3);
+    const sizes = new Float32Array(starCount);
+    
+    for (let i = 0; i < starCount; i++) {
+      positions[i * 3] = (Math.random() - 0.5) * 5000;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 5000;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 5000;
+      
+      // Random star colors (blue, white, gold)
+      const colorChoice = Math.random();
+      if (colorChoice < 0.5) {
+        colors[i * 3] = 0.8; colors[i * 3 + 1] = 0.9; colors[i * 3 + 2] = 1.0; // Blue-white
+      } else if (colorChoice < 0.8) {
+        colors[i * 3] = 1.0; colors[i * 3 + 1] = 1.0; colors[i * 3 + 2] = 1.0; // White
+      } else {
+        colors[i * 3] = 1.0; colors[i * 3 + 1] = 0.9; colors[i * 3 + 2] = 0.6; // Gold
+      }
+      
+      sizes[i] = Math.random() * 1.5 + 0.3;
+    }
+    
+    starGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    starGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    starGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+    
+    const starMaterial = new THREE.PointsMaterial({
+      size: 1,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.7,
+      blending: THREE.AdditiveBlending,
+      sizeAttenuation: true,
+    });
+    
+    const stars = new THREE.Points(starGeometry, starMaterial);
+    scene.add(stars);
+    
+    // Nebula dust clouds (reduced count to prevent WebGL context loss)
+    const dustGeometry = new THREE.BufferGeometry();
+    const dustCount = 500;
+    const dustPositions = new Float32Array(dustCount * 3);
+    const dustColors = new Float32Array(dustCount * 3);
+    
+    for (let i = 0; i < dustCount; i++) {
+      const radius = Math.random() * 1500 + 200;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.random() * Math.PI;
+      
+      dustPositions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+      dustPositions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta) * 0.3;
+      dustPositions[i * 3 + 2] = radius * Math.cos(phi);
+      
+      // Nebula colors - mix of blue and orange
+      const colorMix = Math.random();
+      if (colorMix < 0.4) {
+        dustColors[i * 3] = 0.2; dustColors[i * 3 + 1] = 0.4; dustColors[i * 3 + 2] = 0.8; // Blue
+      } else if (colorMix < 0.7) {
+        dustColors[i * 3] = 0.9; dustColors[i * 3 + 1] = 0.5; dustColors[i * 3 + 2] = 0.2; // Orange
+      } else {
+        dustColors[i * 3] = 0.6; dustColors[i * 3 + 1] = 0.3; dustColors[i * 3 + 2] = 0.7; // Purple
+      }
+    }
+    
+    dustGeometry.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
+    dustGeometry.setAttribute('color', new THREE.BufferAttribute(dustColors, 3));
+    
+    const dustMaterial = new THREE.PointsMaterial({
+      size: 4,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.15,
+      blending: THREE.AdditiveBlending,
+      sizeAttenuation: true,
+    });
+    
+    const dust = new THREE.Points(dustGeometry, dustMaterial);
+    scene.add(dust);
 
-    if (fgRef.current) {
-      fgRef.current.d3Force('charge').strength(-80);
+    const chargeForce = fgRef.current.d3Force?.('charge');
+    if (chargeForce) {
+      chargeForce.strength(-80);
     }
   }, []);
 
@@ -849,26 +850,28 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
           const id = `${sourceId}-${targetId}`;
           const reverseId = `${targetId}-${sourceId}`;
           
+          // Use the relationship type color from EDGE_COLORS
+          const edgeType = link.type as EdgeType;
+          const baseColor = EDGE_COLORS[edgeType] || '#3b82f6';
+          
+          // Convert hex to rgba with opacity
+          const hexToRgba = (hex: string, alpha: number) => {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+          };
+          
           const isHighlighted = highlightEdges.has(id) || highlightEdges.has(reverseId);
-          if (isHighlighted) return 'rgba(255, 220, 100, 0.9)';
+          if (isHighlighted) return hexToRgba(baseColor, 0.95);
           
           if (highlightNodes.size > 0) {
             const sourceHighlighted = highlightNodes.has(sourceId);
             const targetHighlighted = highlightNodes.has(targetId);
-            if (sourceHighlighted || targetHighlighted) return 'rgba(100, 150, 200, 0.05)';
+            if (sourceHighlighted || targetHighlighted) return hexToRgba(baseColor, 0.1);
           }
           
-          // Subtle constellation lines
-          const sourceColor = getStarPalette(sourceId);
-          const targetColor = getStarPalette(targetId);
-          
-          // Blend colors - use the warmer tone
-          if (sourceColor === STAR_COLORS.gold || targetColor === STAR_COLORS.gold) {
-            return 'rgba(251, 191, 36, 0.12)';
-          } else if (sourceColor === STAR_COLORS.orange || targetColor === STAR_COLORS.orange) {
-            return 'rgba(249, 115, 22, 0.12)';
-          }
-          return 'rgba(96, 165, 250, 0.1)';
+          return hexToRgba(baseColor, 0.4);
         }}
         linkWidth={(link: any) => {
           const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
