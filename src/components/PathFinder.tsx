@@ -157,7 +157,7 @@ export default function PathFinder({ nodes, onPathFound }: PathFinderProps) {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(true)}
-        className="absolute bottom-8 right-8 z-40 bg-gradient-to-r from-violet-600/90 to-purple-600/90 hover:from-violet-500 hover:to-purple-500 text-white px-6 py-3.5 rounded-xl backdrop-blur-xl border border-violet-400/30 shadow-lg shadow-violet-900/30 hover:shadow-violet-500/40 transition-all flex items-center gap-2.5 font-medium"
+        className="absolute top-[140px] left-8 z-40 bg-gradient-to-r from-violet-600/90 to-purple-600/90 hover:from-violet-500 hover:to-purple-500 text-white px-6 py-3.5 rounded-2xl backdrop-blur-xl border border-violet-400/30 shadow-lg shadow-violet-900/30 hover:shadow-violet-500/40 transition-all flex items-center gap-2.5 font-medium"
       >
         <Route size={20} className="drop-shadow-sm" />
         <span>Find Path</span>
@@ -171,7 +171,7 @@ export default function PathFinder({ nodes, onPathFound }: PathFinderProps) {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 20, scale: 0.95 }}
       transition={{ type: "spring", damping: 25, stiffness: 300 }}
-      className="absolute bottom-8 right-8 z-40 w-[520px] max-w-[90vw] bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden"
+      className="absolute top-[140px] left-8 z-40 w-[520px] max-w-[90vw] bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden"
     >
       {/* Header with gradient */}
       <div className="relative bg-gradient-to-r from-violet-900/30 via-purple-900/20 to-transparent border-b border-white/5 px-6 py-5">

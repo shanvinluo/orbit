@@ -58,9 +58,9 @@ export default function SearchBar({ nodes, onSelect }: SearchBarProps) {
       <motion.div
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className={`relative bg-slate-900/80 backdrop-blur-xl border rounded-2xl transition-all duration-300 ${isFocused ? 'border-white shadow-[0_0_25px_rgba(255,255,255,0.2)]' : 'border-white/10 hover:border-white/20'}`}
+        className={`relative bg-slate-900/80 backdrop-blur-xl border rounded-full transition-all duration-300 ${isFocused ? 'border-white shadow-[0_0_25px_rgba(255,255,255,0.2)]' : 'border-white/10 hover:border-white/20'}`}
       >
-        <div className="flex items-center px-6 py-4">
+        <div className="flex items-center px-8 py-4">
           <Search className={`mr-4 transition-colors ${isFocused ? 'text-violet-400' : 'text-slate-400'}`} size={20} />
           <input
             type="text"
@@ -70,7 +70,8 @@ export default function SearchBar({ nodes, onSelect }: SearchBarProps) {
             onBlur={() => setTimeout(() => setIsFocused(false), 200)}
             onKeyDown={handleKeyDown}
             placeholder="Search companies..."
-            className="bg-transparent border-none focus:outline-none text-white text-lg w-full placeholder-slate-500 font-light placeholder:text-slate-500"
+            className="bg-transparent border-none focus:outline-none text-white text-lg w-full placeholder-slate-500 font-light placeholder:text-slate-500 caret-white"
+            style={{ color: 'white' }}
           />
         </div>
       </motion.div>
