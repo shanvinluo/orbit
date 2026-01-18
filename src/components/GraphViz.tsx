@@ -754,6 +754,7 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
       depthWrite: false,
     });
     const outerGlow = new THREE.Mesh(outerGlowGeometry, outerGlowMaterial);
+    outerGlow.raycast = () => {}; // Disable raycasting so edges behind are clickable
     group.add(outerGlow);
     
     // Layer 2: Middle glow
@@ -766,6 +767,7 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
       depthWrite: false,
     });
     const midGlow = new THREE.Mesh(midGlowGeometry, midGlowMaterial);
+    midGlow.raycast = () => {}; // Disable raycasting so edges behind are clickable
     group.add(midGlow);
     
     // Layer 3: Inner glow
@@ -778,6 +780,7 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
       depthWrite: false,
     });
     const innerGlow = new THREE.Mesh(innerGlowGeometry, innerGlowMaterial);
+    innerGlow.raycast = () => {}; // Disable raycasting so edges behind are clickable
     group.add(innerGlow);
     
     // Layer 4: Bright core
@@ -803,22 +806,26 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
         side: THREE.DoubleSide,
       });
       const spike1 = new THREE.Mesh(spikeGeometry, spikeMaterial);
+      spike1.raycast = () => {}; // Disable raycasting so edges behind are clickable
       group.add(spike1);
       
       // Vertical spike
       const spike2 = new THREE.Mesh(spikeGeometry, spikeMaterial);
       spike2.rotation.z = Math.PI / 2;
+      spike2.raycast = () => {}; // Disable raycasting so edges behind are clickable
       group.add(spike2);
       
       // Diagonal spikes
       const spike3 = new THREE.Mesh(spikeGeometry, spikeMaterial.clone());
       spike3.material.opacity = 0.2;
       spike3.rotation.z = Math.PI / 4;
+      spike3.raycast = () => {}; // Disable raycasting so edges behind are clickable
       group.add(spike3);
       
       const spike4 = new THREE.Mesh(spikeGeometry, spikeMaterial.clone());
       spike4.material.opacity = 0.2;
       spike4.rotation.z = -Math.PI / 4;
+      spike4.raycast = () => {}; // Disable raycasting so edges behind are clickable
       group.add(spike4);
     }
     
