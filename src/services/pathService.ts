@@ -1,5 +1,5 @@
 import { loadGraph } from './graphService';
-import { PathResult, CycleResult, GraphEdge, PathItem } from '../types';
+import { PathResult, CycleResult, CycleResultWithEdges, CyclesResponse, GraphEdge, PathItem } from '../types';
 import { scorePath } from './pathScoringService';
 
 /**
@@ -327,4 +327,125 @@ export const findCycles = (nodeId: string, maxDepth: number = 6): CycleResult[] 
   dfs(nodeId, [], new Set<string>());
   
   return cycles;
+};
+
+/**
+ * Finds all directed cycles containing a specific node with detailed edge information
+ * Uses DFS with bounded depth and deduplication via canonical representation
+ * Returns up to maxCycles cycles to prevent UI freezing
+ */
+export const findCyclesWithEdges = (
+  nodeId: string, 
+  maxDepth: number = 8,
+  maxCycles: number = 50
+): CyclesResponse => {
+  const graph = loadGraph();
+  const cycles: CycleResultWithEdges[] = [];
+  const seenCanonical = new Set<string>();
+  
+  // Build adjacency list for DIRECTED edges only
+  const adj = new Map<string, GraphEdge[]>();
+  graph.links.forEach(link => {
+    const sourceId = typeof link.source === 'string' ? link.source : (link.source?.id || String(link.source));
+    if (!adj.has(sourceId)) adj.set(sourceId, []);
+    adj.get(sourceId)!.push(link);
+  });
+
+  let totalFound = 0;
+  let capped = false;
+
+  /**
+   * DFS to find cycles starting and ending at nodeId
+   * pathNodes: current path of node IDs
+   * pathEdges: edges used to reach current position
+   * visited: set of nodes in current path (for simple path enforcement)
+   */
+  const dfs = (
+    current: string,
+    pathNodes: string[],
+    pathEdges: GraphEdge[],
+    visited: Set<string>
+  ) => {
+    // Check if we've hit the cap
+    if (cycles.length >= maxCycles) {
+      capped = true;
+      return;
+    }
+
+    // Depth limit check (pathNodes.length - 1 = number of hops so far)
+    if (pathNodes.length > maxDepth) {
+      return;
+    }
+
+    const neighbors = adj.get(current) || [];
+    
+    for (const edge of neighbors) {
+      const targetId = typeof edge.target === 'string' ? edge.target : (edge.target?.id || String(edge.target));
+      
+      // Found a cycle back to the starting node
+      if (targetId === nodeId && pathNodes.length >= 2) {
+        totalFound++;
+        
+        // Create canonical representation for deduplication
+        // Use sorted edge keys to identify unique cycles regardless of starting point
+        const cycleEdgeKeys = [...pathEdges, edge].map(e => {
+          const src = typeof e.source === 'string' ? e.source : (e.source?.id || String(e.source));
+          const tgt = typeof e.target === 'string' ? e.target : (e.target?.id || String(e.target));
+          return `${src}->${tgt}-${e.type}`;
+        }).sort().join('|');
+        
+        if (!seenCanonical.has(cycleEdgeKeys)) {
+          seenCanonical.add(cycleEdgeKeys);
+          
+          const completePath = [...pathNodes, nodeId];
+          const completeEdges = [...pathEdges, edge];
+          
+          cycles.push({
+            cycleId: `cycle-${cycles.length}`,
+            path: completePath,
+            edges: completeEdges,
+            length: completeEdges.length
+          });
+        }
+        
+        if (cycles.length >= maxCycles) {
+          capped = true;
+          return;
+        }
+        
+        // Don't continue exploring from this edge (it completes a cycle)
+        continue;
+      }
+      
+      // Only visit unvisited nodes (simple path)
+      if (!visited.has(targetId)) {
+        visited.add(targetId);
+        pathNodes.push(targetId);
+        pathEdges.push(edge);
+        
+        dfs(targetId, pathNodes, pathEdges, visited);
+        
+        // Backtrack
+        pathEdges.pop();
+        pathNodes.pop();
+        visited.delete(targetId);
+        
+        if (capped) return;
+      }
+    }
+  };
+
+  // Start DFS from the node
+  const initialVisited = new Set<string>([nodeId]);
+  dfs(nodeId, [nodeId], [], initialVisited);
+
+  // Sort cycles by length (shorter cycles first)
+  cycles.sort((a, b) => a.length - b.length);
+
+  return {
+    nodeId,
+    cycles,
+    totalFound,
+    capped
+  };
 };

@@ -12,7 +12,7 @@ import ToolsNavbar from '@/components/ToolsNavbar';
 import WatchlistPopup from '@/components/WatchlistPopup';
 
 import NewsImpactPopup from '@/components/NewsImpactPopup';
-import { GraphData, GraphNode, GraphEdge, EdgeType } from '@/types';
+import { GraphData, GraphNode, GraphEdge, EdgeType, CycleResultWithEdges } from '@/types';
 import { NewsAnalysis } from '@/services/aiService';
 
 const WATCHLIST_STORAGE_KEY = 'orbit-watchlist';
@@ -33,6 +33,8 @@ export default function Home() {
   const [watchlist, setWatchlist] = useState<Set<string>>(new Set());
   const [showWatchlist, setShowWatchlist] = useState(false);
   const [isWatchlistActive, setIsWatchlistActive] = useState(false);
+  const [cycleMode, setCycleMode] = useState(false);
+  const [detectedCycles, setDetectedCycles] = useState<CycleResultWithEdges[] | null>(null);
 
   // Load watchlist from localStorage
   useEffect(() => {
@@ -73,6 +75,7 @@ export default function Home() {
     setPathMode(false);
     setNewsMode(false);
     setNewsAnalysis(null);
+    // Don't clear cycle mode - user must toggle it off manually
   }, []);
 
   const handleNodeClick = useCallback((node: GraphNode) => {
@@ -81,6 +84,10 @@ export default function Home() {
 
     // If in path mode or news mode, don't change highlighting on node click
     if (pathMode || newsMode) return;
+
+    // If in cycle mode, the CyclesPanel will handle highlighting via useEffect
+    // So we don't need to do neighbor highlighting
+    if (cycleMode) return;
 
     // Simple neighbor highlighting
     const newHighlightNodes = new Set<string>([node.id]);
@@ -101,7 +108,7 @@ export default function Home() {
 
     setHighlightNodes(newHighlightNodes);
     setHighlightEdges(newHighlightEdges);
-  }, [graphData.links, pathMode, newsMode]);
+  }, [graphData.links, pathMode, newsMode, cycleMode]);
 
   const handlePathFound = useCallback((path: { nodes: string[]; edges: string[] } | null) => {
     if (path) {
@@ -217,6 +224,26 @@ export default function Home() {
   const handleWatchlistClick = useCallback(() => {
     setShowWatchlist(prev => !prev);
   }, []);
+
+  const handleCycleModeToggle = useCallback((enabled: boolean) => {
+    setCycleMode(enabled);
+    if (!enabled) {
+      // Clear cycle highlighting when disabling
+      setDetectedCycles(null);
+      setHighlightNodes(new Set());
+      setHighlightEdges(new Set());
+    }
+  }, []);
+
+  const handleCyclesFound = useCallback((
+    cycles: CycleResultWithEdges[] | null, 
+    nodes: Set<string>, 
+    edges: Set<string>
+  ) => {
+    setDetectedCycles(cycles);
+    setHighlightNodes(nodes);
+    setHighlightEdges(edges);
+  }, []);
   
   // Create map of affected companies for GraphViz
   const affectedCompaniesMap = newsAnalysis 
@@ -259,6 +286,7 @@ export default function Home() {
           focusedNodeId={selectedNode?.id}
           enabledEdgeTypes={enabledEdgeTypes}
           pathMode={pathMode}
+          cycleMode={cycleMode}
           affectedCompanies={affectedCompaniesMap}
           watchlist={isWatchlistActive && watchlist.size > 0 ? watchlist : undefined}
         />
@@ -275,6 +303,10 @@ export default function Home() {
         onPathFound={handlePathFound}
         onWatchlistClick={handleWatchlistClick}
         watchlistCount={watchlist.size}
+        cycleMode={cycleMode}
+        onCycleModeToggle={handleCycleModeToggle}
+        onCyclesFound={handleCyclesFound}
+        selectedNodeId={selectedNode?.id}
       />
       
       <Chatbot onNewsAnalysis={handleNewsAnalysis} />

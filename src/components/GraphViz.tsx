@@ -23,6 +23,7 @@ interface Props {
   affectedCompanies?: Map<string, 'bullish' | 'bearish' | 'neutral' | 'mixed' | 'uncertain'>;
   pathMode?: boolean;
   watchlist?: Set<string>;
+  cycleMode?: boolean;
 }
 
 // Nebula color palette - celestial blues, cyans, warm oranges/golds
@@ -172,7 +173,7 @@ const generateDensityField = (
   return densityPoints;
 };
 
-export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundClick, highlightNodes, highlightEdges, focusedNodeId, enabledEdgeTypes, affectedCompanies, pathMode = false, watchlist }: Props) {
+export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundClick, highlightNodes, highlightEdges, focusedNodeId, enabledEdgeTypes, affectedCompanies, pathMode = false, watchlist, cycleMode = false }: Props) {
   const fgRef = useRef<any>(null);
   const [cameraPosition, setCameraPosition] = useState<THREE.Vector3>(new THREE.Vector3(0, 0, 1000));
   const densityUpdateTimer = useRef<NodeJS.Timeout | null>(null);
@@ -233,6 +234,7 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
       filteredLinks = filteredLinks.filter(link => enabledEdgeTypes.has(link.type));
     }
     
+    // Path mode: only show highlighted path nodes/edges
     if (pathMode && highlightNodes.size > 0) {
       filteredNodes = filteredNodes.filter(node => highlightNodes.has(node.id));
       filteredLinks = filteredLinks.filter(link => {
@@ -241,6 +243,17 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
         const edgeId = `${sourceId}-${targetId}`;
         const reverseEdgeId = `${targetId}-${sourceId}`;
         return highlightEdges.has(edgeId) || highlightEdges.has(reverseEdgeId);
+      });
+    }
+    
+    // Cycle mode: only show highlighted cycle nodes/edges
+    if (cycleMode && highlightNodes.size > 0) {
+      filteredNodes = filteredNodes.filter(node => highlightNodes.has(node.id));
+      filteredLinks = filteredLinks.filter(link => {
+        const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+        const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+        const edgeId = `${sourceId}-${targetId}`;
+        return highlightEdges.has(edgeId);
       });
     }
     
@@ -286,7 +299,7 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
       nodes: filteredNodes,
       links: linksWithCurvature
     };
-  }, [data, enabledEdgeTypes, pathMode, highlightNodes, highlightEdges, watchlist]);
+  }, [data, enabledEdgeTypes, pathMode, cycleMode, highlightNodes, highlightEdges, watchlist]);
 
   // Track camera
   useEffect(() => {
@@ -643,7 +656,7 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
       }
       milkyLayersRef.current = [];
     };
-  }, [filteredData.nodes, webglLost, pathMode, highlightNodes]);
+  }, [filteredData.nodes, webglLost, pathMode, cycleMode, highlightNodes]);
 
   // Store original positions for restoring when deselecting
   const originalPositions = useRef<Map<string, {x: number, y: number, z: number}>>(new Map());
@@ -756,6 +769,11 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
       else if (impact === 'mixed') palette = STAR_COLORS.gold;
     }
     
+    // Use pink for highlighted nodes in cycle mode
+    if (cycleMode && isHighlighted) {
+      palette = STAR_COLORS.pink;
+    }
+    
     // Sizes based on state
     const baseSize = isSelected ? 3 : isHighlighted ? 2.5 : 1.2;
     
@@ -852,7 +870,7 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
     }
     
     return group;
-  }, [affectedCompanies]);
+  }, [affectedCompanies, cycleMode]);
 
   // Show fallback when WebGL context is lost
   if (webglLost) {
@@ -902,7 +920,13 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
           };
           
           const isHighlighted = highlightEdges.has(id) || highlightEdges.has(reverseId);
-          if (isHighlighted) return hexToRgba(baseColor, 0.95);
+          if (isHighlighted) {
+            // Use pink/magenta color for cycle mode highlighting
+            if (cycleMode) {
+              return hexToRgba('#ec4899', 0.95); // pink-500
+            }
+            return hexToRgba(baseColor, 0.95);
+          }
           
           if (highlightNodes.size > 0) {
             const sourceHighlighted = highlightNodes.has(sourceId);
@@ -918,6 +942,8 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
           const id = `${sourceId}-${targetId}`;
           const reverseId = `${targetId}-${sourceId}`;
           const isHighlighted = highlightEdges.has(id) || highlightEdges.has(reverseId);
+          // Thicker edges for cycle mode to make them more visible
+          if (isHighlighted && cycleMode) return 4;
           return isHighlighted ? 3 : 0.8;
         }}
         linkOpacity={1}

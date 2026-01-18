@@ -108,3 +108,17 @@ export interface CycleResult {
   path: string[];
   length: number;
 }
+
+export interface CycleResultWithEdges {
+  cycleId: string;
+  path: string[];        // Node IDs in the cycle
+  edges: GraphEdge[];    // Edges forming the cycle
+  length: number;        // Number of edges (hops) in the cycle
+}
+
+export interface CyclesResponse {
+  nodeId: string;
+  cycles: CycleResultWithEdges[];
+  totalFound: number;
+  capped: boolean;       // True if results were capped
+}
