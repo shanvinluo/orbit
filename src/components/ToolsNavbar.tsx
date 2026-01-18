@@ -321,41 +321,41 @@ function PathFinderPanel({
     <motion.div
       initial={{ opacity: 0, y: -10, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      className="w-[320px] bg-black/40 backdrop-blur-2xl border border-white/[0.06] rounded-[1.5rem] shadow-[0_8px_32px_rgba(0,0,0,0.4)] overflow-hidden"
+      className="w-[340px] bg-white rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden"
     >
-      <div className="px-5 py-4">
-        <h3 className="text-white font-medium text-[14px]">Find Path</h3>
-        <p className="text-[11px] text-white/40 mt-0.5">Discover connections</p>
+      <div className="bg-gradient-to-r from-violet-500 via-purple-500 to-blue-500 px-5 py-3">
+        <h3 className="text-white font-semibold text-sm">Find Path</h3>
+        <p className="text-white/70 text-xs">Discover connections</p>
       </div>
 
-      <div className="px-4 pb-4 space-y-3">
+      <div className="px-4 py-4 space-y-3 bg-gray-50">
         {/* From Node */}
         <div className="relative">
           {fromSelected ? (
-            <div className="flex items-center justify-between bg-white/[0.06] rounded-xl px-3.5 py-2.5">
-              <span className="text-white/90 text-[13px]">{fromSelected.label}</span>
-              <button onClick={() => { setFromSelected(null); setFromQuery(''); }} className="text-white/30 hover:text-white/70">
-                <X size={14} />
+            <div className="flex items-center justify-between bg-white rounded-xl px-4 py-3 shadow-sm">
+              <span className="text-gray-800 text-sm font-medium">{fromSelected.label}</span>
+              <button onClick={() => { setFromSelected(null); setFromQuery(''); }} className="text-gray-400 hover:text-gray-600">
+                <X size={16} />
               </button>
             </div>
           ) : (
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" size={15} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               <input
                 value={fromQuery}
                 onChange={(e) => handleFromSearch(e.target.value)}
                 onFocus={() => setIsFromFocused(true)}
                 onBlur={() => setTimeout(() => setIsFromFocused(false), 200)}
                 placeholder="From..."
-                className="w-full bg-white/[0.04] border border-white/[0.06] rounded-xl pl-9 pr-3 py-2.5 text-white text-[13px] placeholder-white/30 focus:outline-none focus:border-white/[0.12] transition-colors"
+                className="w-full bg-white rounded-xl pl-10 pr-4 py-3 text-gray-800 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 shadow-sm"
               />
               {isFromFocused && fromResults.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1.5 bg-black/80 backdrop-blur-xl border border-white/[0.08] rounded-xl overflow-hidden z-50">
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-lg overflow-hidden z-50 border border-gray-100">
                   {fromResults.map(node => (
                     <button
                       key={node.id}
                       onClick={() => { setFromSelected(node); setFromQuery(node.label); setFromResults([]); }}
-                      className="w-full px-3.5 py-2.5 text-left text-[13px] text-white/70 hover:bg-white/[0.06] hover:text-white transition-colors"
+                      className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors"
                     >
                       {node.label}
                     </button>
@@ -367,38 +367,38 @@ function PathFinderPanel({
         </div>
 
         <div className="flex justify-center">
-          <div className="w-6 h-6 rounded-full bg-white/[0.04] flex items-center justify-center">
-            <ArrowRight size={12} className="text-white/30" />
+          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-violet-500 to-purple-500 flex items-center justify-center shadow-md">
+            <ArrowRight size={14} className="text-white" />
           </div>
         </div>
 
         {/* To Node */}
         <div className="relative">
           {toSelected ? (
-            <div className="flex items-center justify-between bg-white/[0.06] rounded-xl px-3.5 py-2.5">
-              <span className="text-white/90 text-[13px]">{toSelected.label}</span>
-              <button onClick={() => { setToSelected(null); setToQuery(''); }} className="text-white/30 hover:text-white/70">
-                <X size={14} />
+            <div className="flex items-center justify-between bg-white rounded-xl px-4 py-3 shadow-sm">
+              <span className="text-gray-800 text-sm font-medium">{toSelected.label}</span>
+              <button onClick={() => { setToSelected(null); setToQuery(''); }} className="text-gray-400 hover:text-gray-600">
+                <X size={16} />
               </button>
             </div>
           ) : (
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" size={15} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               <input
                 value={toQuery}
                 onChange={(e) => handleToSearch(e.target.value)}
                 onFocus={() => setIsToFocused(true)}
                 onBlur={() => setTimeout(() => setIsToFocused(false), 200)}
                 placeholder="To..."
-                className="w-full bg-white/[0.04] border border-white/[0.06] rounded-xl pl-9 pr-3 py-2.5 text-white text-[13px] placeholder-white/30 focus:outline-none focus:border-white/[0.12] transition-colors"
+                className="w-full bg-white rounded-xl pl-10 pr-4 py-3 text-gray-800 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 shadow-sm"
               />
               {isToFocused && toResults.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1.5 bg-black/80 backdrop-blur-xl border border-white/[0.08] rounded-xl overflow-hidden z-50">
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-lg overflow-hidden z-50 border border-gray-100">
                   {toResults.map(node => (
                     <button
                       key={node.id}
                       onClick={() => { setToSelected(node); setToQuery(node.label); setToResults([]); }}
-                      className="w-full px-3.5 py-2.5 text-left text-[13px] text-white/70 hover:bg-white/[0.06] hover:text-white transition-colors"
+                      className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors"
                     >
                       {node.label}
                     </button>
@@ -411,13 +411,13 @@ function PathFinderPanel({
 
         {/* Depth Selector */}
         <div className="relative">
-          <label className="block text-[11px] font-medium text-white/40 mb-1.5 uppercase tracking-wider">
+          <label className="block text-xs font-medium text-gray-500 mb-2 uppercase tracking-wider">
             Max Depth (Hops)
           </label>
           <select
             value={maxDepth}
             onChange={(e) => setMaxDepth(parseInt(e.target.value))}
-            className="w-full bg-white/[0.04] border border-white/[0.06] rounded-xl px-3 py-2 text-white text-[12px] focus:outline-none focus:border-white/[0.12] transition-colors"
+            className="w-full bg-white rounded-xl px-4 py-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/30 shadow-sm"
           >
             <option value={2}>2 hops</option>
             <option value={3}>3 hops</option>
