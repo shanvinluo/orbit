@@ -20,7 +20,7 @@ interface Props {
   highlightEdges: Set<string>;
   focusedNodeId?: string;
   enabledEdgeTypes?: Set<EdgeType>;
-  affectedCompanies?: Map<string, 'positive' | 'negative' | 'neutral' | 'mixed' | 'uncertain'>;
+  affectedCompanies?: Map<string, 'bullish' | 'bearish' | 'neutral' | 'mixed' | 'uncertain'>;
   pathMode?: boolean;
   watchlist?: Set<string>;
 }
@@ -56,46 +56,159 @@ const getNodeColor = (nodeId: string): string => {
   return getStarPalette(nodeId).glow;
 };
 
-// Calculate node centrality based on local density of neighbors
-const calculateNodeCentrality = (
-  node: { x?: number; y?: number; z?: number; id: string },
-  allNodes: Array<{ x?: number; y?: number; z?: number; id: string }>,
-  bandwidth: number = 100
-): number => {
-  if (node.x === undefined) return 0.5;
-  
+// Density cloud calculation for milky effect
+interface DensityPoint {
+  x: number;
+  y: number;
+  z: number;
+  density: number;
+  color: THREE.Color;
+}
+
+// Calculate density at a point using Gaussian kernel
+const calculateDensity = (
+  point: THREE.Vector3,
+  nodes: Array<{ x?: number; y?: number; z?: number; id: string }>,
+  bandwidth: number
+): { density: number; color: THREE.Color } => {
   let density = 0;
-  const nodeX = node.x || 0;
-  const nodeY = node.y || 0;
-  const nodeZ = node.z || 0;
-  
-  for (const other of allNodes) {
-    if (other.x === undefined || other.id === node.id) continue;
+  const colorAccum = new THREE.Color(0, 0, 0);
+  let colorWeight = 0;
+
+  for (const node of nodes) {
+    if (node.x === undefined) continue;
     
-    const dx = nodeX - (other.x || 0);
-    const dy = nodeY - (other.y || 0);
-    const dz = nodeZ - (other.z || 0);
+    const dx = point.x - (node.x || 0);
+    const dy = point.y - (node.y || 0);
+    const dz = point.z - (node.z || 0);
     const distSq = dx * dx + dy * dy + dz * dz;
     
-    // Gaussian kernel - nodes closer contribute more to density
-    density += Math.exp(-distSq / (2 * bandwidth * bandwidth));
+    // Gaussian kernel
+    const weight = Math.exp(-distSq / (2 * bandwidth * bandwidth));
+    density += weight;
+    
+    // Accumulate color weighted by proximity
+    if (weight > 0.01) {
+      const palette = getStarPalette(node.id);
+      const nodeColor = new THREE.Color(palette.glow);
+      colorAccum.r += nodeColor.r * weight;
+      colorAccum.g += nodeColor.g * weight;
+      colorAccum.b += nodeColor.b * weight;
+      colorWeight += weight;
+    }
   }
-  
-  return density;
+
+  // Normalize color
+  if (colorWeight > 0) {
+    colorAccum.r /= colorWeight;
+    colorAccum.g /= colorWeight;
+    colorAccum.b /= colorWeight;
+  }
+
+  return { density, color: colorAccum };
+};
+
+// Generate density field sample points
+const generateDensityField = (
+  nodes: Array<{ x?: number; y?: number; z?: number; id: string }>,
+  gridSize: number = 20,
+  bandwidth: number = 50
+): DensityPoint[] => {
+  if (nodes.length === 0) return [];
+
+  // Find bounding box of nodes
+  let minX = Infinity, maxX = -Infinity;
+  let minY = Infinity, maxY = -Infinity;
+  let minZ = Infinity, maxZ = -Infinity;
+  let validNodes = 0;
+
+  for (const node of nodes) {
+    if (node.x === undefined) continue;
+    validNodes++;
+    minX = Math.min(minX, node.x || 0);
+    maxX = Math.max(maxX, node.x || 0);
+    minY = Math.min(minY, node.y || 0);
+    maxY = Math.max(maxY, node.y || 0);
+    minZ = Math.min(minZ, node.z || 0);
+    maxZ = Math.max(maxZ, node.z || 0);
+  }
+
+  if (validNodes < 3) return [];
+
+  // Expand bounds slightly
+  const padding = bandwidth * 2;
+  minX -= padding; maxX += padding;
+  minY -= padding; maxY += padding;
+  minZ -= padding; maxZ += padding;
+
+  const stepX = (maxX - minX) / gridSize;
+  const stepY = (maxY - minY) / gridSize;
+  const stepZ = (maxZ - minZ) / gridSize;
+
+  const densityPoints: DensityPoint[] = [];
+
+  // Sample density at grid points
+  for (let ix = 0; ix <= gridSize; ix++) {
+    for (let iy = 0; iy <= gridSize; iy++) {
+      for (let iz = 0; iz <= gridSize; iz++) {
+        const x = minX + ix * stepX;
+        const y = minY + iy * stepY;
+        const z = minZ + iz * stepZ;
+        
+        const { density, color } = calculateDensity(
+          new THREE.Vector3(x, y, z),
+          nodes,
+          bandwidth
+        );
+        
+        // Very low threshold for maximum cloud coverage
+        if (density > 0.1) {
+          densityPoints.push({ x, y, z, density, color });
+        }
+      }
+    }
+  }
+
+  return densityPoints;
 };
 
 export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundClick, highlightNodes, highlightEdges, focusedNodeId, enabledEdgeTypes, affectedCompanies, pathMode = false, watchlist }: Props) {
   const fgRef = useRef<any>(null);
-  const [cameraPosition, setCameraPosition] = useState<THREE.Vector3>(new THREE.Vector3(0, 0, 5000));
-  const initialCameraSetRef = useRef(false);
-  
-  // Loading state
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadingProgress, setLoadingProgress] = useState(0);
-  const graphReadyRef = useRef(false);
-  
-  // Node centrality cache (how central each node is in its cluster)
-  const [nodeCentralities, setNodeCentralities] = useState<Map<string, number>>(new Map());
+  const [cameraPosition, setCameraPosition] = useState<THREE.Vector3>(new THREE.Vector3(0, 0, 1000));
+  const densityUpdateTimer = useRef<NodeJS.Timeout | null>(null);
+  const [webglLost, setWebglLost] = useState(false);
+
+  // Handle WebGL context loss
+  useEffect(() => {
+    const handleContextLost = (event: Event) => {
+      event.preventDefault();
+      console.warn('WebGL context lost. Pausing rendering.');
+      setWebglLost(true);
+      // Clear interval to stop cloud updates
+      if (densityUpdateTimer.current) {
+        clearInterval(densityUpdateTimer.current);
+        densityUpdateTimer.current = null;
+      }
+    };
+
+    const handleContextRestored = () => {
+      console.log('WebGL context restored.');
+      setWebglLost(false);
+    };
+
+    const canvas = document.querySelector('canvas');
+    if (canvas) {
+      canvas.addEventListener('webglcontextlost', handleContextLost);
+      canvas.addEventListener('webglcontextrestored', handleContextRestored);
+    }
+
+    return () => {
+      if (canvas) {
+        canvas.removeEventListener('webglcontextlost', handleContextLost);
+        canvas.removeEventListener('webglcontextrestored', handleContextRestored);
+      }
+    };
+  }, []);
 
   // Filter graph data based on enabled edge types, path mode, and watchlist
   const filteredData = useMemo(() => {
@@ -136,71 +249,6 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
     };
   }, [data, enabledEdgeTypes, pathMode, highlightNodes, highlightEdges, watchlist]);
 
-  // Check if everything is loaded
-  useEffect(() => {
-    if (graphReadyRef.current && isLoading) {
-      // Small delay to ensure smooth transition
-      setTimeout(() => setIsLoading(false), 200);
-    }
-  }, [isLoading, loadingProgress]);
-  
-  // Set initial zoomed out camera position
-  useEffect(() => {
-    if (!fgRef.current || initialCameraSetRef.current) return;
-    
-    const setInitialCamera = () => {
-      if (fgRef.current && !initialCameraSetRef.current) {
-        fgRef.current.cameraPosition({ x: 0, y: 0, z: 5000 }, { x: 0, y: 0, z: 0 }, 0);
-        initialCameraSetRef.current = true;
-      }
-    };
-    
-    // Try immediately and after a short delay
-    setInitialCamera();
-    const timer = setTimeout(setInitialCamera, 500);
-    return () => clearTimeout(timer);
-  }, []);
-  
-  // Track when graph nodes have positions and calculate centralities
-  useEffect(() => {
-    if (graphReadyRef.current) return;
-    
-    const checkGraphReady = () => {
-      const nodes = filteredData.nodes as Array<{ x?: number; y?: number; z?: number; id: string }>;
-      const validNodes = nodes.filter(n => n.x !== undefined);
-      
-      if (validNodes.length >= 2) {
-        graphReadyRef.current = true;
-        setLoadingProgress(50);
-        
-        // Calculate centrality for each node
-        const centralities = new Map<string, number>();
-        let maxCentrality = 0;
-        let minCentrality = Infinity;
-        
-        for (const node of validNodes) {
-          const centrality = calculateNodeCentrality(node, validNodes);
-          centralities.set(node.id, centrality);
-          maxCentrality = Math.max(maxCentrality, centrality);
-          minCentrality = Math.min(minCentrality, centrality);
-        }
-        
-        // Normalize centralities to 0-1 range
-        const range = maxCentrality - minCentrality || 1;
-        for (const [id, centrality] of centralities) {
-          centralities.set(id, (centrality - minCentrality) / range);
-        }
-        
-        setNodeCentralities(centralities);
-        setLoadingProgress(100);
-      } else {
-        setTimeout(checkGraphReady, 100);
-      }
-    };
-    
-    checkGraphReady();
-  }, [filteredData.nodes]);
-  
   // Track camera
   useEffect(() => {
     if (!fgRef.current) return;
@@ -258,9 +306,9 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
         renderer.toneMappingExposure = 1.2;
       }
       
-      // Background star field
+      // Background star field (reduced count to prevent WebGL context loss)
       const starGeometry = new THREE.BufferGeometry();
-      const starCount = 8000;
+      const starCount = 1500;
       const positions = new Float32Array(starCount * 3);
       const colors = new Float32Array(starCount * 3);
       const sizes = new Float32Array(starCount);
@@ -299,9 +347,9 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
       const stars = new THREE.Points(starGeometry, starMaterial);
       scene.add(stars);
       
-      // Nebula dust clouds
+      // Nebula dust clouds (reduced count to prevent WebGL context loss)
       const dustGeometry = new THREE.BufferGeometry();
-      const dustCount = 3000;
+      const dustCount = 500;
       const dustPositions = new Float32Array(dustCount * 3);
       const dustColors = new Float32Array(dustCount * 3);
       
@@ -345,6 +393,217 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
       fgRef.current.d3Force('charge').strength(-80);
     }
   }, []);
+
+  // Store all milky cloud layers for cleanup
+  const milkyLayersRef = useRef<THREE.Points[]>([]);
+
+  // Create and update milky density clouds
+  useEffect(() => {
+    if (!fgRef.current || webglLost) return;
+    
+    const scene = fgRef.current.scene();
+    if (!scene) return;
+
+    const updateMilkyCloud = () => {
+      // Skip if WebGL context is lost
+      if (webglLost) return;
+      
+      // Disable milky cloud effect entirely - it causes visual artifacts
+      // Remove all existing cloud layers and don't create new ones
+      for (const layer of milkyLayersRef.current) {
+        scene.remove(layer);
+        layer.geometry.dispose();
+        if (layer.material instanceof THREE.Material) {
+          layer.material.dispose();
+        }
+      }
+      milkyLayersRef.current = [];
+      
+      // Cloud effect disabled - return early
+      return;
+
+      // Get current node positions from the graph
+      const nodes = filteredData.nodes as Array<{ x?: number; y?: number; z?: number; id: string }>;
+      
+      // Generate density field - reduced grid size to prevent WebGL context loss
+      const densityPoints = generateDensityField(nodes, 12, 80);
+      
+      if (densityPoints.length === 0) return;
+
+      // Find max density for normalization
+      const maxDensity = Math.max(...densityPoints.map(p => p.density));
+      
+      // Helper to create a cloud layer
+      const createCloudLayer = (
+        particleMultiplier: number,
+        scatter: number,
+        size: number,
+        opacity: number,
+        colorMult: number,
+        whiteMix: number,
+        renderOrder: number
+      ) => {
+        const count = Math.floor(densityPoints.length * particleMultiplier);
+        const pos = new Float32Array(count * 3);
+        const col = new Float32Array(count * 3);
+        
+        for (let i = 0; i < count; i++) {
+          const point = densityPoints[i % densityPoints.length];
+          const normalizedDensity = point.density / maxDensity;
+          const dynamicScatter = scatter * (1 - normalizedDensity * 0.3);
+          
+          pos[i * 3] = point.x + (Math.random() - 0.5) * dynamicScatter;
+          pos[i * 3 + 1] = point.y + (Math.random() - 0.5) * dynamicScatter;
+          pos[i * 3 + 2] = point.z + (Math.random() - 0.5) * dynamicScatter;
+          
+          // Mix original color with white for milky effect
+          const variation = 0.8 + Math.random() * 0.4;
+          col[i * 3] = Math.min(1, point.color.r * colorMult * variation + whiteMix);
+          col[i * 3 + 1] = Math.min(1, point.color.g * colorMult * variation + whiteMix);
+          col[i * 3 + 2] = Math.min(1, point.color.b * colorMult * variation + whiteMix);
+        }
+        
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+        
+        const mat = new THREE.PointsMaterial({
+          size,
+          vertexColors: true,
+          transparent: true,
+          opacity,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          sizeAttenuation: false,
+        });
+        
+        const cloud = new THREE.Points(geo, mat);
+        cloud.renderOrder = renderOrder;
+        scene.add(cloud);
+        milkyLayersRef.current.push(cloud);
+      };
+
+      // Reduced cloud layers to prevent WebGL context loss
+      // Sizes are in pixels (sizeAttenuation: false)
+      // === LAYER 1: Dense core particles ===
+      createCloudLayer(6, 15, 3, 0.4, 1.2, 0.1, -0.5);
+      
+      // === LAYER 2: Inner cloud ===
+      createCloudLayer(4, 35, 5, 0.3, 1.0, 0.15, -1);
+      
+      // === LAYER 3: Outer glow ===
+      createCloudLayer(3, 80, 8, 0.2, 0.8, 0.2, -2);
+      
+      // === Bright white milky highlights (reduced) ===
+      const whiteCount = Math.floor(Math.min(densityPoints.length, 100) * 2);
+      const whitePos = new Float32Array(whiteCount * 3);
+      const whiteCol = new Float32Array(whiteCount * 3);
+      
+      // Sort by density and only use top 30%
+      const sorted = [...densityPoints].sort((a, b) => b.density - a.density);
+      const topPoints = sorted.slice(0, Math.floor(sorted.length * 0.3));
+      
+      for (let i = 0; i < whiteCount; i++) {
+        const point = topPoints[i % topPoints.length];
+        const normalizedDensity = point.density / maxDensity;
+        
+        whitePos[i * 3] = point.x + (Math.random() - 0.5) * 40;
+        whitePos[i * 3 + 1] = point.y + (Math.random() - 0.5) * 40;
+        whitePos[i * 3 + 2] = point.z + (Math.random() - 0.5) * 40;
+        
+        // Bright white/cream color with hint of original
+        const whiteness = 0.7 + normalizedDensity * 0.3;
+        whiteCol[i * 3] = Math.min(1, whiteness + point.color.r * 0.2);
+        whiteCol[i * 3 + 1] = Math.min(1, whiteness + point.color.g * 0.15);
+        whiteCol[i * 3 + 2] = Math.min(1, whiteness + point.color.b * 0.1);
+      }
+      
+      const whiteGeo = new THREE.BufferGeometry();
+      whiteGeo.setAttribute('position', new THREE.BufferAttribute(whitePos, 3));
+      whiteGeo.setAttribute('color', new THREE.BufferAttribute(whiteCol, 3));
+      
+      const whiteMat = new THREE.PointsMaterial({
+        size: 4,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.6,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        sizeAttenuation: false,
+      });
+      
+      const whiteCloud = new THREE.Points(whiteGeo, whiteMat);
+      whiteCloud.renderOrder = -0.3;
+      scene.add(whiteCloud);
+      milkyLayersRef.current.push(whiteCloud);
+      
+      // === Glowing hot cores at densest points (reduced) ===
+      const coreCount = Math.floor(Math.min(topPoints.length, 50) * 2);
+      const corePos = new Float32Array(coreCount * 3);
+      const coreCol = new Float32Array(coreCount * 3);
+      
+      for (let i = 0; i < coreCount; i++) {
+        const point = topPoints[Math.floor(i / 2)];
+        
+        corePos[i * 3] = point.x + (Math.random() - 0.5) * 25;
+        corePos[i * 3 + 1] = point.y + (Math.random() - 0.5) * 25;
+        corePos[i * 3 + 2] = point.z + (Math.random() - 0.5) * 25;
+        
+        // Intensified original color
+        coreCol[i * 3] = Math.min(1, point.color.r * 1.5 + 0.2);
+        coreCol[i * 3 + 1] = Math.min(1, point.color.g * 1.5 + 0.2);
+        coreCol[i * 3 + 2] = Math.min(1, point.color.b * 1.5 + 0.2);
+      }
+      
+      const coreGeo = new THREE.BufferGeometry();
+      coreGeo.setAttribute('position', new THREE.BufferAttribute(corePos, 3));
+      coreGeo.setAttribute('color', new THREE.BufferAttribute(coreCol, 3));
+      
+      const coreMat = new THREE.PointsMaterial({
+        size: 5,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.7,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        sizeAttenuation: false,
+      });
+      
+      const coreCloud = new THREE.Points(coreGeo, coreMat);
+      coreCloud.renderOrder = -0.1;
+      scene.add(coreCloud);
+      milkyLayersRef.current.push(coreCloud);
+    };
+
+    // Initial delay to let nodes settle
+    const initialTimer = setTimeout(() => {
+      updateMilkyCloud();
+      
+      // Update periodically as nodes move (reduced frequency to prevent WebGL issues)
+      densityUpdateTimer.current = setInterval(updateMilkyCloud, 5000);
+    }, 2000);
+
+    return () => {
+      clearTimeout(initialTimer);
+      if (densityUpdateTimer.current) {
+        clearInterval(densityUpdateTimer.current);
+      }
+      // Clean up all layers
+      if (fgRef.current) {
+        const scene = fgRef.current.scene();
+        if (scene) {
+          for (const layer of milkyLayersRef.current) {
+            scene.remove(layer);
+            layer.geometry.dispose();
+            if (layer.material instanceof THREE.Material) {
+              layer.material.dispose();
+            }
+          }
+        }
+      }
+      milkyLayersRef.current = [];
+    };
+  }, [filteredData.nodes, webglLost, pathMode, highlightNodes]);
 
   // Store original positions for restoring when deselecting
   const originalPositions = useRef<Map<string, {x: number, y: number, z: number}>>(new Map());
@@ -452,70 +711,56 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
     // Override for affected companies
     if (affectedCompanies?.has(node.id)) {
       const impact = affectedCompanies.get(node.id);
-      if (impact === 'positive') palette = STAR_COLORS.green;
-      else if (impact === 'negative') palette = STAR_COLORS.red;
+      if (impact === 'bullish') palette = STAR_COLORS.green;
+      else if (impact === 'bearish') palette = STAR_COLORS.red;
       else if (impact === 'mixed') palette = STAR_COLORS.gold;
     }
     
-    // Get centrality for brightness adjustment (0 = edge, 1 = center)
-    // Edge nodes are dimmer, center nodes are brighter
-    const centrality = nodeCentralities.get(node.id) ?? 0.5;
-    // Map centrality to brightness multiplier: edge (0) -> 0.3, center (1) -> 1.5
-    const brightnessMultiplier = 0.3 + (centrality * 1.2);
-    
-    // Sizes based on state - also scale by centrality for more visual differentiation
-    const centralityScale = 0.7 + (centrality * 0.6); // 0.7 to 1.3
-    const baseSize = isSelected ? 3 : isHighlighted ? 2.5 : 1.2 * centralityScale;
+    // Sizes based on state
+    const baseSize = isSelected ? 3 : isHighlighted ? 2.5 : 1.2;
     
     // Layer 1: Outer glow (largest, most transparent)
     const outerGlowGeometry = new THREE.SphereGeometry(baseSize * 8, 16, 16);
-    const outerOpacity = (isSelected ? 0.15 : isHighlighted ? 0.12 : 0.06) * brightnessMultiplier;
     const outerGlowMaterial = new THREE.MeshBasicMaterial({
       color: palette.outer,
       transparent: true,
-      opacity: Math.min(outerOpacity, 0.4),
+      opacity: isSelected ? 0.15 : isHighlighted ? 0.12 : 0.06,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
     const outerGlow = new THREE.Mesh(outerGlowGeometry, outerGlowMaterial);
-    outerGlow.raycast = () => {}; // Disable raycasting so edges behind are clickable
     group.add(outerGlow);
     
     // Layer 2: Middle glow
     const midGlowGeometry = new THREE.SphereGeometry(baseSize * 4, 16, 16);
-    const midOpacity = (isSelected ? 0.3 : isHighlighted ? 0.25 : 0.12) * brightnessMultiplier;
     const midGlowMaterial = new THREE.MeshBasicMaterial({
       color: palette.glow,
       transparent: true,
-      opacity: Math.min(midOpacity, 0.6),
+      opacity: isSelected ? 0.3 : isHighlighted ? 0.25 : 0.12,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
     const midGlow = new THREE.Mesh(midGlowGeometry, midGlowMaterial);
-    midGlow.raycast = () => {}; // Disable raycasting so edges behind are clickable
     group.add(midGlow);
     
     // Layer 3: Inner glow
     const innerGlowGeometry = new THREE.SphereGeometry(baseSize * 2, 16, 16);
-    const innerOpacity = (isSelected ? 0.6 : isHighlighted ? 0.5 : 0.3) * brightnessMultiplier;
     const innerGlowMaterial = new THREE.MeshBasicMaterial({
       color: palette.inner,
       transparent: true,
-      opacity: Math.min(innerOpacity, 0.85),
+      opacity: isSelected ? 0.6 : isHighlighted ? 0.5 : 0.3,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
     const innerGlow = new THREE.Mesh(innerGlowGeometry, innerGlowMaterial);
-    innerGlow.raycast = () => {}; // Disable raycasting so edges behind are clickable
     group.add(innerGlow);
     
     // Layer 4: Bright core
     const coreGeometry = new THREE.SphereGeometry(baseSize, 12, 12);
-    const coreOpacity = Math.min(0.4 + (centrality * 0.6), 1); // 0.4 to 1.0
     const coreMaterial = new THREE.MeshBasicMaterial({
       color: palette.core,
       transparent: true,
-      opacity: coreOpacity,
+      opacity: 1,
     });
     const core = new THREE.Mesh(coreGeometry, coreMaterial);
     group.add(core);
@@ -533,26 +778,22 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
         side: THREE.DoubleSide,
       });
       const spike1 = new THREE.Mesh(spikeGeometry, spikeMaterial);
-      spike1.raycast = () => {}; // Disable raycasting so edges behind are clickable
       group.add(spike1);
       
       // Vertical spike
       const spike2 = new THREE.Mesh(spikeGeometry, spikeMaterial);
       spike2.rotation.z = Math.PI / 2;
-      spike2.raycast = () => {}; // Disable raycasting so edges behind are clickable
       group.add(spike2);
       
       // Diagonal spikes
       const spike3 = new THREE.Mesh(spikeGeometry, spikeMaterial.clone());
       spike3.material.opacity = 0.2;
       spike3.rotation.z = Math.PI / 4;
-      spike3.raycast = () => {}; // Disable raycasting so edges behind are clickable
       group.add(spike3);
       
       const spike4 = new THREE.Mesh(spikeGeometry, spikeMaterial.clone());
       spike4.material.opacity = 0.2;
       spike4.rotation.z = -Math.PI / 4;
-      spike4.raycast = () => {}; // Disable raycasting so edges behind are clickable
       group.add(spike4);
     }
     
@@ -571,41 +812,28 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
     }
     
     return group;
-  }, [affectedCompanies, nodeCentralities]);
+  }, [affectedCompanies]);
+
+  // Show fallback when WebGL context is lost
+  if (webglLost) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-slate-900">
+        <div className="text-center p-8">
+          <div className="text-amber-400 text-xl mb-4">WebGL Context Lost</div>
+          <p className="text-slate-400 mb-4">The 3D visualization encountered a GPU error.</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          >
+            Reload Page
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full h-full relative">
-      {/* Loading overlay - fully opaque, centered */}
-      {isLoading && (
-        <div 
-          className="fixed top-0 left-0 w-screen h-screen z-[9999]" 
-          style={{ backgroundColor: '#000008' }}
-        >
-          {/* Centered content container */}
-          <div 
-            className="absolute top-1/2 left-1/2 flex flex-col items-center"
-            style={{ transform: 'translate(-50%, -50%)' }}
-          >
-            {/* Title */}
-            <div className="text-white text-2xl mb-6 font-light tracking-[0.3em] uppercase">
-              ORBIT
-            </div>
-            
-            {/* Progress bar */}
-            <div className="w-72 h-1.5 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
-              <div 
-                className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-amber-500 rounded-full transition-all duration-700 ease-out shadow-[0_0_10px_rgba(139,92,246,0.5)]"
-                style={{ width: `${loadingProgress}%` }}
-              />
-            </div>
-            
-            {/* Status text */}
-            <div className="text-white/50 text-sm mt-4 font-light tracking-wide">
-              {loadingProgress < 50 ? 'Positioning stars...' : 'Calculating depths...'}
-            </div>
-          </div>
-        </div>
-      )}
+    <div className="w-full h-full">
       {/* @ts-ignore */}
       <ForceGraph3D
         ref={fgRef}

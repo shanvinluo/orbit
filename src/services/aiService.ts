@@ -167,10 +167,110 @@ export const analyzeText = async (text: string) => {
 export interface AffectedCompany {
   companyId: string;
   companyName: string;
-  impactType: 'positive' | 'negative' | 'neutral' | 'mixed';
+  impactType: 'bullish' | 'bearish' | 'neutral' | 'mixed';
   impactDescription: string;
   confidence: number; // 0-1
 }
+
+export interface GeneralFinanceResponse {
+  answer: string;
+  mentionedCompanies: AffectedCompany[];
+}
+
+export const analyzeGeneralFinance = async (question: string): Promise<GeneralFinanceResponse | { error: string }> => {
+  // Load graph to get company list for context and matching
+  const graphData = loadGraph();
+  const allCompanyNames = graphData.nodes.map(n => n.label).slice(0, 200);
+  
+  const prompt = `
+    You are a helpful financial assistant. Answer the user's question about finance, investing, or the stock market.
+    
+    Important guidelines:
+    1. Give a clear, informative answer (2-4 sentences)
+    2. If specific companies are relevant to the answer, mention them by name
+    3. Do NOT give specific investment advice or recommend buying/selling
+    4. Be educational and explain concepts clearly
+    
+    Known companies in our database (you can reference these):
+    ${allCompanyNames.slice(0, 100).join(', ')}
+    
+    After your answer, list any company names from the database above that are directly relevant to your answer.
+    
+    Output strictly valid JSON with no markdown formatting:
+    {
+      "answer": "Your clear, helpful answer here",
+      "mentionedCompanies": ["Company Name 1", "Company Name 2"]
+    }
+    
+    User question: "${question.substring(0, 1000)}"
+  `;
+
+  try {
+    let txt = await generateContentWithFallback(prompt);
+    
+    // Clean up JSON
+    txt = txt.replace(/```json/g, '').replace(/```/g, '').trim();
+    const firstBrace = txt.indexOf('{');
+    const lastBrace = txt.lastIndexOf('}');
+    
+    if (firstBrace !== -1 && lastBrace !== -1) {
+      txt = txt.substring(firstBrace, lastBrace + 1);
+      const response = JSON.parse(txt);
+      
+      // Map mentioned company names to graph nodes
+      const mappedCompanies: AffectedCompany[] = [];
+      const companyMap = new Map(graphData.nodes.map(n => [n.label.toLowerCase(), n]));
+      
+      for (const companyName of (response.mentionedCompanies || [])) {
+        // Try exact match first
+        const node = companyMap.get(companyName.toLowerCase());
+        if (node) {
+          mappedCompanies.push({
+            companyId: node.id,
+            companyName: node.label,
+            impactType: 'neutral',
+            impactDescription: 'Mentioned in response',
+            confidence: 1.0
+          });
+        } else {
+          // Fuzzy match
+          const withoutSuffix = companyName.replace(/\s+(Inc|Corp|Corporation|LLC|Ltd|Limited|Company|Co)\.?$/i, '').trim();
+          const fuzzyMatch = graphData.nodes.find(n => 
+            n.label.toLowerCase().includes(companyName.toLowerCase()) ||
+            n.label.toLowerCase().includes(withoutSuffix.toLowerCase()) ||
+            companyName.toLowerCase().includes(n.label.toLowerCase().split(' ')[0])
+          );
+          
+          if (fuzzyMatch && !mappedCompanies.find(c => c.companyId === fuzzyMatch.id)) {
+            mappedCompanies.push({
+              companyId: fuzzyMatch.id,
+              companyName: fuzzyMatch.label,
+              impactType: 'neutral',
+              impactDescription: 'Mentioned in response',
+              confidence: 0.9
+            });
+          }
+        }
+      }
+      
+      return {
+        answer: response.answer,
+        mentionedCompanies: mappedCompanies
+      };
+    } else {
+      throw new Error("Invalid JSON response from AI");
+    }
+  } catch (e: any) {
+    console.error("General finance analysis failed:", e);
+    const errorMsg = e?.message || String(e);
+    
+    if (errorMsg.includes('404') || errorMsg.includes('not found') || errorMsg.includes('models/')) {
+      return { error: `The Gemini model is not available. Please check your API key.` };
+    }
+    
+    return { error: `Failed to process question: ${errorMsg}` };
+  }
+};
 
 export interface NewsAnalysis {
   affectedCompanies: AffectedCompany[];
@@ -185,19 +285,21 @@ export const analyzeNews = async (newsText: string): Promise<NewsAnalysis | { er
   
   // Step 2: Use smarter prompting - provide companies list and ask AI to identify affected ones
   const prompt = `
-    You are analyzing a news article and need to identify which companies from a known list would be affected by this news.
+    You are a financial analyst analyzing how news affects company stock prices. Identify which companies would be impacted and whether the news is bullish or bearish for their stock.
     
     Available companies in the knowledge graph (use EXACT names from this list):
     ${allCompanyNames.join(', ')}
     
     Instructions:
-    1. Analyze the news article and identify which companies from the list above would be affected (even if not directly mentioned)
-    2. Consider both direct mentions AND indirect impacts (e.g., oil companies affected by Venezuela news, tech companies affected by regulation)
-    3. For each affected company, determine:
-       - Impact type: "positive", "negative", "neutral", or "uncertain"
-       - Brief description of how they're affected
-       - Confidence level (0-1)
-    4. Classify the news type: "merger", "partnership", "regulation", "financial", "technology", "market", or "other"
+    1. Analyze the news/scenario and identify which companies from the list above would be affected (even if not directly mentioned)
+    2. Consider both direct mentions AND indirect impacts (e.g., oil companies affected by Middle East news, chip makers affected by tech regulations)
+    3. For each affected company, determine the STOCK IMPACT:
+       - "bullish" = Good for the stock price (positive revenue, competitive advantage, favorable conditions)
+       - "bearish" = Bad for the stock price (lost revenue, increased costs, unfavorable conditions, supply chain issues)
+       - "neutral" = Minimal or no significant impact on stock
+       - "mixed" = Both positive and negative factors at play
+    4. Provide a brief description explaining WHY it's bullish/bearish
+    5. Classify the news type: "merger", "partnership", "regulation", "financial", "technology", "market", "geopolitical", or "other"
     
     IMPORTANT: Only include companies that are in the list above. Use their EXACT names as shown.
     
@@ -207,15 +309,15 @@ export const analyzeNews = async (newsText: string): Promise<NewsAnalysis | { er
       "affectedCompanies": [
         {
           "companyName": "Exact Company Name From List",
-          "impactType": "positive|negative|neutral|mixed",
-          "impactDescription": "Brief description of impact",
+          "impactType": "bullish|bearish|neutral|mixed",
+          "impactDescription": "Why this is bullish/bearish for the stock",
           "confidence": 0.85
         }
       ],
-      "summary": "2-3 sentence summary of the news and its implications"
+      "summary": "2-3 sentence summary of the news and market implications"
     }
     
-    News article: "${newsText.substring(0, 3000)}"
+    News/Scenario: "${newsText.substring(0, 3000)}"
   `;
 
   try {

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { analyzeText, analyzeNews } from '@/services/aiService';
+import { analyzeText, analyzeNews, analyzeGeneralFinance } from '@/services/aiService';
 
 export async function POST(request: Request) {
   try {
@@ -9,7 +9,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 });
     }
 
-    // If type is 'news', use news analysis, otherwise use regular analysis
+    // If type is 'news', use news analysis
     if (type === 'news') {
       const result = await analyzeNews(text);
       if (result.error) {
@@ -17,7 +17,17 @@ export async function POST(request: Request) {
       }
       return NextResponse.json({ ...result, analysisType: 'news' });
     }
+    
+    // If type is 'general', use general finance Q&A
+    if (type === 'general') {
+      const result = await analyzeGeneralFinance(text);
+      if (result.error) {
+        return NextResponse.json({ error: result.error }, { status: 200 });
+      }
+      return NextResponse.json({ ...result, analysisType: 'general' });
+    }
 
+    // Default to relationship analysis
     const result = await analyzeText(text);
     if (result.error) {
       return NextResponse.json({ error: result.error }, { status: 200 });
