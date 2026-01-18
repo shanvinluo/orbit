@@ -592,14 +592,14 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
       // Note: sizeAttenuation is FALSE so sizes are in PIXELS
       
       // Clouds around each node
-      createCloudAroundNodes(18, 25, 10, 0.025, 0.03);  // Close
-      createCloudAroundNodes(12, 50, 18, 0.02, 0.025);  // Medium
-      createCloudAroundNodes(10, 80, 25, 0.015, 0.02);  // Far
+      createCloudAroundNodes(20, 25, 10, 0.035, 0.04);  // Close
+      createCloudAroundNodes(15, 50, 18, 0.028, 0.03);  // Medium
+      createCloudAroundNodes(12, 80, 25, 0.022, 0.025); // Far
       
       // Ambient fill clouds
-      createAmbientCloud(2000, 1.3, 12, 0.025);
-      createAmbientCloud(1500, 1.8, 20, 0.018);
-      createAmbientCloud(1000, 2.2, 30, 0.012);
+      createAmbientCloud(2500, 1.3, 12, 0.032);
+      createAmbientCloud(1800, 1.8, 20, 0.025);
+      createAmbientCloud(1200, 2.2, 30, 0.018);
       
         console.log('BRIGHT clouds created:', milkyLayersRef.current.length, 'layers from', validNodes.length, 'nodes');
       };
