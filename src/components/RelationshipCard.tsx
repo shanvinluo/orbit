@@ -665,8 +665,19 @@ export default function RelationshipCard({ edge, sourceNode, targetNode, allRela
                             ))}
                           </Pie>
                           <Tooltip 
-                            formatter={(value) => `${value}%`}
-                            contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.8)', border: 'none', borderRadius: '8px', fontSize: '12px' }}
+                            formatter={(value, name, props) => [`${value}%`, props.payload?.name || 'Share']}
+                            contentStyle={{ 
+                              backgroundColor: 'rgba(15, 23, 42, 0.98)', 
+                              border: '1px solid rgba(139, 92, 246, 0.3)', 
+                              borderRadius: '10px', 
+                              fontSize: '13px',
+                              padding: '10px 14px',
+                              boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+                              minWidth: '120px'
+                            }}
+                            itemStyle={{ color: '#ffffff', fontWeight: 500 }}
+                            wrapperStyle={{ zIndex: 10000, pointerEvents: 'none' }}
+                            cursor={{ fill: 'rgba(139, 92, 246, 0.2)' }}
                           />
                         </PieChart>
                       </ResponsiveContainer>
