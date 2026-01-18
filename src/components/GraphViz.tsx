@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect, useMemo, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { GraphData, GraphNode, EDGE_COLORS, EdgeType } from '@/types';
+import { GraphData, GraphNode, GraphEdge, EDGE_COLORS, EdgeType } from '@/types';
 import SpriteText from 'three-spritetext';
 import * as THREE from 'three';
 
@@ -15,6 +15,7 @@ const ForceGraph3D = dynamic(() => import('react-force-graph-3d'), {
 interface Props {
   data: GraphData;
   onNodeClick: (node: GraphNode) => void;
+  onLinkClick?: (link: GraphEdge, source: GraphNode, target: GraphNode) => void;
   onBackgroundClick?: () => void;
   highlightNodes: Set<string>;
   highlightEdges: Set<string>;
@@ -51,7 +52,7 @@ const getNodeColor = (nodeId: string): string => {
 };
 
 
-export default function GraphViz({ data, onNodeClick, onBackgroundClick, highlightNodes, highlightEdges, focusedNodeId, enabledEdgeTypes, affectedCompanies }: Props) {
+export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundClick, highlightNodes, highlightEdges, focusedNodeId, enabledEdgeTypes, affectedCompanies }: Props) {
   const fgRef = useRef<any>();
   const [cameraDistance, setCameraDistance] = useState(1000);
 
@@ -315,6 +316,34 @@ export default function GraphViz({ data, onNodeClick, onBackgroundClick, highlig
         }}
         onNodeClick={(node) => {
             onNodeClick(node as GraphNode);
+        }}
+        onLinkClick={(link) => {
+            if (onLinkClick) {
+                const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+                const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+                
+                // Try filteredData first, then fallback to data.nodes
+                let sourceNode = filteredData.nodes.find(n => n.id === sourceId);
+                let targetNode = filteredData.nodes.find(n => n.id === targetId);
+                
+                if (!sourceNode) sourceNode = data.nodes.find(n => n.id === sourceId);
+                if (!targetNode) targetNode = data.nodes.find(n => n.id === targetId);
+                
+                if (sourceNode && targetNode) {
+                    // Ensure type is valid, default to Partnership if missing
+                    const edgeType = link.type || EdgeType.Partnership;
+                    const edge: GraphEdge = {
+                        source: sourceId,
+                        target: targetId,
+                        type: edgeType,
+                        description: link.description,
+                        data: link.data
+                    };
+                    onLinkClick(edge, sourceNode, targetNode);
+                } else {
+                    console.warn('Link click: Could not find source or target node', { sourceId, targetId, link });
+                }
+            }
         }}
         onBackgroundClick={onBackgroundClick}
         nodeThreeObjectExtend={true}
