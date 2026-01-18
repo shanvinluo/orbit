@@ -21,7 +21,7 @@ interface Props {
   highlightEdges: Set<string>;
   focusedNodeId?: string;
   enabledEdgeTypes?: Set<EdgeType>;
-  affectedCompanies?: Map<string, 'positive' | 'negative' | 'neutral' | 'mixed'>;
+  affectedCompanies?: Map<string, 'positive' | 'negative' | 'neutral' | 'mixed' | 'uncertain'>;
   pathMode?: boolean;
 }
 
@@ -54,7 +54,7 @@ const getNodeColor = (nodeId: string): string => {
 
 
 export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundClick, highlightNodes, highlightEdges, focusedNodeId, enabledEdgeTypes, affectedCompanies, pathMode = false }: Props) {
-  const fgRef = useRef<any>();
+  const fgRef = useRef<any>(null);
   const [cameraDistance, setCameraDistance] = useState(1000);
 
   // Filter graph data based on enabled edge types and path mode
@@ -196,38 +196,21 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
   // Zoom to focused node and unscatter (organize nodes around it)
   useEffect(() => {
     if (focusedNodeId && fgRef.current) {
-        const node = data.nodes.find(n => n.id === focusedNodeId);
+        const node = filteredData.nodes.find(n => n.id === focusedNodeId) || data.nodes.find(n => n.id === focusedNodeId);
         if (node && typeof node.x === 'number') {
-            fgRef.current.d3Force('center', null);
-            fgRef.current.d3Force('customCenter', (alpha: number) => {
-              filteredData.nodes.forEach((d: any) => {
-                if (d.id !== focusedNodeId) {
-                  d.vx += (node.x! - d.x) * alpha * 0.1;
-                  d.vy += ((node.y! || 0) - d.y) * alpha * 0.1;
-                  d.vz += ((node.z || 0) - (d.z || 0)) * alpha * 0.1;
-                } else {
-                  d.vx *= 0.8;
-                  d.vy *= 0.8;
-                  d.vz *= 0.8;
-                  const maxZ = Math.max(...filteredData.nodes.filter(n => n.id !== focusedNodeId).map(n => n.z || 0));
-                  if ((d.z || 0) <= maxZ) {
-                    d.z = maxZ + 150;
-                  }
-                }
-              });
-            });
-
-            const distance = 300;
-            const distRatio = 1 + distance/Math.hypot(node.x, node.y! || 0, (node.z || 0));
+            // Just zoom the camera, don't apply custom forces that create ghost nodes
+            const nodePos = new THREE.Vector3(node.x, node.y || 0, node.z || 0);
+            const distance = 200;
+            const direction = new THREE.Vector3(0.3, 0.5, 0.8).normalize();
+            const cameraOffset = direction.multiplyScalar(distance);
+            const cameraPos = nodePos.clone().add(cameraOffset);
+            
             fgRef.current.cameraPosition(
-                { x: node.x * distRatio, y: (node.y! || 0) * distRatio, z: ((node.z || 0) + 150) * distRatio },
+                { x: cameraPos.x, y: cameraPos.y, z: cameraPos.z },
                 node as any,
-                2000
+                1500
             );
         }
-    } else if (!focusedNodeId && fgRef.current) {
-      fgRef.current.d3Force('customCenter', null);
-      fgRef.current.d3Force('center');
     }
   }, [focusedNodeId, data.nodes, filteredData]);
 
@@ -280,6 +263,7 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
 
   return (
     <div className="w-full h-full">
+      {/* @ts-ignore - ForceGraph3D type definitions are incorrect for function accessors */}
       <ForceGraph3D
         ref={fgRef}
         graphData={filteredData}
@@ -309,31 +293,50 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
                 ? `${link.source.id}-${link.target.id}`
                 : `${link.source}-${link.target}`;
             
+            const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+            const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+            
+            // Bright gold when explicitly highlighted
             if (highlightEdges.has(id)) {
-                return 'rgba(251, 191, 36, 0.6)'; // Bright gold when highlighted
+                return 'rgba(251, 191, 36, 0.6)';
             }
             
-            if (highlightNodes.size > 0 && !highlightEdges.has(id)) {
-                return 'rgba(251, 191, 36, 0.03)'; // Very faint when other nodes highlighted
+            // Dim edges connected to highlighted nodes (but not the edge itself)
+            if (highlightNodes.size > 0) {
+                const sourceHighlighted = highlightNodes.has(sourceId);
+                const targetHighlighted = highlightNodes.has(targetId);
+                if ((sourceHighlighted || targetHighlighted) && !highlightEdges.has(id)) {
+                    return 'rgba(251, 191, 36, 0.03)';
+                }
             }
             
-            // Use edge color based on connected nodes
+            // Default: subtle edge color
             return getEdgeColor(link, 'rgba(251, 191, 36, 0.15)');
         }}
-        linkWidth={(link: any) => {
-            const id = typeof link.source === 'object' 
-                ? `${link.source.id}-${link.target.id}`
-                : `${link.source}-${link.target}`;
-            return highlightEdges.has(id) ? 2 : 0.5; // Thin edges
-        }}
+        // linkWidth is controlled by linkThreeObject geometry size
+        // @ts-expect-error - ForceGraph3D type definitions don't properly support function accessors
         linkOpacity={(link: any) => {
             const id = typeof link.source === 'object' 
                 ? `${link.source.id}-${link.target.id}`
                 : `${link.source}-${link.target}`;
             
-            let baseOpacity = 0.15;
-            if (highlightEdges.has(id)) baseOpacity = 0.8;
-            else if (highlightNodes.size > 0 && !highlightEdges.has(id)) baseOpacity = 0.05;
+            const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+            const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+            
+            let baseOpacity = 0.15; // Default subtle opacity
+            
+            // Highlighted edges are bright
+            if (highlightEdges.has(id)) {
+                baseOpacity = 0.8;
+            }
+            // Dim edges connected to highlighted nodes (but not the edge itself)
+            else if (highlightNodes.size > 0) {
+                const sourceHighlighted = highlightNodes.has(sourceId);
+                const targetHighlighted = highlightNodes.has(targetId);
+                if (sourceHighlighted || targetHighlighted) {
+                    baseOpacity = 0.05;
+                }
+            }
             
             return getEdgeOpacity(link, baseOpacity);
         }}
@@ -415,104 +418,6 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
                 group.add(sprite);
                 sprite.position.set(0, size * 2.5 + 8, 0);
             }
-            
-            return group;
-        }}
-        linkThreeObjectExtend={true}
-        linkThreeObject={(link: any) => {
-            // Create edge with additive blending for cosmic feel
-            const source = typeof link.source === 'object' ? link.source : filteredData.nodes.find(n => n.id === link.source);
-            const target = typeof link.target === 'object' ? link.target : filteredData.nodes.find(n => n.id === link.target);
-            
-            if (!source || !target || source.x === undefined || target.x === undefined) {
-                return null;
-            }
-            
-            const id = typeof link.source === 'object' 
-                ? `${link.source.id}-${link.target.id}`
-                : `${link.source}-${link.target}`;
-            
-            const isHighlighted = highlightEdges.has(id);
-            let colorStr = isHighlighted ? 'rgba(251, 191, 36, 0.6)' : getEdgeColor(link, 'rgba(251, 191, 36, 0.15)');
-            
-            // Handle highlight fade
-            if (highlightNodes.size > 0 && !highlightEdges.has(id)) {
-                colorStr = 'rgba(251, 191, 36, 0.03)';
-            }
-            
-            // Parse color string (handles both rgba and hex)
-            let r, g, b, a;
-            if (colorStr.startsWith('rgba')) {
-                const matches = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
-                if (matches) {
-                    r = parseInt(matches[1]) / 255;
-                    g = parseInt(matches[2]) / 255;
-                    b = parseInt(matches[3]) / 255;
-                    a = matches[4] ? parseFloat(matches[4]) : 1;
-                } else {
-                    r = g = b = 251 / 255; a = 0.15;
-                }
-            } else {
-                r = parseInt(colorStr.slice(1, 3), 16) / 255;
-                g = parseInt(colorStr.slice(3, 5), 16) / 255;
-                b = parseInt(colorStr.slice(5, 7), 16) / 255;
-                a = 1;
-            }
-            
-            const sourcePos = new THREE.Vector3(source.x, source.y || 0, source.z || 0);
-            const targetPos = new THREE.Vector3(target.x, target.y || 0, target.z || 0);
-            const distance = sourcePos.distanceTo(targetPos);
-            
-            const edgeOpacity = a * getEdgeOpacity(link, 1);
-            const edgeColor = new THREE.Color(r, g, b);
-            
-            const group = new THREE.Group();
-            
-            // Outer glow for edge
-            const outerGlowGeometry = new THREE.CylinderGeometry(isHighlighted ? 4 : 2, isHighlighted ? 4 : 2, distance, 8, 1);
-            const outerGlowMaterial = new THREE.MeshBasicMaterial({
-                color: edgeColor,
-                transparent: true,
-                opacity: edgeOpacity * 0.15,
-                blending: THREE.AdditiveBlending,
-                depthWrite: false,
-            });
-            const outerGlow = new THREE.Mesh(outerGlowGeometry, outerGlowMaterial);
-            
-            // Inner glow for edge
-            const innerGlowGeometry = new THREE.CylinderGeometry(isHighlighted ? 2 : 1, isHighlighted ? 2 : 1, distance, 8, 1);
-            const innerGlowMaterial = new THREE.MeshBasicMaterial({
-                color: edgeColor,
-                transparent: true,
-                opacity: edgeOpacity * 0.3,
-                blending: THREE.AdditiveBlending,
-                depthWrite: false,
-            });
-            const innerGlow = new THREE.Mesh(innerGlowGeometry, innerGlowMaterial);
-            
-            // Core line
-            const coreGeometry = new THREE.CylinderGeometry(isHighlighted ? 0.8 : 0.4, isHighlighted ? 0.8 : 0.4, distance, 6, 1);
-            const coreMaterial = new THREE.MeshBasicMaterial({
-                color: edgeColor,
-                transparent: true,
-                opacity: edgeOpacity * 0.8,
-                blending: THREE.AdditiveBlending,
-                depthWrite: false,
-            });
-            const core = new THREE.Mesh(coreGeometry, coreMaterial);
-            
-            group.add(outerGlow);
-            group.add(innerGlow);
-            group.add(core);
-            
-            // Position and orient
-            const midPoint = new THREE.Vector3().addVectors(sourcePos, targetPos).multiplyScalar(0.5);
-            group.position.copy(midPoint);
-            
-            const direction = new THREE.Vector3().subVectors(targetPos, sourcePos).normalize();
-            const up = new THREE.Vector3(0, 1, 0);
-            const quaternion = new THREE.Quaternion().setFromUnitVectors(up, direction);
-            group.quaternion.copy(quaternion);
             
             return group;
         }}
