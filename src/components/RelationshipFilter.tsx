@@ -27,18 +27,20 @@ export default function RelationshipFilter({ enabledTypes, onToggle, onToggleAll
         {/* Toggle Button */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-xl px-5 py-3 shadow-lg hover:border-white/20 transition-all flex items-center gap-3 group"
+          className="bg-slate-900/90 backdrop-blur-2xl border border-white/10 rounded-2xl px-5 py-3.5 shadow-xl hover:border-violet-500/30 hover:shadow-violet-900/20 transition-all flex items-center gap-3 group"
         >
-          <Filter className="text-violet-400" size={18} />
+          <div className="p-1.5 bg-violet-600/20 rounded-lg border border-violet-500/30">
+            <Filter className="text-violet-400" size={16} />
+          </div>
           <span className="text-white font-medium text-sm">Relationships</span>
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs text-slate-400">
+          <div className="flex items-center gap-2 ml-1">
+            <span className="text-xs text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded-full border border-violet-500/20">
               {enabledTypes.size}/{allTypes.length}
             </span>
             {isOpen ? (
-              <ChevronUp className="text-slate-400 group-hover:text-white transition-colors" size={16} />
+              <ChevronUp className="text-slate-400 group-hover:text-violet-400 transition-colors" size={16} />
             ) : (
-              <ChevronDown className="text-slate-400 group-hover:text-white transition-colors" size={16} />
+              <ChevronDown className="text-slate-400 group-hover:text-violet-400 transition-colors" size={16} />
             )}
           </div>
         </button>
@@ -51,7 +53,7 @@ export default function RelationshipFilter({ enabledTypes, onToggle, onToggleAll
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="absolute top-full left-0 mt-2 w-[340px] bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+              className="absolute top-full left-0 mt-3 w-[340px] bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden"
             >
               {/* Header */}
               <div className="px-5 py-4 border-b border-white/5 bg-gradient-to-r from-violet-900/20 to-transparent">

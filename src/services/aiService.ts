@@ -9,7 +9,7 @@ const genAI = new GoogleGenerativeAI(API_KEY);
 
 // Helper function to try generating content with multiple models
 const generateContentWithFallback = async (prompt: string): Promise<string> => {
-  const modelNames = ['gemini-2.0-flash-exp', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro'];
+  const modelNames = ['gemini-2.0-flash-exp', 'gemini-2.0-flash'];
   let lastError: any;
   
   for (const modelName of modelNames) {

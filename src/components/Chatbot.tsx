@@ -27,7 +27,7 @@ const isLikelyNews = (text: string): boolean => {
 };
 
 export default function Chatbot({ onNewsAnalysis }: ChatbotProps = {}) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -140,77 +140,78 @@ export default function Chatbot({ onNewsAnalysis }: ChatbotProps = {}) {
 
   return (
     <>
-      <motion.button
-        onClick={() => setIsOpen(true)}
-        style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 50, backgroundColor: 'white' }}
-        className={`p-4 rounded-full transition-all hover:scale-110 shadow-[0_0_15px_rgba(255,255,255,0.5)] ${isOpen ? 'hidden' : 'flex'}`}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-      >
-        <Sparkles size={24} className="text-black fill-black" />
-      </motion.button>
-
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 50 }}
-            className="w-[380px] h-[600px] max-h-[80vh] bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl flex flex-col overflow-hidden"
+            style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 50 }}
+            className="w-[360px] h-[480px] max-h-[75vh] bg-[#0a0a0f]/90 backdrop-blur-2xl border border-white/[0.08] rounded-[28px] shadow-[0_20px_60px_rgba(0,0,0,0.6)] flex flex-col"
           >
             {/* Header */}
-            <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-violet-500/20 rounded-lg">
-                  <Sparkles size={18} className="text-violet-400" />
-                </div>
-                <span className="font-bold text-white">Orbit AI</span>
+            <div className="px-5 py-4 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
+                <Sparkles size={14} className="text-white" />
               </div>
-              <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-white transition-colors">
-                <X size={20} />
-              </button>
+              <h3 className="text-white font-medium text-sm flex-1">Orbit AI</h3>
+              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
               {messages.map((msg) => (
-                <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] p-3 rounded-2xl text-sm ${msg.role === 'user' ? 'bg-violet-600 text-white rounded-tr-sm' : 'bg-white/10 text-slate-200 rounded-tl-sm'}`}>
+                <motion.div 
+                  key={msg.id} 
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div className={`max-w-[85%] px-4 py-2.5 text-[13px] leading-[1.5] ${
+                    msg.role === 'user' 
+                      ? 'bg-violet-500 text-white rounded-2xl rounded-br-md' 
+                      : 'bg-white/[0.05] text-white/70 rounded-2xl rounded-bl-md border border-white/[0.03]'
+                  }`}>
                     {msg.content}
                   </div>
-                </div>
+                </motion.div>
               ))}
               {isLoading && (
-                <div className="flex justify-start">
-                  <div className="bg-white/10 px-4 py-2 rounded-2xl rounded-tl-sm">
-                    <span className="flex gap-1">
-                      <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}/>
-                      <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}/>
-                      <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}/>
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex justify-start"
+                >
+                  <div className="bg-white/[0.05] border border-white/[0.03] px-4 py-3 rounded-2xl rounded-bl-md">
+                    <span className="flex gap-1.5">
+                      <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}/>
+                      <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}/>
+                      <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}/>
                     </span>
                   </div>
-                </div>
+                </motion.div>
               )}
               <div ref={messagesEndRef} />
             </div>
 
             {/* Input */}
-            <div className="p-4 border-t border-white/10 bg-white/5">
-              <div className="flex gap-2">
+            <div className="px-4 pb-4">
+              <div className="flex items-center gap-2">
                 <input
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder="Ask anything..."
-                  className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-violet-500/50"
+                  placeholder="Ask something..."
+                  className="flex-1 bg-transparent text-sm text-white placeholder-white/25 focus:outline-none"
                 />
                 <button 
                   onClick={handleSend}
-                  className="p-2 bg-violet-600 hover:bg-violet-500 rounded-xl text-white transition-colors"
+                  disabled={!input.trim() || isLoading}
+                  className="w-8 h-8 flex items-center justify-center bg-violet-500 hover:bg-violet-400 disabled:opacity-30 disabled:cursor-not-allowed rounded-full text-white transition-all shrink-0"
                 >
-                  <Send size={18} />
+                  <Send size={14} />
                 </button>
               </div>
             </div>
