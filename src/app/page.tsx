@@ -128,8 +128,9 @@ export default function Home() {
 
   const handleCloseNewsPopup = useCallback(() => {
     setNewsAnalysis(null);
-    // Keep highlighting but allow node clicks
     setNewsMode(false);
+    setHighlightNodes(new Set());
+    setHighlightEdges(new Set());
   }, []);
   
   // Create map of affected companies for GraphViz

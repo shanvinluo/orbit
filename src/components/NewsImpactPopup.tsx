@@ -1,7 +1,6 @@
 'use client';
 
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState } from 'react';
 import { 
   X, 
   TrendingUp, 
@@ -10,280 +9,290 @@ import {
   AlertCircle, 
   Newspaper,
   Building2,
-  BarChart3,
-  Sparkles
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
-import { AffectedCompany, NewsAnalysis } from '@/services/aiService';
+import { NewsAnalysis } from '@/services/aiService';
 
 interface NewsImpactPopupProps {
   analysis: NewsAnalysis;
   onClose: () => void;
 }
 
-const IMPACT_COLORS = {
-  positive: {
-    bg: 'bg-gradient-to-br from-green-500/20 to-emerald-500/10',
-    border: 'border-green-500/40',
-    text: 'text-green-300',
-    icon: 'text-green-400',
-    badge: 'bg-green-500/30 text-green-400 border-green-500/50',
-    glow: 'shadow-green-500/20'
-  },
-  negative: {
-    bg: 'bg-gradient-to-br from-red-500/20 to-rose-500/10',
-    border: 'border-red-500/40',
-    text: 'text-red-300',
-    icon: 'text-red-400',
-    badge: 'bg-red-500/30 text-red-400 border-red-500/50',
-    glow: 'shadow-red-500/20'
-  },
-  neutral: {
-    bg: 'bg-gradient-to-br from-slate-500/20 to-slate-600/10',
-    border: 'border-slate-500/40',
-    text: 'text-slate-300',
-    icon: 'text-slate-400',
-    badge: 'bg-slate-500/30 text-slate-400 border-slate-500/50',
-    glow: 'shadow-slate-500/20'
-  },
-  uncertain: {
-    bg: 'bg-gradient-to-br from-yellow-500/20 to-amber-500/10',
-    border: 'border-yellow-500/40',
-    text: 'text-yellow-300',
-    icon: 'text-yellow-400',
-    badge: 'bg-yellow-500/30 text-yellow-400 border-yellow-500/50',
-    glow: 'shadow-yellow-500/20'
-  }
+const IMPACT_STYLES: Record<string, { bg: string; border: string; text: string }> = {
+  positive: { bg: 'rgba(34, 197, 94, 0.15)', border: '#22c55e', text: '#86efac' },
+  negative: { bg: 'rgba(239, 68, 68, 0.15)', border: '#ef4444', text: '#fca5a5' },
+  neutral: { bg: 'rgba(100, 116, 139, 0.15)', border: '#64748b', text: '#cbd5e1' },
+  mixed: { bg: 'rgba(250, 204, 21, 0.15)', border: '#facc15', text: '#fef08a' }
 };
 
-const IMPACT_ICONS = {
+const IMPACT_ICONS: Record<string, any> = {
   positive: TrendingUp,
   negative: TrendingDown,
   neutral: Minus,
-  uncertain: AlertCircle
-};
-
-const NEWS_TYPE_LABELS: Record<string, { label: string; icon: any; color: string }> = {
-  merger: { label: 'Merger & Acquisition', icon: Building2, color: 'from-violet-500 to-purple-500' },
-  partnership: { label: 'Partnership', icon: Sparkles, color: 'from-blue-500 to-cyan-500' },
-  regulation: { label: 'Regulation', icon: BarChart3, color: 'from-orange-500 to-amber-500' },
-  financial: { label: 'Financial News', icon: TrendingUp, color: 'from-green-500 to-emerald-500' },
-  technology: { label: 'Technology', icon: Sparkles, color: 'from-indigo-500 to-purple-500' },
-  market: { label: 'Market News', icon: BarChart3, color: 'from-cyan-500 to-blue-500' },
-  other: { label: 'General News', icon: Newspaper, color: 'from-slate-500 to-gray-500' }
+  mixed: AlertCircle
 };
 
 export default function NewsImpactPopup({ analysis, onClose }: NewsImpactPopupProps) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const { affectedCompanies, summary, newsType } = analysis;
-  const newsTypeConfig = NEWS_TYPE_LABELS[newsType] || NEWS_TYPE_LABELS.other;
-  const NewsTypeIcon = newsTypeConfig.icon;
 
-  // Sort companies by impact type (negative first, then positive, then others)
   const sortedCompanies = [...affectedCompanies].sort((a, b) => {
-    const order = { negative: 0, positive: 1, uncertain: 2, neutral: 3 };
+    const order: Record<string, number> = { negative: 0, positive: 1, mixed: 2, neutral: 3 };
     return (order[a.impactType] || 3) - (order[b.impactType] || 3);
   });
 
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-        {/* Backdrop */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="absolute inset-0 bg-black/70 backdrop-blur-md pointer-events-auto"
-        />
+    <>
+      {/* Backdrop */}
+      <div 
+        onClick={onClose}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+          backdropFilter: 'blur(4px)',
+          zIndex: 9998
+        }}
+      />
 
-        {/* Popup */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 30 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 30 }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="relative w-full max-w-4xl max-h-[92vh] bg-gradient-to-br from-slate-900/95 via-slate-900/95 to-slate-950/95 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col pointer-events-auto"
-        >
-          {/* Header */}
-          <div className={`relative px-8 py-6 border-b border-white/10 bg-gradient-to-r ${newsTypeConfig.color}/20 via-transparent to-transparent`}>
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(139,92,246,0.1),transparent_70%)]" />
-            <div className="relative flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <motion.div 
-                  initial={{ scale: 0, rotate: -180 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ delay: 0.2, type: "spring" }}
-                  className={`p-3 bg-gradient-to-br ${newsTypeConfig.color}/30 rounded-2xl border border-white/10 shadow-lg backdrop-blur-sm`}
-                >
-                  <NewsTypeIcon className={`text-white`} size={26} />
-                </motion.div>
-                <div>
-                  <h2 className="font-bold text-white text-2xl mb-1">News Impact Analysis</h2>
-                  <div className="flex items-center gap-2">
-                    <div className={`px-3 py-1 rounded-full bg-gradient-to-r ${newsTypeConfig.color}/30 border border-white/10 text-xs font-medium text-white/90`}>
-                      {newsTypeConfig.label}
-                    </div>
-                    <div className="text-xs text-slate-400">
-                      {affectedCompanies.length} compan{affectedCompanies.length === 1 ? 'y' : 'ies'} affected
-                    </div>
-                  </div>
+      {/* Bottom Sheet */}
+      <div 
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '100%',
+          maxWidth: '900px',
+          maxHeight: isCollapsed ? 'auto' : '70vh',
+          backgroundColor: '#0f172a',
+          borderTop: '3px solid #8b5cf6',
+          borderRadius: '24px 24px 0 0',
+          zIndex: 9999,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          boxShadow: '0 -10px 40px rgba(0,0,0,0.5)'
+        }}
+      >
+        {/* Drag Handle */}
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 8px' }}>
+          <div style={{ width: 48, height: 6, backgroundColor: '#475569', borderRadius: 3 }} />
+        </div>
+
+        {/* Header */}
+        <div style={{ 
+          padding: '16px 24px', 
+          borderBottom: '1px solid rgba(255,255,255,0.1)',
+          background: 'linear-gradient(to right, rgba(139, 92, 246, 0.2), transparent)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ 
+                padding: 10, 
+                backgroundColor: 'rgba(139, 92, 246, 0.3)', 
+                borderRadius: 12,
+                border: '1px solid rgba(255,255,255,0.1)'
+              }}>
+                <Newspaper color="white" size={20} />
+              </div>
+              <div>
+                <h2 style={{ color: 'white', fontSize: 18, fontWeight: 'bold', margin: 0 }}>
+                  News Impact Analysis
+                </h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                  <span style={{ 
+                    padding: '4px 10px', 
+                    backgroundColor: 'rgba(139, 92, 246, 0.3)',
+                    borderRadius: 20,
+                    fontSize: 12,
+                    color: 'rgba(255,255,255,0.9)',
+                    border: '1px solid rgba(255,255,255,0.1)'
+                  }}>
+                    {newsType}
+                  </span>
+                  <span style={{ fontSize: 12, color: '#94a3b8' }}>
+                    {affectedCompanies.length} companies affected
+                  </span>
                 </div>
               </div>
-              <motion.button
-                whileHover={{ scale: 1.1, rotate: 90 }}
-                whileTap={{ scale: 0.9 }}
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button 
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                style={{ 
+                  padding: 8, 
+                  backgroundColor: 'rgba(0,0,0,0.3)', 
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                {isCollapsed ? <ChevronUp color="#94a3b8" size={18} /> : <ChevronDown color="#94a3b8" size={18} />}
+              </button>
+              <button 
                 onClick={onClose}
-                className="p-2.5 bg-black/30 hover:bg-black/50 rounded-xl text-slate-400 hover:text-white transition-all backdrop-blur-sm border border-white/10 hover:border-white/20"
+                style={{ 
+                  padding: 8, 
+                  backgroundColor: 'rgba(0,0,0,0.3)', 
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
               >
-                <X size={20} />
-              </motion.button>
+                <X color="#94a3b8" size={18} />
+              </button>
             </div>
           </div>
+        </div>
 
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto p-8 space-y-6 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-            {/* Summary Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="relative bg-gradient-to-br from-slate-800/60 to-slate-900/40 border border-white/10 rounded-2xl p-6 backdrop-blur-sm"
-            >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-violet-500/10 to-transparent rounded-full blur-3xl" />
-              <div className="relative">
-                <div className="flex items-center gap-2 mb-3">
-                  <Newspaper className="text-violet-400" size={18} />
-                  <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wide">Summary</h3>
-                </div>
-                <p className="text-slate-200 leading-relaxed text-base">{summary}</p>
+        {/* Content */}
+        {!isCollapsed && (
+          <div style={{ 
+            flex: 1, 
+            overflowY: 'auto', 
+            padding: 24,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 20
+          }}>
+            {/* Summary */}
+            <div style={{ 
+              padding: 20, 
+              backgroundColor: 'rgba(30, 41, 59, 0.6)',
+              borderRadius: 12,
+              border: '1px solid rgba(255,255,255,0.1)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <Newspaper color="#a78bfa" size={16} />
+                <span style={{ fontSize: 12, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 }}>
+                  Summary
+                </span>
               </div>
-            </motion.div>
+              <p style={{ color: '#e2e8f0', fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+                {summary}
+              </p>
+            </div>
 
-            {/* Companies Section */}
+            {/* Companies */}
             <div>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="flex items-center gap-3 mb-5"
-              >
-                <Building2 className="text-violet-400" size={20} />
-                <h3 className="text-lg font-bold text-white">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                <Building2 color="#a78bfa" size={18} />
+                <span style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}>
                   Affected Companies
-                </h3>
-                <div className="flex-1 h-px bg-gradient-to-r from-white/10 to-transparent" />
-                <div className="px-3 py-1 bg-violet-500/20 border border-violet-500/30 rounded-full text-xs font-medium text-violet-300">
+                </span>
+                <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, rgba(255,255,255,0.1), transparent)' }} />
+                <span style={{ 
+                  padding: '4px 12px',
+                  backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                  border: '1px solid rgba(139, 92, 246, 0.3)',
+                  borderRadius: 20,
+                  fontSize: 12,
+                  color: '#c4b5fd'
+                }}>
                   {affectedCompanies.length}
-                </div>
-              </motion.div>
+                </span>
+              </div>
 
-              {sortedCompanies.length > 0 ? (
-                <div className="grid gap-4">
-                  {sortedCompanies.map((company, idx) => {
-                    const ImpactIcon = IMPACT_ICONS[company.impactType];
-                    const colors = IMPACT_COLORS[company.impactType];
-                    
-                    return (
-                      <motion.div
-                        key={company.companyId}
-                        initial={{ opacity: 0, x: -30 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.3 + idx * 0.05, type: "spring" }}
-                        className={`relative ${colors.bg} ${colors.border} border-2 rounded-2xl p-5 backdrop-blur-sm ${colors.glow} shadow-lg hover:shadow-xl transition-all hover:scale-[1.02]`}
-                      >
-                        {/* Decorative gradient */}
-                        <div className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl ${
-                          company.impactType === 'positive' ? 'bg-green-500/20' :
-                          company.impactType === 'negative' ? 'bg-red-500/20' :
-                          company.impactType === 'uncertain' ? 'bg-yellow-500/20' :
-                          'bg-slate-500/20'
-                        }`} />
-                        
-                        <div className="relative flex items-start justify-between gap-6">
-                          {/* Left: Company Info */}
-                          <div className="flex-1 space-y-3">
-                            <div className="flex items-center gap-3 flex-wrap">
-                              <div className={`p-2 ${colors.bg} rounded-xl border ${colors.border}`}>
-                                <ImpactIcon className={colors.icon} size={20} />
-                              </div>
-                              <h4 className="font-bold text-white text-lg">{company.companyName}</h4>
-                              <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${colors.badge}`}>
-                                {company.impactType.toUpperCase()}
-                              </span>
-                            </div>
-                            
-                            <p className={`${colors.text} text-sm leading-relaxed`}>
-                              {company.impactDescription}
-                            </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {sortedCompanies.map((company) => {
+                  const styles = IMPACT_STYLES[company.impactType] || IMPACT_STYLES.neutral;
+                  const ImpactIcon = IMPACT_ICONS[company.impactType] || Minus;
+                  
+                  return (
+                    <div 
+                      key={company.companyId}
+                      style={{ 
+                        padding: 16,
+                        backgroundColor: styles.bg,
+                        border: `2px solid ${styles.border}40`,
+                        borderRadius: 12,
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        justifyContent: 'space-between',
+                        gap: 16
+                      }}
+                    >
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                          <div style={{ 
+                            padding: 6, 
+                            backgroundColor: styles.bg, 
+                            borderRadius: 8,
+                            border: `1px solid ${styles.border}40`
+                          }}>
+                            <ImpactIcon color={styles.text} size={16} />
                           </div>
-
-                          {/* Right: Confidence Meter */}
-                          <div className="flex flex-col items-end gap-2 min-w-[120px]">
-                            <div className="text-xs text-slate-400 font-medium uppercase tracking-wide">Confidence</div>
-                            <div className="relative w-24 h-24">
-                              {/* SVG Circular Progress */}
-                              <svg className="transform -rotate-90 w-24 h-24" viewBox="0 0 36 36">
-                                <circle
-                                  cx="18"
-                                  cy="18"
-                                  r="16"
-                                  fill="none"
-                                  stroke="rgba(255,255,255,0.1)"
-                                  strokeWidth="3"
-                                />
-                                <motion.circle
-                                  cx="18"
-                                  cy="18"
-                                  r="16"
-                                  fill="none"
-                                  stroke={company.impactType === 'positive' ? '#22c55e' : 
-                                          company.impactType === 'negative' ? '#ef4444' :
-                                          company.impactType === 'uncertain' ? '#facc15' : '#6b7280'}
-                                  strokeWidth="3"
-                                  strokeLinecap="round"
-                                  strokeDasharray={`${company.confidence * 100}, 100`}
-                                  initial={{ strokeDasharray: "0, 100" }}
-                                  animate={{ strokeDasharray: `${company.confidence * 100}, 100` }}
-                                  transition={{ duration: 1, delay: 0.5 + idx * 0.1 }}
-                                />
-                              </svg>
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <span className={`text-lg font-bold ${colors.text}`}>
-                                  {Math.round(company.confidence * 100)}%
-                                </span>
-                              </div>
-                            </div>
-                          </div>
+                          <span style={{ color: 'white', fontWeight: 'bold', fontSize: 15 }}>
+                            {company.companyName}
+                          </span>
+                          <span style={{ 
+                            padding: '2px 10px',
+                            backgroundColor: styles.bg,
+                            border: `1px solid ${styles.border}60`,
+                            borderRadius: 20,
+                            fontSize: 11,
+                            fontWeight: 600,
+                            color: styles.text,
+                            textTransform: 'uppercase'
+                          }}>
+                            {company.impactType}
+                          </span>
                         </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="text-center py-12 bg-slate-800/30 border border-white/10 rounded-2xl"
-                >
-                  <AlertCircle size={48} className="mx-auto mb-4 text-slate-500" />
-                  <p className="text-slate-400 text-lg">No companies from the graph were identified in this news.</p>
-                </motion.div>
-              )}
+                        <p style={{ color: styles.text, fontSize: 13, lineHeight: 1.5, margin: 0 }}>
+                          {company.impactDescription}
+                        </p>
+                      </div>
+                      <div style={{ textAlign: 'right', minWidth: 80 }}>
+                        <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4, textTransform: 'uppercase' }}>
+                          Confidence
+                        </div>
+                        <div style={{ fontSize: 18, fontWeight: 'bold', color: styles.text }}>
+                          {Math.round(company.confidence * 100)}%
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
+        )}
 
-          {/* Footer */}
-          <div className="px-8 py-5 border-t border-white/10 bg-gradient-to-r from-slate-900/50 to-slate-800/30 backdrop-blur-sm">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+        {/* Footer */}
+        {!isCollapsed && (
+          <div style={{ 
+            padding: '16px 24px', 
+            borderTop: '1px solid rgba(255,255,255,0.1)',
+            background: 'linear-gradient(to right, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.3))'
+          }}>
+            <button 
               onClick={onClose}
-              className="w-full py-3.5 bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 hover:from-violet-500 hover:via-purple-500 hover:to-violet-500 text-white rounded-xl font-semibold transition-all shadow-lg shadow-violet-900/40 hover:shadow-violet-500/60 text-base"
+              style={{ 
+                width: '100%',
+                padding: '12px 24px',
+                background: 'linear-gradient(to right, #7c3aed, #9333ea, #7c3aed)',
+                border: 'none',
+                borderRadius: 12,
+                color: 'white',
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: 'pointer',
+                boxShadow: '0 4px 20px rgba(139, 92, 246, 0.4)'
+              }}
             >
               Close Analysis
-            </motion.button>
+            </button>
           </div>
-        </motion.div>
+        )}
       </div>
-    </AnimatePresence>
+    </>
   );
 }
