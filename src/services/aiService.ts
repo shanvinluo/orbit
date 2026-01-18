@@ -173,6 +173,21 @@ export interface NewsArticle {
   sentiment: 'positive' | 'negative' | 'neutral';
 }
 
+export interface ExampleCompany {
+  name: string; // Specific company name
+  ticker?: string; // Stock ticker if publicly traded
+  explanation: string; // Why this specific company would be affected
+  searchUrl: string; // URL to search/learn more about this company
+}
+
+export interface RippleEffect {
+  name: string; // Company, industry, or sector name (not in database)
+  type: 'company' | 'industry' | 'sector' | 'supplier' | 'competitor';
+  impactType: 'bullish' | 'bearish' | 'neutral' | 'mixed';
+  reason: string; // Why this entity would be affected
+  exampleCompanies: ExampleCompany[]; // 2-3 specific example companies
+}
+
 export interface AffectedCompany {
   companyId: string;
   companyName: string;
@@ -180,6 +195,7 @@ export interface AffectedCompany {
   impactType: 'bullish' | 'bearish' | 'neutral' | 'mixed';
   impactDescription: string;
   confidence: number; // 0-1
+  rippleEffects?: RippleEffect[]; // Secondary impacts on entities not in database
   news?: NewsArticle[]; // Scraped news articles
   newsLoading?: boolean; // Loading state for news
 }
@@ -311,9 +327,18 @@ export const analyzeNews = async (newsText: string): Promise<NewsAnalysis | { er
        - "neutral" = Minimal or no significant impact on stock
        - "mixed" = Both positive and negative factors at play
     4. Provide a brief description explaining WHY it's bullish/bearish
-    5. Classify the news type: "merger", "partnership", "regulation", "financial", "technology", "market", "geopolitical", or "other"
+    5. For EACH affected company, also identify 2-3 "ripple effects" - other companies, industries, suppliers, or sectors that are NOT in our database but would also be impacted. For example:
+       - If IKEA is affected → wood suppliers, furniture logistics, home decor retailers
+       - If Apple is affected → app developers, accessory manufacturers, retail partners
+       - If an oil company is affected → gas stations, petrochemical industry, plastic manufacturers
+    6. For EACH ripple effect, provide 2-3 SPECIFIC example companies within that industry/sector with:
+       - Their stock ticker (if publicly traded)
+       - A brief explanation of why that specific company would be affected
+       - A Google Finance search URL in format: https://www.google.com/finance/quote/TICKER:EXCHANGE (use NYSE, NASDAQ, or appropriate exchange)
+    7. Classify the news type: "merger", "partnership", "regulation", "financial", "technology", "market", "geopolitical", or "other"
     
-    IMPORTANT: Only include companies that are in the list above. Use their EXACT names as shown.
+    IMPORTANT: Only include companies that are in the list above for "affectedCompanies". Use their EXACT names as shown.
+    The "rippleEffects" should be entities NOT in our database - broader industry impacts with REAL example companies.
     
     Output strictly valid JSON with no markdown formatting:
     {
@@ -323,7 +348,23 @@ export const analyzeNews = async (newsText: string): Promise<NewsAnalysis | { er
           "companyName": "Exact Company Name From List",
           "impactType": "bullish|bearish|neutral|mixed",
           "impactDescription": "Why this is bullish/bearish for the stock",
-          "confidence": 0.85
+          "confidence": 0.85,
+          "rippleEffects": [
+            {
+              "name": "Industry/Company/Sector name not in database",
+              "type": "industry|company|sector|supplier|competitor",
+              "impactType": "bullish|bearish|neutral|mixed",
+              "reason": "Brief explanation of why they would be affected",
+              "exampleCompanies": [
+                {
+                  "name": "Specific Company Name",
+                  "ticker": "TICK",
+                  "explanation": "Why this specific company is affected",
+                  "searchUrl": "https://www.google.com/finance/quote/TICK:NASDAQ"
+                }
+              ]
+            }
+          ]
         }
       ],
       "summary": "2-3 sentence summary of the news and market implications"
@@ -356,7 +397,8 @@ export const analyzeNews = async (newsText: string): Promise<NewsAnalysis | { er
             companyName: node.label,
             impactType: company.impactType,
             impactDescription: company.impactDescription,
-            confidence: company.confidence
+            confidence: company.confidence,
+            rippleEffects: company.rippleEffects || []
           });
         } else {
           // Fallback: try fuzzy matching (without suffix, partial match)
@@ -373,7 +415,8 @@ export const analyzeNews = async (newsText: string): Promise<NewsAnalysis | { er
               companyName: fuzzyMatch.label,
               impactType: company.impactType,
               impactDescription: company.impactDescription,
-              confidence: company.confidence * 0.8 // Lower confidence for fuzzy matches
+              confidence: company.confidence * 0.8, // Lower confidence for fuzzy matches
+              rippleEffects: company.rippleEffects || []
             });
           }
         }

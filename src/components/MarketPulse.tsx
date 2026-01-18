@@ -17,7 +17,7 @@ import {
   Globe,
   RefreshCw
 } from 'lucide-react';
-import { NewsAnalysis, AffectedCompany, NewsArticle } from '@/services/aiService';
+import { NewsAnalysis, AffectedCompany, NewsArticle, RippleEffect, ExampleCompany } from '@/services/aiService';
 
 interface MarketPulseProps {
   analysis: NewsAnalysis;
@@ -42,6 +42,14 @@ const IMPACT_ICONS: Record<string, any> = {
   bearish: TrendingDown,
   neutral: Minus,
   mixed: AlertCircle
+};
+
+const RIPPLE_TYPE_LABELS: Record<string, { label: string; color: string }> = {
+  industry: { label: 'Industry', color: '#a78bfa' },
+  company: { label: 'Company', color: '#60a5fa' },
+  sector: { label: 'Sector', color: '#f472b6' },
+  supplier: { label: 'Supplier', color: '#fb923c' },
+  competitor: { label: 'Competitor', color: '#34d399' }
 };
 
 export default function MarketPulse({ analysis, onClose }: MarketPulseProps) {
@@ -680,6 +688,231 @@ export default function MarketPulse({ analysis, onClose }: MarketPulseProps) {
                                     }}>
                                       No recent news found
                                     </div>
+                                  )}
+
+                                  {/* Ripple Effects Section */}
+                                  {company.rippleEffects && company.rippleEffects.length > 0 && (
+                                    <>
+                                      <div style={{ 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        gap: 8, 
+                                        marginTop: 20,
+                                        marginBottom: 12 
+                                      }}>
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={styles.text} strokeWidth="2">
+                                          <circle cx="12" cy="12" r="3" />
+                                          <circle cx="12" cy="12" r="7" opacity="0.6" />
+                                          <circle cx="12" cy="12" r="11" opacity="0.3" />
+                                        </svg>
+                                        <span style={{ 
+                                          fontSize: 12, 
+                                          color: styles.text, 
+                                          textTransform: 'uppercase', 
+                                          letterSpacing: 0.5,
+                                          fontWeight: 600
+                                        }}>
+                                          Ripple Effects
+                                        </span>
+                                        <span style={{
+                                          marginLeft: 'auto',
+                                          padding: '2px 8px',
+                                          backgroundColor: 'rgba(255,255,255,0.1)',
+                                          borderRadius: 10,
+                                          fontSize: 10,
+                                          color: '#94a3b8'
+                                        }}>
+                                          Not in database
+                                        </span>
+                                      </div>
+
+                                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                        {company.rippleEffects.map((ripple, rippleIdx) => {
+                                          const rippleImpactStyle = IMPACT_STYLES[ripple.impactType] || IMPACT_STYLES.neutral;
+                                          const RippleIcon = IMPACT_ICONS[ripple.impactType] || Minus;
+                                          const typeInfo = RIPPLE_TYPE_LABELS[ripple.type] || { label: ripple.type, color: '#94a3b8' };
+                                          
+                                          return (
+                                            <motion.div
+                                              key={rippleIdx}
+                                              initial={{ opacity: 0, x: -10 }}
+                                              animate={{ opacity: 1, x: 0 }}
+                                              transition={{ delay: rippleIdx * 0.1 }}
+                                              style={{
+                                                padding: 12,
+                                                backgroundColor: 'rgba(0,0,0,0.25)',
+                                                borderRadius: 10,
+                                                borderLeft: `3px solid ${rippleImpactStyle.border}`,
+                                              }}
+                                            >
+                                              {/* Ripple Header */}
+                                              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                                                <div style={{
+                                                  padding: 4,
+                                                  backgroundColor: rippleImpactStyle.bg,
+                                                  borderRadius: 6,
+                                                  flexShrink: 0
+                                                }}>
+                                                  <RippleIcon color={rippleImpactStyle.text} size={12} />
+                                                </div>
+                                                <div style={{ flex: 1 }}>
+                                                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                                                    <span style={{ 
+                                                      color: 'white', 
+                                                      fontWeight: 600, 
+                                                      fontSize: 13 
+                                                    }}>
+                                                      {ripple.name}
+                                                    </span>
+                                                    <span style={{
+                                                      padding: '1px 6px',
+                                                      backgroundColor: `${typeInfo.color}20`,
+                                                      border: `1px solid ${typeInfo.color}40`,
+                                                      borderRadius: 8,
+                                                      fontSize: 9,
+                                                      color: typeInfo.color,
+                                                      textTransform: 'uppercase',
+                                                      fontWeight: 600
+                                                    }}>
+                                                      {typeInfo.label}
+                                                    </span>
+                                                    <span style={{
+                                                      padding: '1px 6px',
+                                                      backgroundColor: rippleImpactStyle.bg,
+                                                      border: `1px solid ${rippleImpactStyle.border}50`,
+                                                      borderRadius: 8,
+                                                      fontSize: 9,
+                                                      color: rippleImpactStyle.text,
+                                                      textTransform: 'uppercase',
+                                                      fontWeight: 600
+                                                    }}>
+                                                      {ripple.impactType}
+                                                    </span>
+                                                  </div>
+                                                  <p style={{ 
+                                                    color: '#94a3b8', 
+                                                    fontSize: 12, 
+                                                    lineHeight: 1.4, 
+                                                    margin: '6px 0 0 0' 
+                                                  }}>
+                                                    {ripple.reason}
+                                                  </p>
+                                                </div>
+                                              </div>
+
+                                              {/* Example Companies */}
+                                              {ripple.exampleCompanies && ripple.exampleCompanies.length > 0 && (
+                                                <div style={{ 
+                                                  marginTop: 12,
+                                                  marginLeft: 26,
+                                                  paddingTop: 10,
+                                                  borderTop: '1px solid rgba(255,255,255,0.08)'
+                                                }}>
+                                                  <div style={{ 
+                                                    fontSize: 10, 
+                                                    color: '#64748b', 
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '0.5px',
+                                                    marginBottom: 8,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: 6
+                                                  }}>
+                                                    <Building2 size={10} />
+                                                    Example Companies
+                                                  </div>
+                                                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                                    {ripple.exampleCompanies.map((example, exIdx) => (
+                                                      <motion.div
+                                                        key={exIdx}
+                                                        initial={{ opacity: 0, y: 5 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        transition={{ delay: (rippleIdx * 0.1) + (exIdx * 0.05) }}
+                                                        style={{
+                                                          padding: '10px 12px',
+                                                          backgroundColor: 'rgba(255,255,255,0.03)',
+                                                          borderRadius: 8,
+                                                          border: '1px solid rgba(255,255,255,0.06)'
+                                                        }}
+                                                      >
+                                                        <div style={{ 
+                                                          display: 'flex', 
+                                                          alignItems: 'center', 
+                                                          justifyContent: 'space-between',
+                                                          marginBottom: 6
+                                                        }}>
+                                                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                            <span style={{ 
+                                                              color: 'white', 
+                                                              fontWeight: 600, 
+                                                              fontSize: 12 
+                                                            }}>
+                                                              {example.name}
+                                                            </span>
+                                                            {example.ticker && (
+                                                              <span style={{
+                                                                padding: '2px 6px',
+                                                                backgroundColor: 'rgba(6, 182, 212, 0.15)',
+                                                                border: '1px solid rgba(6, 182, 212, 0.3)',
+                                                                borderRadius: 4,
+                                                                fontSize: 10,
+                                                                fontWeight: 700,
+                                                                color: '#67e8f9',
+                                                                fontFamily: 'monospace'
+                                                              }}>
+                                                                ${example.ticker}
+                                                              </span>
+                                                            )}
+                                                          </div>
+                                                          <a
+                                                            href={example.searchUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            style={{
+                                                              padding: '4px 8px',
+                                                              backgroundColor: 'rgba(99, 102, 241, 0.15)',
+                                                              border: '1px solid rgba(99, 102, 241, 0.3)',
+                                                              borderRadius: 6,
+                                                              fontSize: 10,
+                                                              color: '#a5b4fc',
+                                                              textDecoration: 'none',
+                                                              display: 'flex',
+                                                              alignItems: 'center',
+                                                              gap: 4,
+                                                              transition: 'all 0.2s'
+                                                            }}
+                                                            onMouseEnter={(e) => {
+                                                              e.currentTarget.style.backgroundColor = 'rgba(99, 102, 241, 0.25)';
+                                                              e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.5)';
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                              e.currentTarget.style.backgroundColor = 'rgba(99, 102, 241, 0.15)';
+                                                              e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.3)';
+                                                            }}
+                                                          >
+                                                            View
+                                                            <ExternalLink size={10} />
+                                                          </a>
+                                                        </div>
+                                                        <p style={{ 
+                                                          color: '#94a3b8', 
+                                                          fontSize: 11, 
+                                                          lineHeight: 1.4, 
+                                                          margin: 0 
+                                                        }}>
+                                                          {example.explanation}
+                                                        </p>
+                                                      </motion.div>
+                                                    ))}
+                                                  </div>
+                                                </div>
+                                              )}
+                                            </motion.div>
+                                          );
+                                        })}
+                                      </div>
+                                    </>
                                   )}
                                 </div>
                               </motion.div>
