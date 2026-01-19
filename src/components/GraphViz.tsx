@@ -983,8 +983,7 @@ export default function GraphViz({ data, onNodeClick, onLinkClick, onBackgroundC
         showNavInfo={false}
         d3AlphaDecay={0.02}
         d3VelocityDecay={0.3}
-        maxZoom={800}
-        minZoom={0.1}
+        controlType="orbit"
       />
     </div>
   );

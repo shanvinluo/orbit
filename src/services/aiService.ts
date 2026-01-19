@@ -3,12 +3,19 @@ import { searchNodes, loadGraph } from './graphService';
 import { findPaths } from './pathService';
 import { GraphEdge } from '../types';
 
-// Hardcoded fallback for immediate fix in this specific environment
-const API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyAKBC8isX--9XLnm8Xmm_BU_jOsLXopcuU';
-const genAI = new GoogleGenerativeAI(API_KEY);
+// API key must be set via environment variable GEMINI_API_KEY
+const API_KEY = process.env.GEMINI_API_KEY;
+if (!API_KEY) {
+  console.warn('GEMINI_API_KEY environment variable is not set. AI features will not work.');
+}
+const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
 
 // Helper function to try generating content with multiple models
 const generateContentWithFallback = async (prompt: string): Promise<string> => {
+  if (!genAI) {
+    throw new Error('AI service is not configured. Please set the GEMINI_API_KEY environment variable.');
+  }
+  
   const modelNames = ['gemini-2.0-flash-exp', 'gemini-2.0-flash'];
   let lastError: any;
   

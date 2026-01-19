@@ -1,24 +1,20 @@
-import fs from 'fs';
 import { GraphData, GraphNode, NodeType, EdgeType } from '../types';
-import path from 'path';
+// Static import for Vercel serverless compatibility
+import companiesData from '../data/companies.json';
 
-// In-memory cache - disabled in development for fresh data on each request
+// In-memory cache
 let graphCache: GraphData | null = null;
-const isDev = process.env.NODE_ENV === 'development';
 
 export const clearGraphCache = () => {
   graphCache = null;
 };
 
-const GRAPH_FILE_PATH = path.join(process.cwd(), 'src', 'data', 'companies.json');
-
 export const loadGraph = (): GraphData => {
-  // In development, skip cache to always get fresh data
-  if (graphCache && !isDev) return graphCache;
+  // Return cached data if available
+  if (graphCache) return graphCache;
   
   try {
-    const raw = fs.readFileSync(GRAPH_FILE_PATH, 'utf-8');
-    const rawData = JSON.parse(raw);
+    const rawData = companiesData as any;
     
     // Handle both formats: { nodes, links } or flat array with mixed nodes/links
     let rawNodes: any[] = [];

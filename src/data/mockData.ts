@@ -27,5 +27,28 @@ export interface GraphData {
   links: Link[];
 }
 
-// Use real company data from JSON file
-export const MOCK_DATA: GraphData = companiesData as GraphData;
+// Parse the flat array format from companies.json
+const rawData = companiesData as unknown[];
+const nodes: Node[] = rawData
+  .filter((item: any) => item.name !== undefined)
+  .map((item: any) => ({
+    id: item.id,
+    name: item.name,
+    type: item.type as NodeType,
+    val: item.val,
+    description: item.description,
+    price: item.price,
+    change: item.change,
+    tvl: item.tvl,
+    volume: item.volume,
+  }));
+
+const links: Link[] = rawData
+  .filter((item: any) => item.source !== undefined && item.target !== undefined)
+  .map((item: any) => ({
+    source: item.source,
+    target: item.target,
+    type: item.type as Link['type'],
+  }));
+
+export const MOCK_DATA: GraphData = { nodes, links };
